@@ -1,0 +1,55 @@
+﻿
+> my-v0-project@0.1.0 dev C:\Users\mrgua\OneDrive\Desktop\DAVID\Agrilpa v2 cambios
+> next dev
+
+node.exe :  ÔÜá Port 
+3000 is in use by 
+process 24316, using 
+available port 3001 
+instead.
+En C:\Users\mrgua\AppD
+ata\Roaming\npm\pnpm.p
+s1: 24 Carácter: 5
++     & "node$exe"  "$
+basedir/node_modules/p
+npm/bin/pnpm.cjs" 
+$args
++     ~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~
+~
+    + CategoryInfo    
+          : NotSpeci  
+  fied: ( ÔÜá Port    
+ 3000 ...t 3001 in    
+stead.:String) []    
+, RemoteException
+    + FullyQualifiedE 
+   rrorId : NativeCo  
+  mmandError
+ 
+   Ôû▓ Next.js 16.0.10 (Turbopack)
+   - Local:         http://localhost:3001
+   - Network:       http://192.168.1.104:3001
+   - Environments: .env.local
+
+ Ô£ô Starting...
+[baseline-browser-mapp
+ing] The data in this 
+module is over two 
+months old.  To 
+ensure accurate 
+Baseline data, please 
+update: `npm i baselin
+e-browser-mapping@late
+st -D`
+ Ô¿» Unable to 
+acquire lock at C:\Use
+rs\mrgua\OneDrive\Desk
+top\DAVID\Agrilpa v2 c
+ambios\.next\dev\lock,
+ is another instance 
+of next dev running?
+   Suggestion: If you intended to restart next dev, terminate the other process, and then try again.
+[?25h
+ÔÇëELIFECYCLEÔÇë Command failed with exit code 1.

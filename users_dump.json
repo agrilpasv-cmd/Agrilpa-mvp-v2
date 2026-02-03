@@ -1,0 +1,400 @@
+{
+  "authUsers": [
+    {
+      "id": "90457521-c4f8-4cb7-baaf-78484f751bf2",
+      "aud": "authenticated",
+      "role": "authenticated",
+      "email": "api_test_1769214643232@example.com",
+      "email_confirmed_at": "2026-01-24T00:30:43.650432Z",
+      "phone": "",
+      "confirmed_at": "2026-01-24T00:30:43.650432Z",
+      "app_metadata": {
+        "provider": "email",
+        "providers": [
+          "email"
+        ]
+      },
+      "user_metadata": {
+        "annual_volume": "100-500",
+        "company_name": "API Test Co",
+        "email_verified": true,
+        "full_name": "API Test User",
+        "products_of_interest": [
+          "Coffee"
+        ],
+        "user_type": "comprador"
+      },
+      "identities": null,
+      "created_at": "2026-01-24T00:30:43.647838Z",
+      "updated_at": "2026-01-24T00:30:43.651186Z",
+      "is_anonymous": false
+    },
+    {
+      "id": "454fb28f-cf45-42fb-a251-2edfb9056546",
+      "aud": "authenticated",
+      "role": "authenticated",
+      "email": "api_test_1769214578535@example.com",
+      "email_confirmed_at": "2026-01-24T00:29:39.030592Z",
+      "phone": "",
+      "confirmed_at": "2026-01-24T00:29:39.030592Z",
+      "app_metadata": {
+        "provider": "email",
+        "providers": [
+          "email"
+        ]
+      },
+      "user_metadata": {
+        "annual_volume": "100-500",
+        "company_name": "API Test Co",
+        "email_verified": true,
+        "full_name": "API Test User",
+        "products_of_interest": [
+          "Coffee"
+        ],
+        "user_type": "comprador"
+      },
+      "identities": null,
+      "created_at": "2026-01-24T00:29:39.026827Z",
+      "updated_at": "2026-01-24T00:29:39.031315Z",
+      "is_anonymous": false
+    },
+    {
+      "id": "ea3c6794-5e4b-43ec-886e-a2566b952f55",
+      "aud": "authenticated",
+      "role": "authenticated",
+      "email": "test_1769214552827@example.com",
+      "email_confirmed_at": "2026-01-24T00:29:13.239766Z",
+      "phone": "",
+      "confirmed_at": "2026-01-24T00:29:13.239766Z",
+      "app_metadata": {
+        "provider": "email",
+        "providers": [
+          "email"
+        ]
+      },
+      "user_metadata": {
+        "email_verified": true,
+        "full_name": "Test User",
+        "user_type": "comprador"
+      },
+      "identities": null,
+      "created_at": "2026-01-24T00:29:13.226754Z",
+      "updated_at": "2026-01-24T00:29:13.241353Z",
+      "is_anonymous": false
+    },
+    {
+      "id": "c566b7c7-676e-4339-9d94-01d22669cfc3",
+      "aud": "authenticated",
+      "role": "authenticated",
+      "email": "123456@gmail.com",
+      "email_confirmed_at": "2026-01-23T19:10:26.414183Z",
+      "phone": "",
+      "confirmed_at": "2026-01-23T19:10:26.414183Z",
+      "last_sign_in_at": "2026-01-23T19:10:40.1493Z",
+      "app_metadata": {
+        "provider": "email",
+        "providers": [
+          "email"
+        ]
+      },
+      "user_metadata": {
+        "annual_volume": "5001-50000",
+        "company_name": "werwerwe",
+        "email_verified": true,
+        "full_name": "ewrewrew",
+        "products_of_interest": [
+          "aolgdo",
+          "frojo",
+          "w3ewe"
+        ],
+        "user_type": "comprador"
+      },
+      "identities": null,
+      "created_at": "2026-01-23T19:10:26.397614Z",
+      "updated_at": "2026-01-23T19:10:40.15271Z",
+      "is_anonymous": false
+    },
+    {
+      "id": "f2159cda-d059-45ce-8aed-84e878469c4d",
+      "aud": "authenticated",
+      "role": "authenticated",
+      "email": "jonyvalverde0609@gmail.com",
+      "email_confirmed_at": "2026-01-23T01:24:03.242761Z",
+      "phone": "",
+      "confirmed_at": "2026-01-23T01:24:03.242761Z",
+      "last_sign_in_at": "2026-01-23T01:25:14.823549Z",
+      "app_metadata": {
+        "provider": "email",
+        "providers": [
+          "email"
+        ]
+      },
+      "user_metadata": {
+        "company_name": "EJE AGRÍCOLA B.A",
+        "email_verified": true,
+        "full_name": "STEVEN VALVERDE",
+        "user_type": "vendedor"
+      },
+      "identities": null,
+      "created_at": "2026-01-23T01:24:03.189543Z",
+      "updated_at": "2026-01-23T03:44:58.82907Z",
+      "is_anonymous": false
+    },
+    {
+      "id": "8067ecc4-13aa-4688-ae82-d707d645bfd3",
+      "aud": "authenticated",
+      "role": "authenticated",
+      "email": "josemanuelcardozoku038@gmail.com",
+      "email_confirmed_at": "2026-01-20T18:31:32.392698Z",
+      "phone": "",
+      "confirmed_at": "2026-01-20T18:31:32.392698Z",
+      "last_sign_in_at": "2026-01-20T18:31:42.173607Z",
+      "app_metadata": {
+        "provider": "email",
+        "providers": [
+          "email"
+        ]
+      },
+      "user_metadata": {
+        "company_name": "No tengo ",
+        "email_verified": true,
+        "full_name": "Jose Manuel",
+        "user_type": "vendedor"
+      },
+      "identities": null,
+      "created_at": "2026-01-20T18:31:32.337227Z",
+      "updated_at": "2026-01-20T18:31:42.241295Z",
+      "is_anonymous": false
+    },
+    {
+      "id": "da684faa-3382-48f2-8794-d76246e52a5e",
+      "aud": "authenticated",
+      "role": "authenticated",
+      "email": "bajioagrifoods@outlook.com",
+      "email_confirmed_at": "2026-01-15T15:11:10.533485Z",
+      "phone": "",
+      "confirmed_at": "2026-01-15T15:11:10.533485Z",
+      "last_sign_in_at": "2026-01-15T15:11:28.772217Z",
+      "app_metadata": {
+        "provider": "email",
+        "providers": [
+          "email"
+        ]
+      },
+      "user_metadata": {
+        "company_name": "Bajio Agri Foods",
+        "email_verified": true,
+        "full_name": "Jennifer Perez",
+        "user_type": "vendedor"
+      },
+      "identities": null,
+      "created_at": "2026-01-15T15:11:10.498006Z",
+      "updated_at": "2026-01-15T15:11:28.865328Z",
+      "is_anonymous": false
+    },
+    {
+      "id": "3df59825-b3a3-4793-be46-a255a7d5b9ae",
+      "aud": "authenticated",
+      "role": "authenticated",
+      "email": "diego.castro.c@hotmail.com",
+      "email_confirmed_at": "2026-01-09T20:59:50.998997Z",
+      "phone": "",
+      "confirmed_at": "2026-01-09T20:59:50.998997Z",
+      "last_sign_in_at": "2026-01-09T21:00:02.350633Z",
+      "app_metadata": {
+        "provider": "email",
+        "providers": [
+          "email"
+        ]
+      },
+      "user_metadata": {
+        "company_name": "Nutrisalva SA de CV",
+        "email_verified": true,
+        "full_name": "Diego Castro",
+        "user_type": "comprador"
+      },
+      "identities": null,
+      "created_at": "2026-01-09T20:59:50.933774Z",
+      "updated_at": "2026-01-09T21:00:02.40087Z",
+      "is_anonymous": false
+    },
+    {
+      "id": "d29391ab-eb78-415d-8455-cc1c17e6b976",
+      "aud": "authenticated",
+      "role": "authenticated",
+      "email": "test123@gmail.com",
+      "email_confirmed_at": "2025-12-19T04:57:06.950504Z",
+      "phone": "",
+      "confirmed_at": "2025-12-19T04:57:06.950504Z",
+      "last_sign_in_at": "2025-12-19T04:57:27.620568Z",
+      "app_metadata": {
+        "provider": "email",
+        "providers": [
+          "email"
+        ]
+      },
+      "user_metadata": {
+        "company_name": "Test ",
+        "email_verified": true,
+        "full_name": "Test",
+        "user_type": "vendedor"
+      },
+      "identities": null,
+      "created_at": "2025-12-19T04:57:06.925987Z",
+      "updated_at": "2025-12-19T04:57:27.632611Z",
+      "is_anonymous": false
+    },
+    {
+      "id": "9cb58fcd-7fe1-4adc-8aff-6d5d4b0f9315",
+      "aud": "authenticated",
+      "role": "authenticated",
+      "email": "mrguayo4820044@gmail.com",
+      "email_confirmed_at": "2025-12-19T00:18:31.45708Z",
+      "phone": "",
+      "confirmed_at": "2025-12-19T00:18:31.45708Z",
+      "last_sign_in_at": "2025-12-19T00:18:39.194737Z",
+      "app_metadata": {
+        "provider": "email",
+        "providers": [
+          "email"
+        ]
+      },
+      "user_metadata": {
+        "company_name": "12",
+        "email_verified": true,
+        "full_name": "Kevin Eduardo Menjivar Peñate",
+        "user_type": "vendedor"
+      },
+      "identities": null,
+      "created_at": "2025-12-19T00:18:31.439628Z",
+      "updated_at": "2025-12-19T00:18:39.216833Z",
+      "is_anonymous": false
+    }
+  ],
+  "publicProfiles": [
+    {
+      "id": "90457521-c4f8-4cb7-baaf-78484f751bf2",
+      "full_name": "API Test User",
+      "email": "api_test_1769214643232@example.com",
+      "phone": "1234567890",
+      "country": "Testland",
+      "user_type": "comprador",
+      "created_at": "2026-01-24T00:30:43.766894+00:00",
+      "updated_at": "2026-01-24T00:30:43.766894+00:00",
+      "company_name": "API Test Co",
+      "role": "user"
+    },
+    {
+      "id": "454fb28f-cf45-42fb-a251-2edfb9056546",
+      "full_name": "API Test User",
+      "email": "api_test_1769214578535@example.com",
+      "phone": "1234567890",
+      "country": "Testland",
+      "user_type": "comprador",
+      "created_at": "2026-01-24T00:29:39.159371+00:00",
+      "updated_at": "2026-01-24T00:29:39.159371+00:00",
+      "company_name": "API Test Co",
+      "role": "user"
+    },
+    {
+      "id": "ea3c6794-5e4b-43ec-886e-a2566b952f55",
+      "full_name": "Test User",
+      "email": "test_1769214552827@example.com",
+      "phone": null,
+      "country": null,
+      "user_type": "comprador",
+      "created_at": "2026-01-24T00:29:13.398508+00:00",
+      "updated_at": "2026-01-24T00:29:13.398508+00:00",
+      "company_name": "Test Company",
+      "role": "user"
+    },
+    {
+      "id": "c566b7c7-676e-4339-9d94-01d22669cfc3",
+      "full_name": "ewrewrew",
+      "email": "123456@gmail.com",
+      "phone": "322323232",
+      "country": "3wq32",
+      "user_type": "comprador",
+      "created_at": "2026-01-23T19:10:26.562176+00:00",
+      "updated_at": "2026-01-23T19:10:26.562176+00:00",
+      "company_name": "werwerwe",
+      "role": "user"
+    },
+    {
+      "id": "f2159cda-d059-45ce-8aed-84e878469c4d",
+      "full_name": "STEVEN VALVERDE",
+      "email": "jonyvalverde0609@gmail.com",
+      "phone": "5930979426108",
+      "country": "Ecuador",
+      "user_type": "vendedor",
+      "created_at": "2026-01-23T01:24:03.384116+00:00",
+      "updated_at": "2026-01-23T01:24:03.384116+00:00",
+      "company_name": "EJE AGRÍCOLA B.A",
+      "role": "user"
+    },
+    {
+      "id": "8067ecc4-13aa-4688-ae82-d707d645bfd3",
+      "full_name": "Jose Manuel",
+      "email": "josemanuelcardozoku038@gmail.com",
+      "phone": "529811813069",
+      "country": "México ",
+      "user_type": "vendedor",
+      "created_at": "2026-01-20T18:31:32.609259+00:00",
+      "updated_at": "2026-01-20T18:31:32.609259+00:00",
+      "company_name": "No tengo ",
+      "role": "user"
+    },
+    {
+      "id": "da684faa-3382-48f2-8794-d76246e52a5e",
+      "full_name": "Jennifer Perez",
+      "email": "bajioagrifoods@outlook.com",
+      "phone": "454463296163",
+      "country": "mexico",
+      "user_type": "vendedor",
+      "created_at": "2026-01-15T15:11:11.04677+00:00",
+      "updated_at": "2026-01-15T15:11:11.04677+00:00",
+      "company_name": "Bajio Agri Foods",
+      "role": "user"
+    },
+    {
+      "id": "3df59825-b3a3-4793-be46-a255a7d5b9ae",
+      "full_name": "Diego Castro",
+      "email": "diego.castro.c@hotmail.com",
+      "phone": "50373084821",
+      "country": "El Salvador",
+      "user_type": "comprador",
+      "created_at": "2026-01-09T20:59:51.490053+00:00",
+      "updated_at": "2026-01-09T20:59:51.490053+00:00",
+      "company_name": "Nutrisalva SA de CV",
+      "role": "user"
+    },
+    {
+      "id": "c00ee604-74ab-4589-aef1-5b8c067b2a5d",
+      "full_name": "test",
+      "email": "testuser@gmail.com",
+      "phone": "50300000000",
+      "country": "El Salvador",
+      "user_type": "vendedor",
+      "created_at": "2025-12-18T23:47:10.702685+00:00",
+      "updated_at": "2025-12-18T23:47:10.702685+00:00",
+      "company_name": "test sa",
+      "role": "user"
+    },
+    {
+      "id": "57b0c950-5397-42c9-b560-1459b21f8d8f",
+      "full_name": "Agrilpa admin",
+      "email": "agrilpasv@gmail.com",
+      "phone": "503111111",
+      "country": "El Salvador",
+      "user_type": "empresa",
+      "created_at": "2025-12-18T21:40:58.70431+00:00",
+      "updated_at": "2025-12-18T21:40:58.70431+00:00",
+      "company_name": "Agrilpa",
+      "role": "admin"
+    }
+  ],
+  "errors": {
+    "auth": null,
+    "profile": null
+  }
+}
