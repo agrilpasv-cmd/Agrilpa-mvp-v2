@@ -40,62 +40,114 @@ export async function POST(request: Request) {
         }
 
         // Update the quotation status
-        const { data, error } = await supabaseAdmin
+        const { data: updateData, error: updateError } = await supabaseAdmin
             .from("quotations")
-            .update({ status })
+            .update({ status: status })
             .eq("id", quotationId)
             .select()
 
-        if (error) {
-            console.error("Error updating quotation:", error)
+        if (updateError) {
+            console.error("Error updating quotation status:", updateError)
             return NextResponse.json(
-                { success: false, error: error.message },
+                { success: false, error: updateError.message },
                 { status: 500 }
             )
         }
 
-        // If accepted, create an order in the orders table
+        const updateResult = updateData?.[0]
+
+        // If accepted, create a record in the new 'orders' table (Unified Sales source)
         let orderCreated = null
         if (status === "accepted") {
-            // Create order in the orders table
+            // 0. Fetch the actual product to get accurate details
+            const { data: productData } = await supabaseAdmin
+                .from("user_products")
+                .select("slug, name, image, vendor_id, id")
+                .eq("id", quotation.product_id)
+                .single()
+
+            const actualSellerId = productData?.vendor_id || quotation.seller_id
+            const actualName = productData?.name || quotation.product_title
+            const actualImage = productData?.image || quotation.product_image
+
+            // 1. Create Order record
+            const orderPayload: any = {
+                seller_id: actualSellerId,
+                product_id: quotation.product_id,
+                product_name: actualName,
+                product_image: actualImage,
+                quantity: quotation.quantity,
+                unit_price: 0, // Negotiated in quotation
+                total_price: 0, // Negotiated
+                buyer_name: quotation.buyer_name,
+                buyer_email: quotation.email,
+                buyer_phone: quotation.phone_number ? `+${quotation.country_code}${quotation.phone_number}` : null,
+                shipping_address: quotation.destination_country || "A convenir",
+                status: "pending",
+                origin: "quotation",
+                quotation_id: quotationId,
+                is_read_seller: false,
+                created_at: new Date().toISOString()
+            }
+
             const { data: orderData, error: orderError } = await supabaseAdmin
                 .from("orders")
-                .insert([
-                    {
-                        quotation_id: quotationId,
-                        product_id: quotation.product_id,
-                        product_title: quotation.product_title,
-                        product_image: quotation.product_image,
-                        seller_id: quotation.seller_id,
-                        buyer_name: quotation.buyer_name,
-                        buyer_email: quotation.email,
-                        buyer_phone: quotation.phone_number ? `+${quotation.country_code}${quotation.phone_number}` : null,
-                        contact_method: quotation.contact_method,
-                        quantity: quotation.quantity,
-                        destination_country: quotation.destination_country,
-                        estimated_date: quotation.estimated_date,
-                        notes: quotation.notes,
-                        status: "confirmed",
-                        created_at: new Date().toISOString()
-                    }
-                ])
+                .insert([orderPayload])
                 .select()
 
             if (orderError) {
-                console.error("Error creating order:", orderError)
-                // If table doesn't exist, log but continue
-                if (orderError.message.includes("relation") && orderError.message.includes("does not exist")) {
-                    console.log("Orders table doesn't exist yet. Please create it in Supabase.")
+                console.error("Error creating order from quotation:", orderError)
+
+                // If the orders table doesn't exist yet, provide the SQL
+                if (orderError.message.includes("relation \"orders\" does not exist")) {
+                    return NextResponse.json({
+                        success: false,
+                        error: "La tabla 'orders' no existe. Por favor ejecute el script SQL scripts/026_create_orders_table.sql en Supabase.",
+                        sqlToRun: `
+CREATE TABLE orders (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    buyer_id UUID,
+    seller_id UUID NOT NULL,
+    product_id UUID NOT NULL,
+    product_name TEXT NOT NULL,
+    product_image TEXT,
+    quantity DECIMAL NOT NULL,
+    unit_price DECIMAL DEFAULT 0,
+    total_price DECIMAL DEFAULT 0,
+    buyer_name TEXT NOT NULL,
+    buyer_email TEXT NOT NULL,
+    buyer_phone TEXT,
+    shipping_address TEXT,
+    status TEXT DEFAULT 'pending',
+    origin TEXT DEFAULT 'direct',
+    quotation_id UUID REFERENCES quotations(id),
+    is_read_seller BOOLEAN DEFAULT false,
+    is_read_buyer BOOLEAN DEFAULT true,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS idx_orders_seller_id ON orders(seller_id);
+-- Enable RLS
+ALTER TABLE orders ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Sellers can view their own orders" ON orders FOR SELECT USING (auth.uid() = seller_id);
+CREATE POLICY "Service role has full access to orders" ON orders FOR ALL USING (true);
+                        `
+                    }, { status: 500 })
                 }
+
+                return NextResponse.json({
+                    success: false,
+                    error: "Error al crear registro de pedido: " + orderError.message
+                }, { status: 500 })
             } else {
                 orderCreated = orderData?.[0]
-                console.log("Order created:", orderCreated)
+                console.log("Order created from quotation:", orderCreated)
             }
         }
 
         return NextResponse.json({
             success: true,
-            quotation: data[0],
+            quotation: updateResult || quotation,
             order: orderCreated
         })
     } catch (error) {

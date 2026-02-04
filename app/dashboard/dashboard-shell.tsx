@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import Image from "next/image"
@@ -17,6 +17,12 @@ import {
     Truck,
     Plus,
     LayoutDashboard,
+    ShoppingCart,
+    Users,
+    Eye,
+    Star,
+    Mail,
+    DollarSign,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -28,10 +34,37 @@ export default function DashboardShell({
     children: React.ReactNode
 }) {
     const router = useRouter()
+    const [isAdmin, setIsAdmin] = useState(false)
     const [isSidebarOpen, setIsSidebarOpen] = useState(false)
     const { counts } = useDashboard()
 
-    const menuItems = [
+    useEffect(() => {
+        const checkUser = async () => {
+            const { createBrowserClient } = await import("@/lib/supabase/client")
+            const supabase = createBrowserClient()
+            const { data: { user } } = await supabase.auth.getUser()
+            if (user && user.email === "agrilpasv@gmail.com") {
+                setIsAdmin(true)
+            }
+        }
+        checkUser()
+    }, [])
+
+    const adminMenuItems = [
+        { href: "/inicio", label: "Inicio", icon: Home, notifications: 0 },
+        { href: "/dashboard", label: "Admin Dashboard", icon: LayoutDashboard, notifications: 0 },
+        { href: "/admin/usuarios", label: "Gestión de Usuarios", icon: Users, notifications: 0 },
+        { href: "/admin/publicaciones", label: "Publicaciones", icon: Package, notifications: 0 },
+        { href: "/admin/visibilidad", label: "Visibilidad", icon: Eye, notifications: 0 },
+        { href: "/admin/reviews", label: "Reviews", icon: Star, notifications: 0 },
+        { href: "/admin/suscripciones", label: "Suscripciones", icon: Mail, notifications: 0 },
+        { href: "/admin/financiamiento", label: "Financiamiento", icon: DollarSign, notifications: 0 },
+        { href: "/admin/logistica", label: "Logística", icon: Truck, notifications: 0 },
+        { href: "/admin/compras", label: "Compras Globales", icon: ShoppingCart, notifications: 0 },
+        { href: "/admin/contactanos", label: "Contáctanos", icon: MessageSquare, notifications: 0 },
+    ]
+
+    const userMenuItems = [
         { href: "/inicio", label: "Inicio", icon: Home, notifications: 0 },
         { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard, notifications: 0 },
         { href: "/dashboard/perfil", label: "Mi Perfil", icon: FileText, notifications: counts.perfil },
@@ -47,7 +80,8 @@ export default function DashboardShell({
             icon: ClipboardList,
             notifications: counts.cotizaciones,
         },
-        { href: "/dashboard/pedidos", label: "Pedidos", icon: Package, notifications: counts.pedidos },
+        { href: "/dashboard/ventas", label: "Mis Ventas", icon: Package, notifications: counts.ventas },
+        { href: "/dashboard/compras", label: "Mis Compras", icon: ShoppingCart, notifications: counts.compras },
         {
             href: "/dashboard/logistica",
             label: "Logística",
@@ -63,6 +97,8 @@ export default function DashboardShell({
         { href: "/dashboard/mensajes", label: "Mensajes", icon: MessageSquare, notifications: counts.mensajes },
         { href: "/dashboard/configuracion", label: "Configuración", icon: Settings, notifications: 0 },
     ]
+
+    const menuItems = isAdmin ? adminMenuItems : userMenuItems
 
     const handleLogout = async () => {
         try {

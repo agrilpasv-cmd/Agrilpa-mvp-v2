@@ -36,9 +36,26 @@ export async function GET(request: NextRequest) {
             return NextResponse.json({ error: "Product not found" }, { status: 404 })
         }
 
-        // Return data for immediate UI update
+        // Increment view count
+        const currentViews = data.views || 0
+        const { error: updateError } = await supabase
+            .from("user_products")
+            .update({ views: currentViews + 1 })
+            .eq("id", productId)
+
+        if (updateError) {
+            console.error("[v0] Error incrementing views:", updateError)
+        } else {
+             // Force revalidation of the dashboard so the user sees the new count immediately
+             revalidatePath('/dashboard/mis-publicaciones')
+        }
+
+        // Return data with incremented view count for immediate UI update
         return NextResponse.json({
-            product: data
+            product: {
+                ...data,
+                views: currentViews + 1
+            }
         }, { status: 200 })
     } catch (error) {
         console.error("[v0] API error:", error)

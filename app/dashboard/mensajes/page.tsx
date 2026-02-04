@@ -1,172 +1,141 @@
-"use client"
-
-import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Search, Send, Calendar } from 'lucide-react'
-import { useState } from "react"
+import { Search, Send, MoreVertical, Phone, Video } from "lucide-react"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 
-const conversations = [
-  {
-    id: 1,
-    name: "Juan López",
-    empresa: "Distribuidora Nacional",
-    mensaje: "Hola, necesito más información sobre el envío...",
-    fecha: "Hace 2 horas",
-    noLeidos: 2,
-    avatar: "JL",
-  },
-  {
-    id: 2,
-    name: "María García",
-    empresa: "Industria de Alimentos",
-    mensaje: "¿Cuál es el precio por mayor para 500kg?",
-    fecha: "Hace 5 horas",
-    noLeidos: 0,
-    avatar: "MG",
-  },
-  {
-    id: 3,
-    name: "Carlos Mendez",
-    empresa: "Cadena de Supermercados",
-    mensaje: "Los productos llegaron perfectos, gracias",
-    fecha: "Hace 1 día",
-    noLeidos: 0,
-    avatar: "CM",
-  },
-]
+import ConstructionOverlay from "@/components/dashboard/construction-overlay"
 
-export default function MessagesPage() {
-  const [selectedConversation, setSelectedConversation] = useState(conversations[0])
-  const [message, setMessage] = useState("")
-  
-  const [searchTerm, setSearchTerm] = useState("")
-  const [startDate, setStartDate] = useState("")
-  const [endDate, setEndDate] = useState("")
-
-  const filteredConversations = conversations.filter((conv) =>
-    conv.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    conv.empresa.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    conv.mensaje.toLowerCase().includes(searchTerm.toLowerCase())
-  )
-
+export default function MensajesPage() {
   return (
-    <div className="p-8">
-      <div className="max-w-6xl mx-auto">
-        {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold text-foreground mb-2">Mensajes</h1>
-          <p className="text-muted-foreground">Comunícate con tus clientes</p>
-        </div>
-
-        <Card className="mb-6 p-6">
-          <h3 className="font-semibold mb-4">Filtros de Búsqueda</h3>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+    <ConstructionOverlay>
+      <div className="flex h-[calc(100vh-8rem)] w-full flex-col rounded-lg border bg-background shadow-sm lg:flex-row">
+        {/* Sidebar - Lista de contactos */}
+        <div className="flex w-full flex-col border-r lg:w-80">
+          <div className="p-4 border-b">
             <div className="relative">
-              <Search className="absolute left-3 top-3 w-4 h-4 text-muted-foreground" />
+              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder="Buscar por nombre, empresa..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10"
-              />
-            </div>
-            <div className="relative">
-              <Calendar className="absolute left-3 top-3 w-4 h-4 text-muted-foreground" />
-              <Input
-                type="date"
-                placeholder="Fecha inicial"
-                value={startDate}
-                onChange={(e) => setStartDate(e.target.value)}
-                className="pl-10"
-              />
-            </div>
-            <div className="relative">
-              <Calendar className="absolute left-3 top-3 w-4 h-4 text-muted-foreground" />
-              <Input
-                type="date"
-                placeholder="Fecha final"
-                value={endDate}
-                onChange={(e) => setEndDate(e.target.value)}
-                className="pl-10"
+                type="search"
+                placeholder="Buscar mensajes..."
+                className="pl-8 bg-muted/50"
               />
             </div>
           </div>
-        </Card>
-
-        {/* Messages Layout */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-[600px]">
-          {/* Conversations List */}
-          <Card className="p-4 overflow-y-auto">
-            <div className="space-y-2">
-              {filteredConversations.length === 0 ? (
-                <div className="text-center py-8 text-muted-foreground">
-                  No se encontraron conversaciones
-                </div>
-              ) : (
-                filteredConversations.map((conv) => (
-                  <div
-                    key={conv.id}
-                    onClick={() => setSelectedConversation(conv)}
-                    className={`p-3 rounded-lg cursor-pointer transition-colors ${
-                      selectedConversation.id === conv.id
-                        ? "bg-primary text-primary-foreground"
-                        : "hover:bg-muted text-foreground"
+          <div className="flex-1 overflow-y-auto">
+            <div className="flex flex-col gap-1 p-2">
+              {[
+                { name: "Juan Pérez", msg: "Hola, ¿está disponible el producto?", time: "10:30 AM", active: true, unread: 2 },
+                { name: "María Garcia", msg: "Gracias por la información", time: "Ayer", active: false, unread: 0 },
+                { name: "Carlos López", msg: "Me interesa el lote de maíz", time: "Lun", active: false, unread: 0 },
+                { name: "Ana Martínez", msg: "¿Cuándo sería la entrega?", time: "Dom", active: false, unread: 0 },
+                { name: "Pedro Sánchez", msg: "Confirmado el pago", time: "Semana pasada", active: false, unread: 0 },
+              ].map((chat, i) => (
+                <button
+                  key={i}
+                  className={`flex items-start gap-3 rounded-md p-3 text-left transition-colors hover:bg-accent/50 ${chat.active ? "bg-accent" : ""
                     }`}
-                  >
-                    <div className="flex items-center justify-between mb-1">
-                      <p className="font-semibold">{conv.name}</p>
-                      {conv.noLeidos > 0 && (
-                        <span className="px-2 py-1 bg-red-500 text-white text-xs rounded-full">{conv.noLeidos}</span>
-                      )}
+                >
+                  <Avatar className="h-10 w-10 border">
+                    <AvatarImage src={`/placeholder-user-${i}.jpg`} alt={chat.name} />
+                    <AvatarFallback>{chat.name.substring(0, 2).toUpperCase()}</AvatarFallback>
+                  </Avatar>
+                  <div className="flex-1 overflow-hidden">
+                    <div className="flex items-center justify-between">
+                      <span className="font-medium">{chat.name}</span>
+                      <span className="text-xs text-muted-foreground">{chat.time}</span>
                     </div>
-                    <p className="text-sm opacity-75 line-clamp-1">{conv.empresa}</p>
+                    <p className="line-clamp-1 text-sm text-muted-foreground">{chat.msg}</p>
                   </div>
-                ))
-              )}
+                  {chat.unread > 0 && (
+                    <span className="flex h-5 w-5 items-center justify-center rounded-full bg-primary text-[10px] text-primary-foreground">
+                      {chat.unread}
+                    </span>
+                  )}
+                </button>
+              ))}
             </div>
-          </Card>
+          </div>
+        </div>
 
-          {/* Chat Area */}
-          <Card className="lg:col-span-2 p-6 flex flex-col">
-            <div className="border-b border-border pb-4 mb-4">
-              <h3 className="text-lg font-semibold text-foreground">{selectedConversation.name}</h3>
-              <p className="text-sm text-muted-foreground">{selectedConversation.empresa}</p>
-            </div>
-
-            {/* Messages */}
-            <div className="flex-1 overflow-y-auto mb-4 space-y-4">
-              <div className="flex justify-start">
-                <div className="bg-muted rounded-lg p-3 max-w-xs">
-                  <p className="text-foreground">{selectedConversation.mensaje}</p>
-                  <p className="text-xs text-muted-foreground mt-1">{selectedConversation.fecha}</p>
-                </div>
-              </div>
-              <div className="flex justify-end">
-                <div className="bg-primary text-primary-foreground rounded-lg p-3 max-w-xs">
-                  <p>{"..."}</p>
-                  <p className="text-xs opacity-75 mt-1">Hace 1 hora</p>
-                </div>
+        {/* Main Chat Area */}
+        <div className="flex flex-1 flex-col">
+          {/* Header */}
+          <div className="flex items-center justify-between border-b p-4">
+            <div className="flex items-center gap-3">
+              <Avatar className="h-10 w-10 border">
+                <AvatarFallback>JP</AvatarFallback>
+              </Avatar>
+              <div>
+                <h3 className="font-medium">Juan Pérez</h3>
+                <p className="text-xs text-muted-foreground">En línea hace 5 min</p>
               </div>
             </div>
-
-            {/* Input Area */}
-            <div className="flex gap-2">
-              <input
-                type="text"
-                value={message}
-                onChange={(e) => setMessage(e.target.value)}
-                placeholder="Escribe tu mensaje..."
-                className="flex-1 px-4 py-2 border border-border rounded-lg bg-background text-foreground placeholder:text-muted-foreground"
-              />
-              <Button size="sm" className="gap-2">
-                <Send className="w-4 h-4" />
-                Enviar
+            <div className="flex items-center gap-2">
+              <Button variant="ghost" size="icon">
+                <Phone className="h-5 w-5 text-muted-foreground" />
+              </Button>
+              <Button variant="ghost" size="icon">
+                <Video className="h-5 w-5 text-muted-foreground" />
+              </Button>
+              <Button variant="ghost" size="icon">
+                <MoreVertical className="h-5 w-5 text-muted-foreground" />
               </Button>
             </div>
-          </Card>
+          </div>
+
+          {/* Messages */}
+          <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-muted/10">
+            <div className="flex justify-start">
+              <div className="max-w-[80%] rounded-2xl rounded-tl-none bg-muted px-4 py-2 text-sm">
+                Hola, estoy interesado en el lote de semillas que publicaste.
+              </div>
+              <span className="ml-2 self-end text-xs text-muted-foreground">10:30 AM</span>
+            </div>
+
+            <div className="flex justify-end">
+              <span className="mr-2 self-end text-xs text-muted-foreground">10:32 AM</span>
+              <div className="max-w-[80%] rounded-2xl rounded-tr-none bg-primary px-4 py-2 text-sm text-primary-foreground">
+                ¡Hola Juan! Claro, todavía está disponible. ¿Cuántas toneladas necesitas?
+              </div>
+            </div>
+
+            <div className="flex justify-start">
+              <div className="max-w-[80%] rounded-2xl rounded-tl-none bg-muted px-4 py-2 text-sm">
+                Necesitaría unas 5 toneladas para empezar. ¿Haces envíos a Santa Cruz?
+              </div>
+              <span className="ml-2 self-end text-xs text-muted-foreground">10:33 AM</span>
+            </div>
+
+            <div className="flex justify-end">
+              <span className="mr-2 self-end text-xs text-muted-foreground">10:35 AM</span>
+              <div className="max-w-[80%] rounded-2xl rounded-tr-none bg-primary px-4 py-2 text-sm text-primary-foreground">
+                Sí, hacemos envíos a todo el país. El costo del flete dependería de la ubicación exacta.
+              </div>
+            </div>
+
+            <div className="flex justify-start">
+              <div className="max-w-[80%] rounded-2xl rounded-tl-none bg-muted px-4 py-2 text-sm">
+                Perfecto, déjame revisar y te confirmo más tarde.
+              </div>
+              <span className="ml-2 self-end text-xs text-muted-foreground">10:36 AM</span>
+            </div>
+          </div>
+
+          {/* Input Area */}
+          <div className="p-4 border-t bg-background">
+            <div className="flex gap-2">
+              <Input
+                placeholder="Escribe un mensaje..."
+                className="flex-1 bg-muted/50 border-0 focus-visible:ring-1"
+              />
+              <Button size="icon">
+                <Send className="h-4 w-4" />
+                <span className="sr-only">Enviar</span>
+              </Button>
+            </div>
+          </div>
         </div>
       </div>
-    </div>
+    </ConstructionOverlay>
   )
 }

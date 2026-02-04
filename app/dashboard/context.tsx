@@ -6,7 +6,9 @@ interface DashboardContextType {
     counts: {
         publicaciones: number
         cotizaciones: number
-        pedidos: number
+        pedidos: number // Keeping for now for backward compatibility if needed temporarily
+        compras: number
+        ventas: number
         logistica: number
         transacciones: number
         mensajes: number
@@ -23,6 +25,8 @@ export function DashboardProvider({ children }: { children: React.ReactNode }) {
         publicaciones: 0,
         cotizaciones: 0,
         pedidos: 0,
+        compras: 0,
+        ventas: 0,
         logistica: 0,
         transacciones: 0,
         mensajes: 0,
@@ -35,6 +39,7 @@ export function DashboardProvider({ children }: { children: React.ReactNode }) {
             const res = await fetch("/api/dashboard/sidebar-counts", { cache: "no-store" })
             if (res.ok) {
                 const data = await res.json()
+                console.log("[DASHBOARD] Received counts:", data)
                 setCounts((prev) => ({ ...prev, ...data }))
             }
         } catch (e) {

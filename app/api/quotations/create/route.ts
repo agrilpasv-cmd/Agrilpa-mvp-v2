@@ -67,6 +67,14 @@ export async function POST(request: Request) {
         if (error) {
             console.error("Error creating quotation:", error)
 
+            // If column doesn't exist
+            if (error.message.includes("column \"is_read\"") && error.message.includes("does not exist")) {
+                return NextResponse.json({
+                    error: "La columna 'is_read' no existe en la tabla 'quotations'.",
+                    sqlToRun: "ALTER TABLE quotations ADD COLUMN is_read BOOLEAN DEFAULT false;"
+                }, { status: 500 })
+            }
+
             // If table doesn't exist, we need to create it
             if (error.message.includes("relation") && error.message.includes("does not exist")) {
                 return NextResponse.json({

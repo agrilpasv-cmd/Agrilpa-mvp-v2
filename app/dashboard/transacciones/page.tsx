@@ -1,178 +1,236 @@
 "use client"
 
-import { useState } from "react"
-import { Card } from "@/components/ui/card"
+import { useState, useEffect } from "react"
+import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
-import { ArrowUpRight, ArrowDownLeft, Search, Calendar } from 'lucide-react'
+import {
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from "@/components/ui/table"
+import {
+    Search,
+    Calendar,
+    ArrowUpRight,
+    ArrowDownLeft,
+    Loader2
+} from "lucide-react"
+import { format } from "date-fns"
+import { es } from "date-fns/locale"
 
-const transactions = [
-  {
-    id: 1,
-    type: "venta",
-    producto: "Tomates Frescos (100kg)",
-    cliente: "Distribuidora Nacional",
-    cantidad: "$1,200",
-    fecha: "2024-11-13",
-    estado: "Completada",
-  },
-  {
-    id: 2,
-    type: "compra",
-    producto: "Insumos Agrícolas",
-    cliente: "Proveedor Agrícola S.A.",
-    cantidad: "$450",
-    fecha: "2024-11-12",
-    estado: "Completada",
-  },
-  {
-    id: 3,
-    type: "venta",
-    producto: "Maíz Premium (250kg)",
-    cliente: "Industria de Alimentos",
-    cantidad: "$2,800",
-    fecha: "2024-11-11",
-    estado: "Pendiente de Pago",
-  },
-  {
-    id: 4,
-    type: "venta",
-    producto: "Papas Selectas (150kg)",
-    cliente: "Cadena de Supermercados",
-    cantidad: "$800",
-    fecha: "2024-11-10",
-    estado: "Completada",
-  },
-]
+interface Transaction {
+    id: string
+    created_at: string
+    product_name: string
+    client_name: string
+    price_usd: number
+    status: string
+    type: 'purchase' | 'sale'
+}
 
-export default function TransactionsPage() {
-  const [searchTerm, setSearchTerm] = useState("")
-  const [startDate, setStartDate] = useState("")
-  const [endDate, setEndDate] = useState("")
+import ConstructionOverlay from "@/components/dashboard/construction-overlay"
 
-  const filteredTransactions = transactions.filter((tx) => {
-    const matchesSearch = 
-      tx.producto.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      tx.cliente.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      tx.type.toLowerCase().includes(searchTerm.toLowerCase())
+export default function TransaccionesPage() {
+    const [transactions, setTransactions] = useState<Transaction[]>([])
+    const [isLoading, setIsLoading] = useState(true)
+    const [searchTerm, setSearchTerm] = useState("")
 
-    const txDate = new Date(tx.fecha)
-    const matchesDateRange = 
-      (!startDate || txDate >= new Date(startDate)) &&
-      (!endDate || txDate <= new Date(endDate))
+    useEffect(() => {
+        const fetchData = async () => {
+            try {
+                // Fetch both Sales (as Seller) and Purchases (as Buyer)
+                const [salesRes, purchasesRes] = await Promise.all([
+                    fetch("/api/seller/orders"),
+                    fetch("/api/user/orders")
+                ])
 
-    return matchesSearch && matchesDateRange
-  })
+                let allTransactions: Transaction[] = []
 
-  return (
-    <div className="p-8">
-      <div className="max-w-6xl mx-auto">
-        {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold text-foreground mb-2">Mis Transacciones</h1>
-          <p className="text-muted-foreground">Historial de compras y ventas</p>
-        </div>
+                if (salesRes.ok) {
+                    const salesData = await salesRes.json()
+                    const sales = (salesData.orders || []).map((o: any) => ({
+                        id: o.id,
+                        created_at: o.created_at,
+                        product_name: o.product_name || "Producto",
+                        client_name: o.full_name || o.buyer_name || "Comprador",
+                        price_usd: o.price_usd || 0,
+                        status: o.status || "completed",
+                        type: 'sale' as const
+                    }))
+                    allTransactions = [...allTransactions, ...sales]
+                }
 
-        <Card className="mb-6 p-6">
-          <h3 className="font-semibold mb-4">Filtros de Búsqueda</h3>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="relative">
-              <Search className="absolute left-3 top-3 w-4 h-4 text-muted-foreground" />
-              <Input
-                placeholder="Buscar por producto, cliente, tipo..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10"
-              />
+                if (purchasesRes.ok) {
+                    const purchasesData = await purchasesRes.json()
+                    const purchases = (purchasesData.orders || []).map((o: any) => ({
+                        id: o.id,
+                        created_at: o.created_at,
+                        product_name: o.product_name || "Producto",
+                        client_name: o.seller_name || "Vendedor", // Assuming we might have this, or fallback
+                        price_usd: o.price_usd || 0,
+                        status: o.status || "completed",
+                        type: 'purchase' as const
+                    }))
+                    allTransactions = [...allTransactions, ...purchases]
+                }
+
+                // Sort by date descending
+                allTransactions.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+
+                setTransactions(allTransactions)
+            } catch (error) {
+                console.error("Error fetching transactions:", error)
+            } finally {
+                setIsLoading(false)
+            }
+        }
+
+        fetchData()
+    }, [])
+
+    const filteredTransactions = transactions.filter(t =>
+        t.product_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        t.client_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        t.id.toLowerCase().includes(searchTerm.toLowerCase())
+    )
+
+    const getStatusBadge = (status: string) => {
+        // Map simplified statuses for the UI
+        let label = status
+        let className = "bg-gray-100 text-gray-800 hover:bg-gray-100"
+
+        if (status === "completed" || status === "paid" || status === "delivered") {
+            label = "Completada"
+            className = "bg-green-100 text-green-700 hover:bg-green-100 border-none"
+        } else if (status === "pending" || status === "processing") {
+            label = "Pendiente de Pago"
+            className = "bg-yellow-100 text-yellow-800 hover:bg-yellow-100 border-none"
+        } else if (status === "cancelled" || status === "rejected") {
+            label = "Cancelada"
+            className = "bg-red-100 text-red-700 hover:bg-red-100 border-none"
+        }
+
+        return <Badge className={`${className} rounded-full px-3 font-medium`}>{label}</Badge>
+    }
+
+    if (isLoading) {
+        return (
+            <div className="flex h-[50vh] items-center justify-center">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
             </div>
-            <div className="relative">
-              <Calendar className="absolute left-3 top-3 w-4 h-4 text-muted-foreground" />
-              <Input
-                type="date"
-                placeholder="Fecha inicial"
-                value={startDate}
-                onChange={(e) => setStartDate(e.target.value)}
-                className="pl-10"
-              />
-            </div>
-            <div className="relative">
-              <Calendar className="absolute left-3 top-3 w-4 h-4 text-muted-foreground" />
-              <Input
-                type="date"
-                placeholder="Fecha final"
-                value={endDate}
-                onChange={(e) => setEndDate(e.target.value)}
-                className="pl-10"
-              />
-            </div>
-          </div>
-        </Card>
+        )
+    }
 
-        {/* Transactions Table */}
-        <Card className="overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-muted border-b border-border">
-                <tr>
-                  <th className="px-6 py-4 text-left text-sm font-semibold text-foreground">Tipo</th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold text-foreground">Producto/Cliente</th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold text-foreground">Monto</th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold text-foreground">Fecha</th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold text-foreground">Estado</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-border">
-                {filteredTransactions.length === 0 ? (
-                  <tr>
-                    <td colSpan={5} className="px-6 py-12 text-center text-muted-foreground">
-                      No se encontraron transacciones
-                    </td>
-                  </tr>
-                ) : (
-                  filteredTransactions.map((tx) => (
-                    <tr key={tx.id} className="hover:bg-muted/50 transition-colors">
-                      <td className="px-6 py-4">
-                        <div className="flex items-center gap-2">
-                          {tx.type === "venta" ? (
-                            <ArrowUpRight className="w-5 h-5 text-green-600" />
-                          ) : (
-                            <ArrowDownLeft className="w-5 h-5 text-red-600" />
-                          )}
-                          <span className="text-sm font-medium text-foreground capitalize">{tx.type}</span>
+    return (
+        <ConstructionOverlay>
+            <div className="p-8 space-y-8 max-w-7xl mx-auto">
+                <div className="flex flex-col gap-1">
+                    <h1 className="text-3xl font-bold tracking-tight text-foreground">Mis Transacciones</h1>
+                    <p className="text-muted-foreground">
+                        Historial de compras y ventas
+                    </p>
+                </div>
+
+                {/* Filter Section */}
+                <Card className="shadow-sm border border-border">
+                    <CardContent className="p-6">
+                        <div className="mb-4">
+                            <h2 className="font-semibold text-base mb-4">Filtros de Búsqueda</h2>
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <div className="relative">
+                                    <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+                                    <Input
+                                        placeholder="Buscar por producto, cliente, tipo..."
+                                        className="pl-9 bg-background"
+                                        value={searchTerm}
+                                        onChange={(e) => setSearchTerm(e.target.value)}
+                                    />
+                                </div>
+                                <div className="relative">
+                                    <Calendar className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+                                    <Input
+                                        type="date"
+                                        placeholder="dd/mm/aaaa"
+                                        className="pl-9 bg-background"
+                                    />
+                                </div>
+                                <div className="relative">
+                                    <Calendar className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+                                    <Input
+                                        type="date"
+                                        placeholder="dd/mm/aaaa"
+                                        className="pl-9 bg-background"
+                                    />
+                                </div>
+                            </div>
                         </div>
-                      </td>
-                      <td className="px-6 py-4">
-                        <div>
-                          <p className="font-medium text-foreground">{tx.producto}</p>
-                          <p className="text-sm text-muted-foreground">{tx.cliente}</p>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4">
-                        <span className="font-semibold text-foreground">{tx.cantidad}</span>
-                      </td>
-                      <td className="px-6 py-4">
-                        <span className="text-sm text-muted-foreground">{tx.fecha}</span>
-                      </td>
-                      <td className="px-6 py-4">
-                        <Badge
-                          variant={tx.estado === "Completada" ? "default" : "secondary"}
-                          className={
-                            tx.estado === "Completada"
-                              ? "bg-green-100 text-green-800 hover:bg-green-100"
-                              : "bg-yellow-100 text-yellow-800 hover:bg-yellow-100"
-                          }
-                        >
-                          {tx.estado}
-                        </Badge>
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
-        </Card>
-      </div>
-    </div>
-  )
+                    </CardContent>
+                </Card>
+
+                {/* Table Section */}
+                <Card className="shadow-sm border border-border overflow-hidden">
+                    <div className="p-0">
+                        <Table>
+                            <TableHeader>
+                                <TableRow className="bg-muted/40 hover:bg-muted/40 border-b border-border">
+                                    <TableHead className="w-[120px] font-semibold text-foreground pl-6">Tipo</TableHead>
+                                    <TableHead className="font-semibold text-foreground">Producto/Cliente</TableHead>
+                                    <TableHead className="font-semibold text-foreground">Monto</TableHead>
+                                    <TableHead className="font-semibold text-foreground">Fecha</TableHead>
+                                    <TableHead className="font-semibold text-foreground">Estado</TableHead>
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                                {filteredTransactions.length === 0 ? (
+                                    <TableRow>
+                                        <TableCell colSpan={5} className="h-32 text-center text-muted-foreground">
+                                            No se encontraron transacciones recientes.
+                                        </TableCell>
+                                    </TableRow>
+                                ) : (
+                                    filteredTransactions.map((t) => (
+                                        <TableRow key={t.id} className="hover:bg-muted/10 border-b border-border/50 last:border-0">
+                                            <TableCell className="pl-6 py-4">
+                                                <div className="flex items-center gap-2">
+                                                    {t.type === 'sale' ? (
+                                                        <ArrowUpRight className="h-4 w-4 text-green-600" />
+                                                    ) : (
+                                                        <ArrowDownLeft className="h-4 w-4 text-red-600" />
+                                                    )}
+                                                    <span className="font-medium text-foreground">
+                                                        {t.type === 'sale' ? 'Venta' : 'Compra'}
+                                                    </span>
+                                                </div>
+                                            </TableCell>
+                                            <TableCell className="py-4">
+                                                <div className="flex flex-col">
+                                                    <span className="font-bold text-foreground">{t.product_name}</span>
+                                                    <span className="text-sm text-muted-foreground">{t.client_name}</span>
+                                                </div>
+                                            </TableCell>
+                                            <TableCell className="py-4">
+                                                <span className="font-bold text-foreground">
+                                                    ${t.price_usd.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}
+                                                </span>
+                                            </TableCell>
+                                            <TableCell className="py-4 text-muted-foreground">
+                                                {format(new Date(t.created_at), "yyyy-MM-dd", { locale: es })}
+                                            </TableCell>
+                                            <TableCell className="py-4">
+                                                {getStatusBadge(t.status)}
+                                            </TableCell>
+                                        </TableRow>
+                                    ))
+                                )}
+                            </TableBody>
+                        </Table>
+                    </div>
+                </Card>
+            </div>
+        </ConstructionOverlay>
+    )
 }

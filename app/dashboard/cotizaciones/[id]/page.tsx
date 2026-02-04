@@ -24,6 +24,7 @@ import {
     MapPin,
     Truck
 } from "lucide-react"
+import { useDashboard } from "../../context"
 
 interface QuotationDetail {
     id: string
@@ -50,6 +51,7 @@ export default function QuotationDetailPage({ params }: { params: Promise<{ id: 
     const [isLoading, setIsLoading] = useState(true)
     const [isUpdating, setIsUpdating] = useState(false)
     const [error, setError] = useState<string | null>(null)
+    const { refreshCounts } = useDashboard()
 
     useEffect(() => {
         const loadQuotation = async () => {
@@ -69,6 +71,18 @@ export default function QuotationDetailPage({ params }: { params: Promise<{ id: 
                     const found = data.quotations.find((q: QuotationDetail) => q.id === id)
                     if (found) {
                         setQuotation(found)
+                        // Mark as read if it's not already read (we don't have is_read in the interface yet but we can call it anyway or add it)
+                        // Actually let's just call the API to be sure.
+                        try {
+                            await fetch("/api/quotations/mark-read", {
+                                method: "POST",
+                                body: JSON.stringify({ quotationId: id })
+                            })
+                            // Refresh sidebar counts
+                            refreshCounts()
+                        } catch (e) {
+                            console.error("Error marking as read", e)
+                        }
                     } else {
                         setError("Cotización no encontrada")
                     }
@@ -103,9 +117,25 @@ export default function QuotationDetailPage({ params }: { params: Promise<{ id: 
             const data = await response.json()
             if (data.success) {
                 setQuotation({ ...quotation, status: newStatus })
+                // Refresh sidebar counts after status change
+                refreshCounts()
+
+                // Redirect after 1 second
+                if (newStatus === "accepted") {
+                    setTimeout(() => {
+                        router.push("/dashboard/ventas")
+                    }, 1000)
+                } else if (newStatus === "rejected") {
+                    setTimeout(() => {
+                        router.push("/dashboard/cotizaciones")
+                    }, 1000)
+                }
+            } else {
+                alert("Error al actualizar el estado: " + (data.error || "Desconocido"))
             }
-        } catch (error) {
+        } catch (error: any) {
             console.error("Error updating status:", error)
+            alert("Error al actualizar el estado. Por favor intenta de nuevo.")
         } finally {
             setIsUpdating(false)
         }
@@ -173,24 +203,6 @@ export default function QuotationDetailPage({ params }: { params: Promise<{ id: 
                             Recibida el {formatDateTime(quotation.created_at)}
                         </p>
                     </div>
-                    {quotation.status === "pending" && (
-                        <Badge className="bg-yellow-500 text-white px-4 py-2">
-                            <Clock className="w-4 h-4 mr-2" />
-                            Pendiente
-                        </Badge>
-                    )}
-                    {quotation.status === "accepted" && (
-                        <Badge className="bg-green-600 text-white px-4 py-2">
-                            <CheckCircle className="w-4 h-4 mr-2" />
-                            Aceptada
-                        </Badge>
-                    )}
-                    {quotation.status === "rejected" && (
-                        <Badge className="bg-red-600 text-white px-4 py-2">
-                            <XCircle className="w-4 h-4 mr-2" />
-                            Rechazada
-                        </Badge>
-                    )}
                 </div>
 
                 {/* Main Grid */}
@@ -298,7 +310,7 @@ export default function QuotationDetailPage({ params }: { params: Promise<{ id: 
                                                 <Truck className="w-5 h-5 text-primary" />
                                             </div>
                                             <div>
-                                                <p className be="text-xs text-muted-foreground">Fecha Estimada de Entrega</p>
+                                                <p className="text-xs text-muted-foreground">Fecha Estimada de Entrega</p>
                                                 <p className="font-semibold">{formatDate(quotation.estimated_date)}</p>
                                             </div>
                                         </div>

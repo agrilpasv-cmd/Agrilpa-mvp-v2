@@ -154,7 +154,7 @@ function AuthPageContent() {
             password: formData.password,
             fullName: formData.fullName,
             companyName: formData.companyName,
-            phone: `${formData.countryCode}${formData.phoneNumber}`,
+            phone: `+${formData.countryCode} ${formData.phoneNumber}`,
             country: formData.country,
             userType: formData.userType,
             product1: formData.product1,

@@ -39,9 +39,9 @@ export default function ComingSoon() {
             window.location.href = "/admin"
             return
           }
-          console.log("[v0] Regular user detected, redirecting to /dashboard")
-          window.location.href = "/dashboard"
-          return
+          // console.log("[v0] Regular user detected, redirecting to /dashboard")
+          // window.location.href = "/dashboard"
+          // return
         }
 
         const supabase = createBrowserClient()
@@ -63,9 +63,9 @@ export default function ComingSoon() {
             return
           }
 
-          console.log("[v0] Regular user detected, redirecting to /dashboard")
-          window.location.href = "/dashboard"
-          return
+          // console.log("[v0] Regular user detected, redirecting to /dashboard")
+          // window.location.href = "/dashboard"
+          // return
         }
       } catch (err) {
         console.error("[v0] Error checking auth:", err)

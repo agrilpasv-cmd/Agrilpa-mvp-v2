@@ -1,5 +1,5 @@
-
 import { createClient } from "@/lib/supabase/server"
+import { createClient as createAdminClient } from "@supabase/supabase-js"
 import { NextResponse } from "next/server"
 
 export async function POST(request: Request) {
@@ -16,26 +16,43 @@ export async function POST(request: Request) {
 
         const body = await request.json()
         const { ids, all } = body
-        console.log("Mark Read API Triggered. Body:", body)
+
+        const supabaseAdmin = createAdminClient(
+            process.env.NEXT_PUBLIC_SUPABASE_URL!,
+            process.env.SUPABASE_SERVICE_ROLE_KEY!
+        )
 
         if (all) {
-            // Mark all user's purchases as read
-            const { error } = await supabase
-                .from("purchases")
-                .update({ is_read: true })
-                .eq("user_id", user.id)
-                .eq("is_read", false) // Only update unread ones
+            // Mark all orders where user is seller as read for seller
+            const { error: sellerError } = await supabaseAdmin
+                .from("orders")
+                .update({ is_read_seller: true })
+                .eq("seller_id", user.id)
+                .eq("is_read_seller", false)
 
-            if (error) throw error
+            // Mark all orders where user is buyer as read for buyer
+            const { error: buyerError } = await supabaseAdmin
+                .from("orders")
+                .update({ is_read_buyer: true })
+                .eq("buyer_id", user.id)
+                .eq("is_read_buyer", false)
+
+            if (sellerError || buyerError) throw (sellerError || buyerError)
         } else if (ids && Array.isArray(ids)) {
-            // Mark specific IDs as read
-            const { error } = await supabase
-                .from("purchases")
-                .update({ is_read: true })
+            // Mark specific IDs as read. We check both roles for each ID to be safe
+            const { error: sellerError } = await supabaseAdmin
+                .from("orders")
+                .update({ is_read_seller: true })
                 .in("id", ids)
-                .eq("user_id", user.id)
+                .eq("seller_id", user.id)
 
-            if (error) throw error
+            const { error: buyerError } = await supabaseAdmin
+                .from("orders")
+                .update({ is_read_buyer: true })
+                .in("id", ids)
+                .eq("buyer_id", user.id)
+
+            if (sellerError || buyerError) throw (sellerError || buyerError)
         } else {
             return NextResponse.json({ error: "Invalid request" }, { status: 400 })
         }

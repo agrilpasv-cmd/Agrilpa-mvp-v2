@@ -164,60 +164,63 @@ export function SuccessStories() {
 
   return (
     <section className="py-16 md:py-24 bg-muted/30 overflow-hidden">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Header */}
-        <div className="text-center mb-12">
+      {/* Header */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-12">
+        <div className="text-center">
           <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">Lo que Dicen Nuestros Clientes</h2>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
             Testimonios reales de granjas, industrias y empresas que han alcanzado nuevos mercados con Agrilpa
           </p>
         </div>
+      </div>
 
-        <div className="mb-12">
-          <div
-            className="relative overflow-x-auto scrollbar-hide cursor-grab active:cursor-grabbing"
-            ref={scrollContainerRef}
-            onMouseDown={handleMouseDown}
-            onMouseMove={handleMouseMove}
-            onMouseUp={handleMouseUp}
-            onMouseLeave={handleMouseLeave}
-            onTouchStart={handleTouchStart}
-            onTouchMove={handleTouchMove}
-            onTouchEnd={handleTouchEnd}
-          >
-            <div className={`flex gap-4 ${isDragging ? "" : "animate-scroll-right"}`}>
-              {allTestimonials.map((testimonial, index) => (
-                <Card
-                  key={`testimonial-${index}`}
-                  className="min-w-[380px] max-w-[380px] p-4 bg-background hover:shadow-lg transition-shadow flex-shrink-0"
-                >
-                  <div className="flex items-start gap-3 mb-2">
-                    <div className="flex-shrink-0 w-12 h-12 rounded-lg overflow-hidden bg-muted">
-                      <img
-                        src={testimonial.logo || "/placeholder.svg"}
-                        alt={`${testimonial.company} logo`}
-                        className="w-full h-full object-cover"
-                      />
-                    </div>
-                    <div className="flex-1">
-                      <h3 className="font-bold text-foreground text-sm">{testimonial.company}</h3>
-                      <p className="text-xs text-muted-foreground">
-                        {testimonial.type} • {testimonial.country}
-                      </p>
-                    </div>
+      {/* Full width slider */}
+      <div className="w-full mb-12">
+        <div
+          className="relative overflow-x-auto scrollbar-hide cursor-grab active:cursor-grabbing w-full"
+          ref={scrollContainerRef}
+          onMouseDown={handleMouseDown}
+          onMouseMove={handleMouseMove}
+          onMouseUp={handleMouseUp}
+          onMouseLeave={handleMouseLeave}
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}
+        >
+          <div className={`flex gap-4 px-4 ${isDragging ? "" : "animate-scroll-right"}`}>
+            {allTestimonials.map((testimonial, index) => (
+              <Card
+                key={`testimonial-${index}`}
+                className="min-w-[380px] max-w-[380px] p-4 bg-background hover:shadow-lg transition-shadow flex-shrink-0"
+              >
+                <div className="flex items-start gap-3 mb-2">
+                  <div className="flex-shrink-0 w-12 h-12 rounded-lg overflow-hidden bg-muted">
+                    <img
+                      src={testimonial.logo || "/placeholder.svg"}
+                      alt={`${testimonial.company} logo`}
+                      className="w-full h-full object-cover"
+                    />
                   </div>
-                  <p className="text-sm text-foreground mb-2 leading-snug">{testimonial.quote}</p>
-                  <div className="pt-2 border-t">
-                    <span className="inline-block px-2 py-0.5 bg-primary/10 text-primary text-xs font-semibold rounded-full">
-                      {testimonial.achievement}
-                    </span>
+                  <div className="flex-1">
+                    <h3 className="font-bold text-foreground text-sm">{testimonial.company}</h3>
+                    <p className="text-xs text-muted-foreground">
+                      {testimonial.type} • {testimonial.country}
+                    </p>
                   </div>
-                </Card>
-              ))}
-            </div>
+                </div>
+                <p className="text-sm text-foreground mb-2 leading-snug">{testimonial.quote}</p>
+                <div className="pt-2 border-t">
+                  <span className="inline-block px-2 py-0.5 bg-primary/10 text-primary text-xs font-semibold rounded-full">
+                    {testimonial.achievement}
+                  </span>
+                </div>
+              </Card>
+            ))}
           </div>
         </div>
+      </div>
 
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* View All Link */}
         <div className="text-center"></div>
       </div>

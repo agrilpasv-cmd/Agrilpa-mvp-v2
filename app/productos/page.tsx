@@ -380,10 +380,15 @@ export default function ProductosPage() {
                         </div>
                       </div>
 
-                      {/* Description */}
-                      <p className="text-sm text-muted-foreground mb-4 flex-1">
-                        {product.description?.split("---")[0]}
-                      </p>
+                      {/* Description with Fade */}
+                      <div className="relative mb-4 flex-1">
+                        <p className="text-sm text-muted-foreground line-clamp-3 min-h-[4.5rem]">
+                          {product.description?.split("---")[0]}
+                        </p>
+                        {(product.description?.split("---")[0].length || 0) > 130 && (
+                          <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-card via-card/90 to-transparent pointer-events-none" />
+                        )}
+                      </div>
 
                       {/* Rating */}
                       <div className="flex items-center gap-1 mb-4">

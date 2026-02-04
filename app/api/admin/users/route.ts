@@ -34,7 +34,9 @@ export async function GET() {
       return {
         ...profile,
         products_of_interest: authUser?.user_metadata?.products_of_interest || [],
-        annual_volume: authUser?.user_metadata?.annual_volume || null
+        annual_volume: authUser?.user_metadata?.annual_volume || null,
+        country_code: authUser?.user_metadata?.country_code || null,
+        metadata_phone_number: authUser?.user_metadata?.phone_number || null
       }
     })
 

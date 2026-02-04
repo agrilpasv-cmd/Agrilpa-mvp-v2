@@ -19,6 +19,8 @@ interface User {
   created_at: string
   products_of_interest?: string[]
   annual_volume?: string
+  country_code?: string
+  metadata_phone_number?: string
 }
 
 export default function AdminUsersPage() {
@@ -154,7 +156,14 @@ export default function AdminUsersPage() {
                       <td className="p-4">{user.full_name}</td>
                       <td className="p-4">{user.email}</td>
                       <td className="p-4">{user.company_name || "-"}</td>
-                      <td className="p-4">{user.phone || "-"}</td>
+                      <td className="p-4">
+                        {user.country_code && user.metadata_phone_number
+                          ? `+${user.country_code} ${user.metadata_phone_number}`
+                          : user.phone
+                            ? (user.phone.startsWith('+') ? user.phone : `+${user.phone}`)
+                            : "-"
+                        }
+                      </td>
                       <td className="p-4">{user.country || "-"}</td>
                       <td className="p-4 max-w-xs">
                         {user.products_of_interest && user.products_of_interest.length > 0 ? (

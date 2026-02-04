@@ -17,6 +17,7 @@ import {
 import { ChatOverlay } from "@/components/chat-overlay"
 import { Star, MapPin, MessageCircle, Check, ChevronLeft, FileText, ShoppingCart, Copy, Calendar, Package, Loader } from "lucide-react"
 import { getProductBySlug, getProductsByCategory } from "@/lib/products-data"
+import { createClient } from "@/lib/supabase/client"
 
 // Helper function to check if a string is a valid UUID or numeric ID
 const isValidId = (str: string): boolean => {
@@ -29,6 +30,16 @@ export default function ProductPage() {
   const router = useRouter()
   const params = useParams()
   const slug = typeof params?.slug === "string" ? params.slug : ""
+
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null)
+
+  // Fetch current user
+  useEffect(() => {
+    const supabase = createClient()
+    supabase.auth.getUser().then(({ data }) => {
+      setCurrentUserId(data.user?.id || null)
+    })
+  }, [])
 
   // State for static and user products
   const staticProduct = getProductBySlug(slug)
@@ -263,11 +274,14 @@ export default function ProductPage() {
         })
       } else {
         console.error("Error:", result)
-        alert(result.error || "Error al enviar la cotización")
+        const detailedError = result.sqlToRun
+          ? `${result.error}\n\nEjecuta esto en Supabase SQL:\n${result.sqlToRun}`
+          : (result.details || result.error || "Error al enviar la cotización")
+        alert(detailedError)
       }
     } catch (error) {
       console.error("Error submitting quotation:", error)
-      alert("Error al enviar la cotización. Por favor intenta de nuevo.")
+      alert("Error al enviar la cotización. Revisa tu conexión e intenta de nuevo.")
     } finally {
       setIsSubmittingQuotation(false)
     }
@@ -418,47 +432,65 @@ export default function ProductPage() {
                 </div>
               </div>
 
-              {product.price === "Por Cotizar" ? (
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {/* Owner Check Logic */}
+              {currentUserId && (product as any).vendorId === currentUserId ? (
+                <div className="space-y-3">
                   <Button
-                    onClick={() => setIsQuotationDialogOpen(true)}
-                    className="w-full bg-primary hover:bg-primary/90 text-white py-6 flex items-center justify-center gap-2"
+                    disabled
+                    className="w-full bg-muted text-muted-foreground py-6 flex items-center justify-center gap-2 cursor-not-allowed border border-border"
                   >
-                    <FileText className="w-5 h-5" />
-                    Solicitar Cotización
+                    <Package className="w-5 h-5" />
+                    Este es tu producto
                   </Button>
-                  <Button
-                    onClick={handleContactVendor}
-                    className="w-full bg-secondary hover:bg-secondary/90 text-foreground py-6 flex items-center justify-center gap-2 border border-border"
-                  >
-                    <MessageCircle className="w-5 h-5" />
-                    Contactar Vendedor
-                  </Button>
+                  <p className="text-xs text-center text-muted-foreground">
+                    No puedes comprar ni cotizar tus propios productos.
+                  </p>
                 </div>
               ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                  <Button
-                    onClick={handleBuy}
-                    className="w-full bg-green-600 hover:bg-green-700 text-white py-6 flex items-center justify-center gap-2"
-                  >
-                    <ShoppingCart className="w-5 h-5" />
-                    Comprar
-                  </Button>
-                  <Button
-                    onClick={handleContactVendor}
-                    className="w-full bg-primary hover:bg-primary/90 text-white py-6 flex items-center justify-center gap-2"
-                  >
-                    <MessageCircle className="w-5 h-5" />
-                    Contactar Vendedor
-                  </Button>
-                  <Button
-                    onClick={() => setIsQuotationDialogOpen(true)}
-                    className="w-full bg-secondary hover:bg-secondary/90 text-foreground py-6 flex items-center justify-center gap-2 border border-border"
-                  >
-                    <FileText className="w-5 h-5" />
-                    Solicitar Cotización
-                  </Button>
-                </div>
+                <>
+                  {product.price === "Por Cotizar" ? (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <Button
+                        onClick={() => setIsQuotationDialogOpen(true)}
+                        className="w-full bg-primary hover:bg-primary/90 text-white py-6 flex items-center justify-center gap-2"
+                      >
+                        <FileText className="w-5 h-5" />
+                        Solicitar Cotización
+                      </Button>
+                      <Button
+                        onClick={handleContactVendor}
+                        className="w-full bg-secondary hover:bg-secondary/90 text-foreground py-6 flex items-center justify-center gap-2 border border-border"
+                      >
+                        <MessageCircle className="w-5 h-5" />
+                        Contactar Vendedor
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                      <Button
+                        onClick={handleBuy}
+                        className="w-full bg-green-600 hover:bg-green-700 text-white py-6 flex items-center justify-center gap-2"
+                      >
+                        <ShoppingCart className="w-5 h-5" />
+                        Comprar
+                      </Button>
+                      <Button
+                        onClick={handleContactVendor}
+                        className="w-full bg-primary hover:bg-primary/90 text-white py-6 flex items-center justify-center gap-2"
+                      >
+                        <MessageCircle className="w-5 h-5" />
+                        Contactar Vendedor
+                      </Button>
+                      <Button
+                        onClick={() => setIsQuotationDialogOpen(true)}
+                        className="w-full bg-secondary hover:bg-secondary/90 text-foreground py-6 flex items-center justify-center gap-2 border border-border"
+                      >
+                        <FileText className="w-5 h-5" />
+                        Solicitar Cotización
+                      </Button>
+                    </div>
+                  )}
+                </>
               )}
               <p className="text-xs text-muted-foreground text-center pt-2">
                 Para realizar una cotización o compra, necesitas ser un usuario verificado
@@ -687,7 +719,7 @@ export default function ProductPage() {
         setIsQuotationDialogOpen(open)
         if (!open) setQuotationSuccess(false)
       }}>
-        <DialogContent className="!w-[95vw] !max-w-[95vw] max-h-[90vh] overflow-y-auto">
+        <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
           {quotationSuccess ? (
             /* Success Screen */
             <div className="py-12 text-center">

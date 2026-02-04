@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react"
 import Link from "next/link"
 import { Menu, X, User, LogOut } from "lucide-react"
+import { usePathname } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import Image from "next/image"
 import { AuthStorage } from "@/lib/auth-storage"
@@ -12,6 +13,7 @@ export function Navbar() {
   const [isOpen, setIsOpen] = useState(false)
   const [isLoggedIn, setIsLoggedIn] = useState(false)
   const [userRole, setUserRole] = useState<string | null>(null)
+  const pathname = usePathname()
 
   useEffect(() => {
     const session = AuthStorage.getSession()
@@ -44,13 +46,13 @@ export function Navbar() {
       await new Promise((resolve) => setTimeout(resolve, 500))
 
       // Use window.location.replace to prevent back button from restoring session
-      window.location.replace("/inicio")
+      window.location.replace("/")
     } catch (error) {
       console.error("[v0] Logout error:", error)
       AuthStorage.clearSession()
       localStorage.clear()
       sessionStorage.clear()
-      window.location.replace("/inicio")
+      window.location.replace("/")
     }
   }
 
@@ -71,7 +73,7 @@ export function Navbar() {
     <nav className="sticky top-0 z-50 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
-          <Link href="/inicio" className="flex items-center space-x-2">
+          <Link href="/" className="flex items-center space-x-2">
             <Image src="/agrilpa-logo.svg" alt="Agrilpa Logo" width={100} height={100} priority />
           </Link>
 
@@ -114,8 +116,18 @@ export function Navbar() {
                     Iniciar sesión
                   </Button>
                 </Link>
-                <Link href="/auth?mode=register">
-                  <Button size="sm" className="bg-primary hover:bg-primary/90">
+                <Link href="/auth?mode=register" className="relative group">
+                  {pathname === "/" && (
+                    <div className="absolute top-full right-0 mt-5 w-72 bg-card border border-primary/20 text-card-foreground p-5 rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.12)] hidden md:block z-50 animate-in fade-in slide-in-from-top-4 duration-1000">
+                      <div className="absolute -top-2.5 right-8 w-5 h-5 bg-card border-t border-l border-primary/20 transform rotate-45"></div>
+                      <div className="relative z-10">
+                        <p className="font-medium text-center text-sm leading-relaxed">
+                          🚀 ¡Únete ahora a <span className="font-bold text-primary">Agrilpa</span> y crea tus publicaciones <span className="font-extrabold text-primary uppercase tracking-wide">GRATIS!</span>
+                        </p>
+                      </div>
+                    </div>
+                  )}
+                  <Button size="sm" className="bg-primary hover:bg-primary/90 shadow-lg shadow-primary/20">
                     Crear Cuenta
                   </Button>
                 </Link>

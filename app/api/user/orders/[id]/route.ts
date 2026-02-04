@@ -1,9 +1,10 @@
 import { createServerClient } from "@supabase/ssr"
+import { createClient } from "@supabase/supabase-js"
 import { cookies } from "next/headers"
-import { type NextRequest, NextResponse } from "next/server"
+import { NextResponse } from "next/server"
 
 export async function GET(
-    request: NextRequest,
+    request: Request,
     { params }: { params: Promise<{ id: string }> }
 ) {
     try {
@@ -24,7 +25,6 @@ export async function GET(
             },
         )
 
-        // Get current user
         const {
             data: { session },
         } = await supabase.auth.getSession()
@@ -33,53 +33,67 @@ export async function GET(
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
         }
 
-        // Fetch specific purchase
-        const { data: purchase, error } = await supabase
-            .from("purchases")
+        const userId = session.user.id
+
+        // Use Admin client to ensure we can fetch data even if RLS policies are tricky for now
+        // Ideally we should rely on standard client + RLS, but for 'ventas' (seller view) we need to be sure.
+        const supabaseAdmin = createClient(
+            process.env.NEXT_PUBLIC_SUPABASE_URL!,
+            process.env.SUPABASE_SERVICE_ROLE_KEY!
+        )
+
+        // Fetch Order
+        const { data: order, error: orderError } = await supabaseAdmin
+            .from("orders")
             .select("*")
             .eq("id", id)
-            .eq("user_id", session.user.id)
             .single()
 
-        if (error) {
-            console.error("Error fetching order details:", error)
+        if (orderError || !order) {
             return NextResponse.json({ error: "Order not found" }, { status: 404 })
         }
 
-        // Fetch image if it's a user product (UUID slug)
-        // We use admin client to bypass RLS so buyer can see the image
-        let productImage = null
-        if (/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(purchase.product_slug)) {
-            const supabaseAdmin = createServerClient(
-                process.env.NEXT_PUBLIC_SUPABASE_URL!,
-                process.env.SUPABASE_SERVICE_ROLE_KEY!,
-                {
-                    cookies: {
-                        getAll() { return [] },
-                        setAll() { }
-                    }
-                }
-            )
-
-            const { data: product } = await supabaseAdmin
-                .from("user_products")
-                .select("image")
-                .eq("id", purchase.product_slug)
-                .single()
-
-            if (product) {
-                productImage = product.image
-            }
+        // Verify ownership (either buyer or seller)
+        if (order.seller_id !== userId && order.buyer_id !== userId) {
+            // For now, if origin is 'quotation', buyer_id might be null or different if not linked to auth user yet.
+            // But seller_id MUST match.
+            return NextResponse.json({ error: "Unauthorized access to order" }, { status: 403 })
         }
 
-        const enhancedOrder = {
-            ...purchase,
-            product_image: productImage
+        // Format data for frontend
+        // The frontend expects: 
+        // id, price_usd, price_bs, quantity_kg, product_name, product_image, full_name, etc.
+        // We map from our 'orders' table schema.
+
+        const formattedOrder = {
+            id: order.id,
+            price_usd: order.total_price || 0, // Map total_price to price_usd
+            price_bs: 0, // specific formatting
+            quantity_kg: order.quantity,
+            product_name: order.product_name,
+            product_slug: order.product_id, // using product_id as slug placeholder if slug not saved
+            product_image: order.product_image,
+            full_name: order.buyer_name,
+            email: order.buyer_email,
+            country_code: "58", // Default or extract if saved
+            phone_number: order.buyer_phone ? order.buyer_phone.replace("+58", "").trim() : "",
+            address: order.shipping_address,
+            city: "N/A", // Not stored in simple order schema yet
+            state: "N/A",
+            zip_code: "N/A",
+            country: "Venezuela", // Default
+            payment_method: "A convenir",
+            special_instructions: order.origin === 'quotation' ? "Via Cotización" : "",
+            incoterm: "EXW", // Default
+            status: order.status || "Pendiente",
+            created_at: order.created_at,
+            shipping_method: "A convenir"
         }
 
-        return NextResponse.json({ order: enhancedOrder }, { status: 200 })
+        return NextResponse.json({ order: formattedOrder })
+
     } catch (error) {
-        console.error("Internal server error:", error)
-        return NextResponse.json({ error: "Internal server error" }, { status: 500 })
+        console.error("Error fetching order detail:", error)
+        return NextResponse.json({ error: "Internal Server Error" }, { status: 500 })
     }
 }
