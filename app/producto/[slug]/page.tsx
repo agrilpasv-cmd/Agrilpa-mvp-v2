@@ -62,7 +62,10 @@ export default function ProductPage() {
     quantity: "",
     destinationCountry: "",
     estimatedDate: "",
-    notes: ""
+    notes: "",
+    targetPrice: "",
+    incoterm: "",
+    currency: "USD"
   })
 
   // Fetch user product if slug is a UUID
@@ -250,10 +253,12 @@ export default function ProductPage() {
           countryCode: quotationForm.countryCode,
           phoneNumber: quotationForm.phoneNumber,
           email: quotationForm.email,
-          quantity: quotationForm.quantity,
           destinationCountry: quotationForm.destinationCountry,
           estimatedDate: quotationForm.estimatedDate,
-          notes: quotationForm.notes
+          notes: quotationForm.notes,
+          targetPrice: quotationForm.targetPrice,
+          incoterm: quotationForm.incoterm,
+          currency: quotationForm.currency
         })
       })
 
@@ -270,7 +275,10 @@ export default function ProductPage() {
           quantity: "",
           destinationCountry: "",
           estimatedDate: "",
-          notes: ""
+          notes: "",
+          targetPrice: "",
+          incoterm: "",
+          currency: "USD"
         })
       } else {
         console.error("Error:", result)
@@ -960,6 +968,68 @@ export default function ProductPage() {
                       value={quotationForm.notes}
                       onChange={(e) => setQuotationForm({ ...quotationForm, notes: e.target.value })}
                     />
+                  </div>
+                </div>
+
+                {/* Commercial Conditions Section */}
+                <div className="bg-primary/5 border border-primary/20 rounded-lg p-4">
+                  <h3 className="font-semibold text-lg mb-4 flex items-center gap-2">
+                    <FileText className="w-5 h-5 text-primary" />
+                    Condiciones comerciales (opcional)
+                  </h3>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium min-h-[2.5rem] flex items-end pb-1">
+                        Presupuesto objetivo por kg (opcional)
+                      </label>
+                      <div className="flex gap-2">
+                        <select
+                          className="bg-background border border-border h-10 w-24 rounded-md px-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
+                          value={quotationForm.currency}
+                          onChange={(e) => setQuotationForm({ ...quotationForm, currency: e.target.value })}
+                        >
+                          <option value="USD">USD</option>
+                          <option value="EUR">EUR</option>
+                          <option value="MXN">MXN</option>
+                          <option value="BRL">BRL</option>
+                          <option value="COP">COP</option>
+                        </select>
+                        <div className="relative flex-1">
+                          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground font-semibold">$</span>
+                          <Input
+                            type="number"
+                            placeholder="Ej: 1.20"
+                            className="pl-7 bg-white"
+                            value={quotationForm.targetPrice}
+                            onChange={(e) => setQuotationForm({ ...quotationForm, targetPrice: e.target.value })}
+                          />
+                        </div>
+                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        Precio aproximado que estás dispuesto a pagar por cada kg. No es un compromiso.
+                      </p>
+                    </div>
+
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium min-h-[2.5rem] flex items-end pb-1">
+                        Incoterm preferido
+                      </label>
+                      <select
+                        className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                        value={quotationForm.incoterm}
+                        onChange={(e) => setQuotationForm({ ...quotationForm, incoterm: e.target.value })}
+                      >
+                        <option value="">No definido (a acordar)</option>
+                        <option value="EXW">EXW – En origen</option>
+                        <option value="FOB">FOB – Entregado en puerto de origen</option>
+                        <option value="CIF">CIF – Incluye transporte y seguro</option>
+                        <option value="DAP">DAP – Entregado en tu país</option>
+                      </select>
+                      <p className="text-xs text-muted-foreground">
+                        Define hasta dónde llega la responsabilidad del vendedor en el envío.
+                      </p>
+                    </div>
                   </div>
                 </div>
 

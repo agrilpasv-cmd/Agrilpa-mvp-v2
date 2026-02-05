@@ -40,6 +40,9 @@ interface QuotationDetail {
     destination_country: string
     estimated_date: string
     notes: string
+    target_price: number | null
+    incoterm: string | null
+    currency: string
     status: string
     created_at: string
 }
@@ -314,6 +317,44 @@ export default function QuotationDetailPage({ params }: { params: Promise<{ id: 
                                                 <p className="font-semibold">{formatDate(quotation.estimated_date)}</p>
                                             </div>
                                         </div>
+                                    </div>
+                                </div>
+                            </CardContent>
+                        </Card>
+
+                        {/* Commercial Conditions Card */}
+                        <Card>
+                            <CardHeader className="pb-4">
+                                <CardTitle className="flex items-center gap-2 text-lg">
+                                    <FileText className="w-5 h-5 text-primary" />
+                                    Condiciones Comerciales
+                                </CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div className="space-y-1">
+                                        <p className="text-xs text-muted-foreground uppercase tracking-wide">Presupuesto Objetivo</p>
+                                        {quotation.target_price ? (
+                                            <>
+                                                <div className="flex items-baseline gap-1">
+                                                    <span className="text-sm font-semibold">{quotation.currency || 'USD'}</span>
+                                                    <span className="text-xl font-bold">{quotation.target_price}</span>
+                                                    <span className="text-sm text-muted-foreground">/ kg</span>
+                                                </div>
+                                                <p className="text-xs text-muted-foreground italic">Referencial</p>
+                                            </>
+                                        ) : (
+                                            <p className="text-lg font-medium text-muted-foreground/70">No definido</p>
+                                        )}
+                                    </div>
+                                    <div className="space-y-1">
+                                        <p className="text-xs text-muted-foreground uppercase tracking-wide">Incoterm Preferido</p>
+                                        <p className={`text-xl font-bold ${!quotation.incoterm ? "text-muted-foreground/70 font-medium" : ""}`}>
+                                            {quotation.incoterm || "A acordar"}
+                                        </p>
+                                        {quotation.incoterm && (
+                                            <p className="text-xs text-muted-foreground italic">Responsabilidad {quotation.incoterm}</p>
+                                        )}
                                     </div>
                                 </div>
                             </CardContent>

@@ -19,7 +19,10 @@ export async function POST(request: Request) {
             quantity,
             destinationCountry,
             estimatedDate,
-            notes
+            notes,
+            targetPrice,
+            incoterm,
+            currency
         } = body
 
         // Validate required fields
@@ -58,6 +61,9 @@ export async function POST(request: Request) {
                     destination_country: destinationCountry,
                     estimated_date: estimatedDate,
                     notes: notes || null,
+                    target_price: targetPrice ? parseFloat(targetPrice) : null,
+                    incoterm: incoterm || null,
+                    currency: currency || "USD",
                     status: "pending",
                     created_at: new Date().toISOString()
                 }
@@ -67,11 +73,16 @@ export async function POST(request: Request) {
         if (error) {
             console.error("Error creating quotation:", error)
 
-            // If column doesn't exist
-            if (error.message.includes("column \"is_read\"") && error.message.includes("does not exist")) {
+            // If columns don't exist
+            if (error.message.includes("column") && error.message.includes("does not exist")) {
                 return NextResponse.json({
-                    error: "La columna 'is_read' no existe en la tabla 'quotations'.",
-                    sqlToRun: "ALTER TABLE quotations ADD COLUMN is_read BOOLEAN DEFAULT false;"
+                    error: "Faltan columnas en la tabla 'quotations'.",
+                    sqlToRun: `
+ALTER TABLE quotations ADD COLUMN IF NOT EXISTS is_read BOOLEAN DEFAULT false;
+ALTER TABLE quotations ADD COLUMN IF NOT EXISTS target_price NUMERIC;
+ALTER TABLE quotations ADD COLUMN IF NOT EXISTS incoterm TEXT;
+ALTER TABLE quotations ADD COLUMN IF NOT EXISTS currency TEXT DEFAULT 'USD';
+`
                 }, { status: 500 })
             }
 
@@ -95,6 +106,10 @@ CREATE TABLE quotations (
     destination_country TEXT NOT NULL,
     estimated_date DATE NOT NULL,
     notes TEXT,
+    target_price NUMERIC,
+    incoterm TEXT,
+    currency TEXT DEFAULT 'USD',
+    is_read BOOLEAN DEFAULT false,
     status TEXT DEFAULT 'pending',
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
