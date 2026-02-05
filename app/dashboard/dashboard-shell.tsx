@@ -51,7 +51,7 @@ export default function DashboardShell({
     }, [])
 
     const adminMenuItems = [
-        { href: "/inicio", label: "Inicio", icon: Home, notifications: 0 },
+        { href: "/", label: "Inicio", icon: Home, notifications: 0 },
         { href: "/dashboard", label: "Admin Dashboard", icon: LayoutDashboard, notifications: 0 },
         { href: "/admin/usuarios", label: "Gestión de Usuarios", icon: Users, notifications: 0 },
         { href: "/admin/publicaciones", label: "Publicaciones", icon: Package, notifications: 0 },
@@ -65,7 +65,7 @@ export default function DashboardShell({
     ]
 
     const userMenuItems = [
-        { href: "/inicio", label: "Inicio", icon: Home, notifications: 0 },
+        { href: "/", label: "Inicio", icon: Home, notifications: 0 },
         { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard, notifications: 0 },
         { href: "/dashboard/perfil", label: "Mi Perfil", icon: FileText, notifications: counts.perfil },
         {
@@ -123,13 +123,13 @@ export default function DashboardShell({
             await new Promise((resolve) => setTimeout(resolve, 500))
 
             // Use window.location.replace to prevent back button from restoring session
-            window.location.replace("/inicio")
+            window.location.replace("/")
         } catch (error) {
             console.error("[v0] Error al cerrar sesión:", error)
             // Clear storage even on error
             localStorage.clear()
             sessionStorage.clear()
-            window.location.replace("/inicio")
+            window.location.replace("/")
         }
     }
 
@@ -139,7 +139,7 @@ export default function DashboardShell({
             <nav className="sticky top-0 z-50 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="flex justify-between items-center h-16">
-                        <Link href="/inicio" className="flex items-center space-x-2">
+                        <Link href="/" className="flex items-center space-x-2">
                             <Image src="/agrilpa-logo.svg" alt="Agrilpa Logo" width={100} height={100} priority />
                         </Link>
 

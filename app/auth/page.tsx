@@ -58,8 +58,8 @@ function AuthPageContent() {
             return
           }
 
-          console.log("[v0] Regular user detected, redirecting to /inicio")
-          router.push("/inicio")
+          console.log("[v0] Regular user detected, redirecting to /")
+          router.push("/")
         }
       } catch (err) {
         console.error("[v0] Error checking existing session:", err)
@@ -236,9 +236,9 @@ function AuthPageContent() {
           return
         }
 
-        console.log("[v0] Regular user, redirecting to /inicio")
+        console.log("[v0] Regular user, redirecting to /")
         setSubmitted(true)
-        window.location.href = "/inicio"
+        window.location.href = "/"
       }
     } catch (err) {
       console.error("[v0] Auth error:", err)

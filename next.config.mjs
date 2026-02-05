@@ -11,7 +11,7 @@ const nextConfig = {
       {
         source: "/inicio",
         destination: "/",
-        permanent: true,
+        permanent: false,
       },
     ]
   },

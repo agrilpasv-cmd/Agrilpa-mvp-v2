@@ -33,7 +33,7 @@ export default function AdminLayout({
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
 
   const menuItems = [
-    { href: "/inicio", label: "Inicio", icon: Home },
+    { href: "/", label: "Inicio", icon: Home },
     { href: "/admin", label: "Dashboard", icon: LayoutDashboard },
     { href: "/admin/usuarios", label: "Gestión de Usuarios", icon: Users },
     { href: "/admin/publicaciones", label: "Publicaciones", icon: Package },
@@ -69,13 +69,13 @@ export default function AdminLayout({
       await new Promise((resolve) => setTimeout(resolve, 500))
 
       // Use window.location.replace to prevent back button from restoring session
-      window.location.replace("/inicio")
+      window.location.replace("/")
     } catch (error) {
       console.error("[v0] Error al cerrar sesión:", error)
       // Clear storage even on error
       localStorage.clear()
       sessionStorage.clear()
-      window.location.replace("/inicio")
+      window.location.replace("/")
     }
   }
 
@@ -85,7 +85,7 @@ export default function AdminLayout({
       <nav className="sticky top-0 z-50 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
-            <Link href="/inicio" className="flex items-center space-x-3">
+            <Link href="/" className="flex items-center space-x-3">
               <Image src="/agrilpa-logo.svg" alt="Agrilpa Logo" width={100} height={100} priority />
               <span className="hidden md:flex items-center gap-2 text-sm font-semibold text-primary">
                 <Shield className="w-4 h-4" />
