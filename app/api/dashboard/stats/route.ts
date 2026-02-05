@@ -45,7 +45,10 @@ export async function GET() {
             .select("total_price, created_at")
             .eq("buyer_id", userId)
 
-        const totalSales = purchases?.reduce((sum, p) => sum + (p.total_price || 0), 0) || 0
+        const totalSales = purchases?.reduce((sum, p) => {
+            const val = typeof p.total_price === 'string' ? parseFloat(p.total_price) : (p.total_price || 0)
+            return sum + val
+        }, 0) || 0
         const totalTransactions = purchases?.length || 0
 
         // 2. Active Quotations (Cotizaciones Pendientes)

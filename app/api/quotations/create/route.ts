@@ -22,12 +22,25 @@ export async function POST(request: Request) {
             notes,
             targetPrice,
             incoterm,
-            currency
+            currency,
+            buyerId
         } = body
 
         // Validate required fields
-        if (!productId || !sellerId || !buyerName || !quantity || !destinationCountry || !estimatedDate) {
-            return NextResponse.json({ error: "Missing required fields" }, { status: 400 })
+        const missingFields = []
+        if (!productId) missingFields.push("productId")
+        if (!sellerId) missingFields.push("sellerId")
+        if (!buyerName) missingFields.push("buyerName")
+        if (!quantity) missingFields.push("quantity")
+        if (!destinationCountry) missingFields.push("destinationCountry")
+        if (!estimatedDate) missingFields.push("estimatedDate")
+
+        if (missingFields.length > 0) {
+            return NextResponse.json({
+                error: "Faltan campos requeridos",
+                missingFields,
+                details: `Los siguientes campos son obligatorios: ${missingFields.join(", ")}`
+            }, { status: 400 })
         }
 
         // Validate contact info
@@ -64,6 +77,7 @@ export async function POST(request: Request) {
                     target_price: targetPrice ? parseFloat(targetPrice) : null,
                     incoterm: incoterm || null,
                     currency: currency || "USD",
+                    buyer_id: buyerId || null,
                     status: "pending",
                     created_at: new Date().toISOString()
                 }
@@ -74,14 +88,22 @@ export async function POST(request: Request) {
             console.error("Error creating quotation:", error)
 
             // If columns don't exist
-            if (error.message.includes("column") && error.message.includes("does not exist")) {
+            const isMissingColumn = (error.message.includes("column") && error.message.includes("does not exist")) ||
+                (error.message.includes("column") && error.message.includes("schema cache"))
+
+            if (isMissingColumn) {
                 return NextResponse.json({
-                    error: "Faltan columnas en la tabla 'quotations'.",
+                    error: "Faltan columnas en la tabla 'quotations' o el esquema está desactualizado.",
                     sqlToRun: `
+-- Ejecuta esto en el SQL Editor de Supabase
 ALTER TABLE quotations ADD COLUMN IF NOT EXISTS is_read BOOLEAN DEFAULT false;
 ALTER TABLE quotations ADD COLUMN IF NOT EXISTS target_price NUMERIC;
 ALTER TABLE quotations ADD COLUMN IF NOT EXISTS incoterm TEXT;
 ALTER TABLE quotations ADD COLUMN IF NOT EXISTS currency TEXT DEFAULT 'USD';
+ALTER TABLE quotations ADD COLUMN IF NOT EXISTS buyer_id UUID;
+
+-- Notifica a PostgREST del cambio
+NOTIFY pgrst, 'reload schema';
 `
                 }, { status: 500 })
             }

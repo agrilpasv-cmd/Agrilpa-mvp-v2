@@ -33,11 +33,27 @@ export default function ProductPage() {
 
   const [currentUserId, setCurrentUserId] = useState<string | null>(null)
 
-  // Fetch current user
   useEffect(() => {
     const supabase = createClient()
     supabase.auth.getUser().then(({ data }) => {
-      setCurrentUserId(data.user?.id || null)
+      if (data.user) {
+        setCurrentUserId(data.user.id)
+        // Fetch profile to auto-fill quotation form
+        fetch("/api/user/profile")
+          .then(res => res.json())
+          .then(resData => {
+            if (resData.user) {
+              setQuotationForm(prev => ({
+                ...prev,
+                buyerName: resData.user.full_name || "",
+                email: resData.user.email || "",
+                phoneNumber: resData.user.phone || "",
+                countryCode: resData.user.country_code || ""
+              }))
+            }
+          })
+          .catch(err => console.error("Error fetching profile for auto-fill:", err))
+      }
     })
   }, [])
 
@@ -237,29 +253,64 @@ export default function ProductPage() {
       return
     }
 
+    const productId = product.id
+    const sellerId = (product as any).vendorId
+
+    if (!productId || !sellerId) {
+      console.error("Missing product or seller information:", { productId, sellerId })
+      alert("Error: No se pudo identificar el producto o el vendedor. Por favor refresca la página.")
+      return
+    }
+
     setIsSubmittingQuotation(true)
 
     try {
-      const response = await fetch('/api/quotations/create', {
+      const payload = {
+        productId,
+        productTitle: product.name,
+        productImage: product.image,
+        sellerId,
+        buyerName: quotationForm.buyerName,
+        contactMethod: quotationForm.contactMethod,
+        countryCode: quotationForm.countryCode,
+        phoneNumber: quotationForm.phoneNumber,
+        email: quotationForm.email,
+        quantity: quotationForm.quantity,
+        destinationCountry: quotationForm.destinationCountry,
+        estimatedDate: quotationForm.estimatedDate,
+        notes: quotationForm.notes,
+        targetPrice: quotationForm.targetPrice,
+        incoterm: quotationForm.incoterm,
+        currency: quotationForm.currency,
+        buyerId: currentUserId
+      }
+
+      console.log("=== SENDING QUOTATION ===")
+      console.log("Payload:", payload)
+
+      // Detailed check before sending
+      const missingInPayload = Object.entries(payload)
+        .filter(([key, value]) => {
+          // Fields required by API
+          const required = ["productId", "sellerId", "buyerName", "quantity", "destinationCountry", "estimatedDate"]
+          return required.includes(key) && !value
+        })
+        .map(([key]) => key)
+
+      if (missingInPayload.length > 0) {
+        console.error("Missing fields in payload:", missingInPayload)
+        alert(`Error: Faltan datos obligatorios: ${missingInPayload.join(", ")}`)
+        setIsSubmittingQuotation(false)
+        return
+      }
+
+      const apiUrl = '/api/quotations/create'
+      console.log(`Hitting API: ${apiUrl}`)
+
+      const response = await fetch(apiUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          productId: product.id,
-          productTitle: product.name,
-          productImage: product.image,
-          sellerId: (product as any).vendorId,
-          buyerName: quotationForm.buyerName,
-          contactMethod: quotationForm.contactMethod,
-          countryCode: quotationForm.countryCode,
-          phoneNumber: quotationForm.phoneNumber,
-          email: quotationForm.email,
-          destinationCountry: quotationForm.destinationCountry,
-          estimatedDate: quotationForm.estimatedDate,
-          notes: quotationForm.notes,
-          targetPrice: quotationForm.targetPrice,
-          incoterm: quotationForm.incoterm,
-          currency: quotationForm.currency
-        })
+        body: JSON.stringify(payload)
       })
 
       const result = await response.json()
@@ -281,10 +332,11 @@ export default function ProductPage() {
           currency: "USD"
         })
       } else {
-        console.error("Error:", result)
-        const detailedError = result.sqlToRun
-          ? `${result.error}\n\nEjecuta esto en Supabase SQL:\n${result.sqlToRun}`
-          : (result.details || result.error || "Error al enviar la cotización")
+        console.error("Error Response:", result)
+        const detailedError = `[URL: ${apiUrl}] ${result.error || "Error desconocido"}` +
+          (result.details ? `\nDetalles: ${result.details}` : "") +
+          (result.missingFields ? `\nFaltan: ${result.missingFields.join(", ")}` : "")
+
         alert(detailedError)
       }
     } catch (error) {

@@ -62,7 +62,7 @@ export async function POST(request: Request) {
             // 0. Fetch the actual product to get accurate details
             const { data: productData } = await supabaseAdmin
                 .from("user_products")
-                .select("slug, name, image, vendor_id, id")
+                .select("slug, name, image, vendor_id, id, category, country, maturity, packaging, packaging_size, certifications, contact_method, contact_info, price")
                 .eq("id", quotation.product_id)
                 .single()
 
@@ -71,14 +71,18 @@ export async function POST(request: Request) {
             const actualImage = productData?.image || quotation.product_image
 
             // 1. Create Order record
+            const targetP = typeof quotation.target_price === 'string' ? parseFloat(quotation.target_price) : (quotation.target_price || 0)
+            const baseUnitPrice = targetP || (productData?.price && !isNaN(parseFloat(productData.price)) ? parseFloat(productData.price) : 0)
+
             const orderPayload: any = {
+                buyer_id: quotation.buyer_id,
                 seller_id: actualSellerId,
                 product_id: quotation.product_id,
                 product_name: actualName,
                 product_image: actualImage,
                 quantity: quotation.quantity,
-                unit_price: 0, // Negotiated in quotation
-                total_price: 0, // Negotiated
+                unit_price: baseUnitPrice, // Usar el precio pactado o el base del producto
+                total_price: (baseUnitPrice) * (quotation.quantity || 1), // Calcular total
                 buyer_name: quotation.buyer_name,
                 buyer_email: quotation.email,
                 buyer_phone: quotation.phone_number ? `+${quotation.country_code}${quotation.phone_number}` : null,
@@ -87,7 +91,17 @@ export async function POST(request: Request) {
                 origin: "quotation",
                 quotation_id: quotationId,
                 is_read_seller: false,
-                created_at: new Date().toISOString()
+                created_at: new Date().toISOString(),
+                // New Technical fields
+                category: productData?.category || null,
+                origin_country: productData?.country || null,
+                maturity: productData?.maturity || null,
+                packaging_type: productData?.packaging || null,
+                packaging_size: productData?.packaging_size || null,
+                certifications: productData?.certifications || null,
+                seller_contact_method: productData?.contact_method || null,
+                seller_contact_info: productData?.contact_info || null,
+                incoterm: quotation.incoterm || "EXW" // Use incoterm from quotation if available
             }
 
             const { data: orderData, error: orderError } = await supabaseAdmin
@@ -124,7 +138,17 @@ CREATE TABLE orders (
     is_read_seller BOOLEAN DEFAULT false,
     is_read_buyer BOOLEAN DEFAULT true,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    -- New Fields
+    category TEXT,
+    origin_country TEXT,
+    maturity TEXT,
+    packaging_type TEXT,
+    packaging_size TEXT,
+    incoterm TEXT,
+    certifications TEXT,
+    seller_contact_method TEXT,
+    seller_contact_info TEXT
 );
 CREATE INDEX IF NOT EXISTS idx_orders_seller_id ON orders(seller_id);
 -- Enable RLS

@@ -322,43 +322,6 @@ export default function QuotationDetailPage({ params }: { params: Promise<{ id: 
                             </CardContent>
                         </Card>
 
-                        {/* Commercial Conditions Card */}
-                        <Card>
-                            <CardHeader className="pb-4">
-                                <CardTitle className="flex items-center gap-2 text-lg">
-                                    <FileText className="w-5 h-5 text-primary" />
-                                    Condiciones Comerciales
-                                </CardTitle>
-                            </CardHeader>
-                            <CardContent>
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div className="space-y-1">
-                                        <p className="text-xs text-muted-foreground uppercase tracking-wide">Presupuesto Objetivo</p>
-                                        {quotation.target_price ? (
-                                            <>
-                                                <div className="flex items-baseline gap-1">
-                                                    <span className="text-sm font-semibold">{quotation.currency || 'USD'}</span>
-                                                    <span className="text-xl font-bold">{quotation.target_price}</span>
-                                                    <span className="text-sm text-muted-foreground">/ kg</span>
-                                                </div>
-                                                <p className="text-xs text-muted-foreground italic">Referencial</p>
-                                            </>
-                                        ) : (
-                                            <p className="text-lg font-medium text-muted-foreground/70">No definido</p>
-                                        )}
-                                    </div>
-                                    <div className="space-y-1">
-                                        <p className="text-xs text-muted-foreground uppercase tracking-wide">Incoterm Preferido</p>
-                                        <p className={`text-xl font-bold ${!quotation.incoterm ? "text-muted-foreground/70 font-medium" : ""}`}>
-                                            {quotation.incoterm || "A acordar"}
-                                        </p>
-                                        {quotation.incoterm && (
-                                            <p className="text-xs text-muted-foreground italic">Responsabilidad {quotation.incoterm}</p>
-                                        )}
-                                    </div>
-                                </div>
-                            </CardContent>
-                        </Card>
 
                         {/* Notes Card */}
                         {quotation.notes && (
@@ -380,6 +343,46 @@ export default function QuotationDetailPage({ params }: { params: Promise<{ id: 
 
                     {/* Right Column - Actions */}
                     <div className="space-y-6">
+                        {/* Summary Card */}
+                        <Card className="bg-primary/5 border-primary/20 shadow-sm">
+                            <CardHeader className="pb-4">
+                                <CardTitle className="text-lg">Resumen de Cotización</CardTitle>
+                            </CardHeader>
+                            <CardContent className="space-y-4">
+                                <div className="space-y-3">
+                                    <div className="flex justify-between items-center text-sm">
+                                        <span className="text-muted-foreground">Cantidad:</span>
+                                        <span className="font-semibold">{quotation.quantity.toLocaleString()} kg</span>
+                                    </div>
+                                    <div className="flex justify-between items-center text-sm">
+                                        <span className="text-muted-foreground">Precio sugerido:</span>
+                                        <span className="font-semibold">
+                                            {quotation.target_price ? `${quotation.target_price} USD/kg` : "No definido"}
+                                        </span>
+                                    </div>
+                                    {quotation.incoterm && (
+                                        <div className="flex justify-between items-center text-sm">
+                                            <span className="text-muted-foreground">Incoterm:</span>
+                                            <Badge variant="outline" className="font-bold text-primary border-primary/20">{quotation.incoterm}</Badge>
+                                        </div>
+                                    )}
+                                </div>
+                                <div className="pt-4 border-t border-primary/10">
+                                    <div className="flex justify-between items-end">
+                                        <span className="text-sm font-medium text-muted-foreground mb-1">Total Estimado</span>
+                                        <div className="text-right">
+                                            <span className="text-3xl font-bold text-primary">
+                                                {quotation.target_price
+                                                    ? new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(quotation.target_price * quotation.quantity)
+                                                    : "Pendiente"
+                                                }
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </CardContent>
+                        </Card>
+
                         {/* Status Actions */}
                         {quotation.status === "pending" && (
                             <Card className="border-2 border-dashed border-primary/30">

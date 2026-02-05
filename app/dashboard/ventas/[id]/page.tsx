@@ -64,11 +64,11 @@ export default function VentaDetailPage() {
                         special_instructions: order.special_instructions,
                         incoterm: order.incoterm,
                         detalles: {
-                            precioUnitario: new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(order.price_usd / order.quantity_kg),
-                            subtotal: new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(order.price_usd),
-                            impuesto: "Incluido (Estimado)",
+                            precioUnitario: new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(order.unit_price || (order.price_usd / (order.quantity_kg || 1))),
+                            subtotal: new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(subtotal),
+                            impuesto: new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(imp),
                             envio: "Por calcular / Incluido",
-                            totalFinal: new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(order.price_usd),
+                            totalFinal: new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(order.price_usd || 0),
                         },
                         tracking: [
                             {

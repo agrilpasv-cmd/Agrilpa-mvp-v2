@@ -44,7 +44,7 @@ export async function POST(request: NextRequest) {
 
     // Validate required fields
     if (!data.productName || !data.email || !data.fullName) {
-      return NextResponse.json({ error: "Missing required fields" }, { status: 400 })
+      return NextResponse.json({ error: "Faltan campos requeridos" }, { status: 400 })
     }
 
     // Get current user if authenticated

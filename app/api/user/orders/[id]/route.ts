@@ -42,52 +42,124 @@ export async function GET(
             process.env.SUPABASE_SERVICE_ROLE_KEY!
         )
 
-        // Fetch Order
+        // 1. Try Fetching from 'orders'
+        let finalData: any = null
+        let origin = 'orders'
+
         const { data: order, error: orderError } = await supabaseAdmin
             .from("orders")
             .select("*")
             .eq("id", id)
             .single()
 
-        if (orderError || !order) {
-            return NextResponse.json({ error: "Order not found" }, { status: 404 })
+        if (order) {
+            finalData = order
+        } else {
+            // 2. Try Fetching from 'purchases'
+            const { data: purchase, error: purchaseError } = await supabaseAdmin
+                .from("purchases")
+                .select("*")
+                .eq("id", id)
+                .single()
+
+            if (purchase) {
+                finalData = purchase
+                origin = 'purchases'
+            }
         }
 
-        // Verify ownership (either buyer or seller)
-        if (order.seller_id !== userId && order.buyer_id !== userId) {
-            // For now, if origin is 'quotation', buyer_id might be null or different if not linked to auth user yet.
-            // But seller_id MUST match.
-            return NextResponse.json({ error: "Unauthorized access to order" }, { status: 403 })
+        if (!finalData) {
+            return NextResponse.json({ error: "Record not found" }, { status: 404 })
         }
+
+        // Verify ownership
+        const ownerId = origin === 'orders' ? finalData.buyer_id : finalData.user_id
+        if (finalData.seller_id !== userId && ownerId !== userId) {
+            return NextResponse.json({ error: "Unauthorized access" }, { status: 403 })
+        }
+
+        // Fetch Seller Data
+        const { data: sellerProfile } = await supabaseAdmin
+            .from("users")
+            .select("full_name, company_name, phone_number")
+            .eq("id", finalData.seller_id)
+            .single()
 
         // Format data for frontend
-        // The frontend expects: 
-        // id, price_usd, price_bs, quantity_kg, product_name, product_image, full_name, etc.
-        // We map from our 'orders' table schema.
-
-        const formattedOrder = {
-            id: order.id,
-            price_usd: order.total_price || 0, // Map total_price to price_usd
-            price_bs: 0, // specific formatting
-            quantity_kg: order.quantity,
-            product_name: order.product_name,
-            product_slug: order.product_id, // using product_id as slug placeholder if slug not saved
-            product_image: order.product_image,
-            full_name: order.buyer_name,
-            email: order.buyer_email,
-            country_code: "58", // Default or extract if saved
-            phone_number: order.buyer_phone ? order.buyer_phone.replace("+58", "").trim() : "",
-            address: order.shipping_address,
-            city: "N/A", // Not stored in simple order schema yet
+        const formattedOrder = origin === 'orders' ? {
+            id: finalData.id,
+            price_usd: typeof finalData.total_price === 'string' ? parseFloat(finalData.total_price) : (finalData.total_price || 0),
+            price_bs: 0,
+            quantity_kg: finalData.quantity,
+            product_name: finalData.product_name,
+            product_slug: finalData.product_id,
+            product_image: finalData.product_image,
+            full_name: finalData.buyer_name,
+            email: finalData.buyer_email,
+            country_code: "58",
+            phone_number: finalData.buyer_phone ? finalData.buyer_phone.replace("+58", "").trim() : "",
+            address: finalData.shipping_address,
+            city: "N/A",
             state: "N/A",
             zip_code: "N/A",
-            country: "Venezuela", // Default
+            country: "Venezuela",
             payment_method: "A convenir",
-            special_instructions: order.origin === 'quotation' ? "Via Cotización" : "",
-            incoterm: "EXW", // Default
-            status: order.status || "Pendiente",
-            created_at: order.created_at,
-            shipping_method: "A convenir"
+            special_instructions: finalData.origin === 'quotation' ? "Via Cotización" : "",
+            incoterm: finalData.incoterm || "EXW",
+            status: finalData.status || "Pendiente",
+            created_at: finalData.created_at,
+            shipping_method: "A convenir",
+            // Seller Info
+            seller_name: sellerProfile?.full_name || "Vendedor Agrilpa",
+            seller_company: sellerProfile?.company_name || "Empresa Verificada",
+            seller_phone: sellerProfile?.phone_number || "Contactar via Chat",
+            unit_price: typeof finalData.unit_price === 'string' ? parseFloat(finalData.unit_price) : (finalData.unit_price || 0),
+            // Technical fields
+            category: finalData.category || "General",
+            origin_country: finalData.origin_country || "Venezuela",
+            maturity: finalData.maturity || "Sin especificar",
+            packaging_type: finalData.packaging_type || "Estándar",
+            packaging_size: finalData.packaging_size || "N/A",
+            certifications: finalData.certifications || "En proceso",
+            seller_contact_method: finalData.seller_contact_method || "Plataforma Agrilpa",
+            seller_contact_info: finalData.seller_contact_info || ""
+        } : {
+            // Native purchase record (direct buy)
+            id: finalData.id,
+            price_usd: typeof finalData.price_usd === 'string' ? parseFloat(finalData.price_usd) : (finalData.price_usd || 0),
+            unit_price: typeof finalData.price_usd === 'string' ? (parseFloat(finalData.price_usd) / (finalData.quantity_kg || 1)) : ((finalData.price_usd || 0) / (finalData.quantity_kg || 1)),
+            price_bs: 0,
+            quantity_kg: finalData.quantity_kg,
+            product_name: finalData.product_name,
+            product_slug: finalData.product_slug,
+            product_image: finalData.product_image,
+            full_name: finalData.full_name,
+            email: finalData.email,
+            country_code: finalData.country_code || "58",
+            phone_number: finalData.phone_number,
+            address: finalData.address,
+            city: finalData.city,
+            state: finalData.state,
+            zip_code: finalData.zip_code,
+            country: finalData.country,
+            payment_method: finalData.payment_method,
+            special_instructions: finalData.special_instructions,
+            incoterm: "N/A",
+            status: finalData.status || "Pagado",
+            created_at: finalData.created_at,
+            shipping_method: finalData.shipping_method,
+            // Seller Info (Purchases might not have seller_id directly depending on schema, but let's try)
+            seller_name: "Vendedor Agrilpa",
+            seller_company: "Empresa Verificada",
+            // Fallbacks for direct purchases (unless we update purchases table too)
+            category: "General",
+            origin_country: "Venezuela",
+            maturity: "Sin especificar",
+            packaging_type: "Estándar",
+            packaging_size: "N/A",
+            certifications: "Verificada",
+            seller_contact_method: "Plataforma Agrilpa",
+            seller_contact_info: ""
         }
 
         return NextResponse.json({ order: formattedOrder })

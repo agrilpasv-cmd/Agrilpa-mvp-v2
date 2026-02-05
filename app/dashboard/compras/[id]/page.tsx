@@ -63,11 +63,16 @@ export default function CompraDetailPage() {
                         special_instructions: order.special_instructions,
                         incoterm: order.incoterm,
                         detalles: {
-                            precioUnitario: new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(order.price_usd / order.quantity_kg),
-                            subtotal: new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(order.price_usd),
-                            impuesto: "Incluido (Estimado)",
+                            precioUnitario: new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(order.unit_price || (order.price_usd / (order.quantity_kg || 1))),
+                            subtotal: new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(subtotal),
+                            impuesto: new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(imp),
                             envio: "Por calcular / Incluido",
-                            totalFinal: new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(order.price_usd),
+                            totalFinal: new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(order.price_usd || 0),
+                        },
+                        seller: {
+                            name: order.seller_name,
+                            company: order.seller_company,
+                            phone: order.seller_phone
                         },
                         tracking: [
                             {
@@ -76,6 +81,15 @@ export default function CompraDetailPage() {
                                 ubicacion: "Sistema Agrilpa"
                             }
                         ],
+                        // Technical Specs
+                        category: order.category,
+                        origin_country: order.origin_country,
+                        maturity: order.maturity,
+                        packaging_type: order.packaging_type,
+                        packaging_size: order.packaging_size,
+                        certifications: order.certifications,
+                        seller_contact_method: order.seller_contact_method,
+                        seller_contact_info: order.seller_contact_info
                     })
 
                     fetch("/api/user/orders/mark-read", {
@@ -214,7 +228,60 @@ export default function CompraDetailPage() {
                         </CardContent>
                     </Card>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <Card>
+                        <CardHeader>
+                            <CardTitle className="text-lg text-primary flex items-center gap-2">
+                                <Eye className="w-5 h-5" />
+                                Especificaciones Técnicas
+                            </CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            <div className="grid grid-cols-2 md:grid-cols-3 gap-6 text-sm">
+                                <div>
+                                    <p className="font-semibold text-muted-foreground">Categoría</p>
+                                    <p className="text-base">{pedido.category || "General"}</p>
+                                </div>
+                                <div>
+                                    <p className="font-semibold text-muted-foreground">País de Origen</p>
+                                    <p className="text-base font-medium">{pedido.origin_country || "Venezuela"}</p>
+                                </div>
+                                <div>
+                                    <p className="font-semibold text-muted-foreground">Tipo de Maduración</p>
+                                    <p className="text-base">{pedido.maturity || "Sin especificar"}</p>
+                                </div>
+                                <div>
+                                    <p className="font-semibold text-muted-foreground">Tipo de Embalaje</p>
+                                    <p className="text-base">{pedido.packaging_type || "Estándar"}</p>
+                                </div>
+                                <div>
+                                    <p className="font-semibold text-muted-foreground">Tamaño del Embalaje</p>
+                                    <p className="text-base">{pedido.packaging_size || "N/A"}</p>
+                                </div>
+                                <div>
+                                    <p className="font-semibold text-muted-foreground">Certificaciones</p>
+                                    <p className="text-base text-green-600 font-medium">{pedido.certifications || "Verificada por Agrilpa"}</p>
+                                </div>
+                            </div>
+                            <div className="mt-4 pt-4 border-t flex flex-wrap gap-4 items-center justify-between">
+                                <div className="flex items-center gap-2">
+                                    <Badge variant="secondary" className="px-3 py-1 text-xs">
+                                        Incoterm: {pedido.incoterm || "EXW"}
+                                    </Badge>
+                                    <Badge variant="outline" className="px-3 py-1 text-xs">
+                                        Vendedor: {pedido.seller?.company || "Empresa Verificada"}
+                                    </Badge>
+                                </div>
+                                <Link href={`/producto/${pedido.slug}`}>
+                                    <Button variant="outline" size="sm" className="gap-2">
+                                        <Eye className="w-4 h-4" />
+                                        Revisar Publicación Original
+                                    </Button>
+                                </Link>
+                            </div>
+                        </CardContent>
+                    </Card>
+
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                         <Card>
                             <CardHeader>
                                 <CardTitle className="text-lg">Tus Datos de Contacto</CardTitle>
@@ -231,6 +298,30 @@ export default function CompraDetailPage() {
                                 <div>
                                     <p className="text-sm font-semibold text-muted-foreground">Teléfono</p>
                                     <p>+{pedido.country_code} {pedido.phone_number}</p>
+                                </div>
+                            </CardContent>
+                        </Card>
+
+                        <Card>
+                            <CardHeader>
+                                <CardTitle className="text-lg">Datos del Vendedor</CardTitle>
+                            </CardHeader>
+                            <CardContent className="space-y-3">
+                                <div>
+                                    <p className="text-sm font-semibold text-muted-foreground">Nombre / Empresa</p>
+                                    <p className="font-medium text-primary">{pedido.seller?.name || "Vendedor Agrilpa"}</p>
+                                    <p className="text-sm text-muted-foreground">{pedido.seller?.company || "Empresa Verificada"}</p>
+                                </div>
+                                {pedido.seller?.phone && (
+                                    <div>
+                                        <p className="text-sm font-semibold text-muted-foreground">Teléfono de Contacto</p>
+                                        <p>{pedido.seller.phone}</p>
+                                    </div>
+                                )}
+                                <div className="pt-2">
+                                    <Button variant="outline" size="sm" className="w-full" disabled>
+                                        Contactar vía Chat
+                                    </Button>
                                 </div>
                             </CardContent>
                         </Card>

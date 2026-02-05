@@ -46,7 +46,7 @@ export async function POST(request: NextRequest) {
       !companyName ||
       !contactMethod
     ) {
-      return NextResponse.json({ error: "Missing required fields" }, { status: 400 })
+      return NextResponse.json({ error: "Faltan campos requeridos" }, { status: 400 })
     }
 
     // Validate contact information based on method

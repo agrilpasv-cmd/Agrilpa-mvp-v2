@@ -44,7 +44,7 @@ export default function ComprasPage() {
                         id: order.id.slice(0, 8).toUpperCase(),
                         fullId: order.id,
                         producto: order.product_name,
-                        cliente: order.full_name,
+                        vendedor: order.full_name, // Ahora refleja el nombre/empresa del vendedor desde la API
                         cantidad: `${order.quantity_kg} kg`,
                         estado: order.status || "Preparación",
                         fecha: order.created_at,
@@ -121,7 +121,7 @@ export default function ComprasPage() {
     const filteredPedidos = pedidos.filter((ped) => {
         const matchesSearch =
             ped.producto.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            ped.cliente.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            ped.vendedor.toLowerCase().includes(searchTerm.toLowerCase()) ||
             ped.id.toLowerCase().includes(searchTerm.toLowerCase())
 
         const pedDate = new Date(ped.fecha)
@@ -281,7 +281,7 @@ export default function ComprasPage() {
                                                     <p className={`text-xs font-mono mb-1 ${!ped.is_read ? "text-green-700 font-bold" : "text-muted-foreground"}`}>
                                                         #{ped.id}
                                                     </p>
-                                                    <p className="text-sm text-muted-foreground line-clamp-1">{ped.cliente}</p>
+                                                    <p className="text-sm text-muted-foreground line-clamp-1">Vendedor: {ped.vendedor}</p>
                                                 </div>
                                                 <div className="text-right hidden md:block">
                                                     <p className="text-xl font-bold text-primary">{ped.total}</p>
