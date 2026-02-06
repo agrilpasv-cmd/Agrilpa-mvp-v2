@@ -1,5 +1,6 @@
 "use client"
 
+import { notFound, useRouter, useParams } from "next/navigation"
 import { useState, useEffect } from "react"
 import Link from "next/link"
 import { Card } from "@/components/ui/card"
@@ -33,6 +34,7 @@ const normalizeText = (text: string) =>
     .toLowerCase()
 
 export default function ProductosPage() {
+  const router = useRouter()
   const [searchTerm, setSearchTerm] = useState("")
   const [selectedCategory, setSelectedCategory] = useState("todos")
   const [showFilters, setShowFilters] = useState(false)
@@ -172,6 +174,33 @@ export default function ProductosPage() {
       console.error("[v0] Error fetching user products:", error)
     } finally {
       setIsLoading(false)
+    }
+  }
+
+  const trackContactClick = async (product: any, type: string) => {
+    try {
+      console.log(`[v0] Tracking click on list: ${type}`, {
+        productId: product.id,
+        sellerId: product.vendorId || product.id
+      })
+
+      const response = await fetch("/api/products/track-contact-click", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        keepalive: true,
+        body: JSON.stringify({
+          productId: product.id,
+          productTitle: product.name,
+          sellerId: product.vendorId || product.id,
+          clickType: type,
+          userId: null // We don't necessarily have it here, and it's optional
+        })
+      })
+
+      const result = await response.json()
+      console.log(`[v0] Tracking result for ${type}:`, result)
+    } catch (err) {
+      console.error("[v0] Failed to track contact click:", err)
     }
   }
 
@@ -418,12 +447,25 @@ export default function ProductosPage() {
                         className="w-full bg-primary hover:bg-primary/90 text-white font-semibold py-2 px-4 rounded transition-colors flex items-center justify-center gap-2"
                         onClick={(e) => {
                           e.preventDefault()
-                          if ((product as any).contactMethod && (product as any).contactInfo) {
-                            alert(`Contactar vía ${(product as any).contactMethod}: ${(product as any).contactInfo}`)
-                            // Here you could implement real redirection links (mailto:, wa.me, etc)
+                          e.stopPropagation()
+                          const contactMethod = (product as any).contactMethod
+                          const contactInfo = (product as any).contactInfo
+
+                          if (contactMethod === "WhatsApp") {
+                            // Extract numbers from contactInfo or use it directly
+                            const phone = contactInfo.replace(/\D/g, "")
+                            window.open(`https://wa.me/${phone}`, '_blank')
+                            trackContactClick(product, "whatsapp")
+                          } else if (contactMethod === "Email") {
+                            window.open(`mailto:${contactInfo}`, '_blank')
+                            trackContactClick(product, "email")
+                          } else if (contactMethod && contactInfo) {
+                            alert(`Contactar vía ${contactMethod}: ${contactInfo}`)
+                            trackContactClick(product, "generic")
                           } else {
-                            // Default behavior or navigation
-                            alert("Contactando al vendedor...")
+                            // Default behavior: go to product page
+                            router.push(`/producto/${product.slug}`)
+                            trackContactClick(product, "generic")
                           }
                         }}
                       >

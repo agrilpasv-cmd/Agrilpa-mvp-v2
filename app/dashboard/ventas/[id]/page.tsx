@@ -12,6 +12,14 @@ import { useEffect, useState } from "react"
 import { format } from "date-fns"
 import { es } from "date-fns/locale"
 import { useDashboard } from "../../context"
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import { Check, ChevronDown } from "lucide-react"
+import { toast } from "sonner"
 
 export default function VentaDetailPage() {
     const params = useParams()
@@ -20,6 +28,7 @@ export default function VentaDetailPage() {
 
     const [pedido, setPedido] = useState<any>(null)
     const [isLoading, setIsLoading] = useState(true)
+    const [isUpdating, setIsUpdating] = useState(false)
     const [error, setError] = useState(false)
     const { refreshCounts } = useDashboard()
 
@@ -46,7 +55,7 @@ export default function VentaDetailPage() {
                         image: order.product_image,
                         cliente: order.full_name,
                         cantidad: `${order.quantity_kg} kg`,
-                        estado: order.status || "Preparación",
+                        estado: order.status === "pending" ? "Pendiente" : (order.status || "Pendiente"),
                         fecha: format(new Date(order.created_at), "dd 'de' MMMM, yyyy", { locale: es }),
                         total: new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(order.price_usd),
                         location: order.country,
@@ -70,13 +79,11 @@ export default function VentaDetailPage() {
                             envio: "Por calcular / Incluido",
                             totalFinal: new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(order.price_usd || 0),
                         },
-                        tracking: [
-                            {
-                                fecha: format(new Date(order.created_at), "dd/MM/yyyy HH:mm", { locale: es }),
-                                estado: "Orden Recibida",
-                                ubicacion: "Sistema Agrilpa"
-                            }
-                        ],
+                        tracking: (order.tracking_history || []).map((t: any) => ({
+                            fecha: format(new Date(t.fecha), "dd/MM/yyyy HH:mm", { locale: es }),
+                            estado: t.estado,
+                            ubicacion: t.ubicacion
+                        })).reverse(),
                     })
 
                     fetch("/api/user/orders/mark-read", {
@@ -110,18 +117,54 @@ export default function VentaDetailPage() {
         return product?.image || "/placeholder.svg"
     }
 
-    const getEstadoColor = (estado: string) => {
-        switch (estado) {
-            case "Preparación":
-            case "Pendiente":
-                return "bg-blue-100 text-blue-800"
-            case "En Tránsito":
-                return "bg-orange-100 text-orange-800"
-            case "Entregado":
-                return "bg-green-100 text-green-800"
-            default:
-                return "bg-gray-100 text-gray-800"
+    const estados = ["Pendiente", "En preparación", "Tránsito", "Entregado"]
+
+    const handleUpdateStatus = async (newStatus: string) => {
+        setIsUpdating(true)
+        try {
+            const response = await fetch(`/api/user/orders/${orderId}`, {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ status: newStatus }),
+            })
+
+            if (response.ok) {
+                const data = await response.json()
+                const updatedOrder = data.order
+
+                if (data.warning) {
+                    toast.warning(data.warning, { duration: 6000 })
+                }
+
+                setPedido((prev: any) => ({
+                    ...prev,
+                    estado: newStatus,
+                    tracking: (Array.isArray(updatedOrder.tracking) ? updatedOrder.tracking : (updatedOrder.tracking_history || prev.tracking)).map((t: any) => ({
+                        fecha: format(new Date(t.fecha), "dd/MM/yyyy HH:mm", { locale: es }),
+                        estado: t.estado,
+                        ubicacion: t.ubicacion
+                    })).reverse()
+                }))
+                toast.success(`Estado actualizado a ${newStatus}`)
+                refreshCounts()
+            } else {
+                toast.error("Error al actualizar el estado")
+            }
+        } catch (err) {
+            console.error("Error updating status:", err)
+            toast.error("Error de red")
+        } finally {
+            setIsUpdating(false)
         }
+    }
+
+    const getEstadoColor = (estado: string) => {
+        const s = estado?.toLowerCase()
+        if (s === "pendiente" || s === "pending") return "bg-slate-100 text-slate-800"
+        if (s === "en preparación") return "bg-blue-100 text-blue-800"
+        if (s === "tránsito") return "bg-orange-100 text-orange-800"
+        if (s === "entregado") return "bg-green-100 text-green-800"
+        return "bg-gray-100 text-gray-800"
     }
 
     if (isLoading) {
@@ -174,6 +217,100 @@ export default function VentaDetailPage() {
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 <div className="lg:col-span-2 space-y-6">
+                    {/* Action Card: Highly Visible Status Management */}
+                    <Card className="border-2 border-primary/10 shadow-sm overflow-hidden relative bg-white">
+                        <CardHeader className="pb-3 text-center sm:text-left">
+                            <CardTitle className="text-xl flex items-center gap-2 justify-center sm:justify-start">
+                                <Badge className={`${getEstadoColor(pedido.estado)} text-base px-4 py-1.5 border-none shadow-sm`}>
+                                    {pedido.estado}
+                                </Badge>
+                                <span className="text-muted-foreground font-normal">Estado actual del pedido</span>
+                            </CardTitle>
+                        </CardHeader>
+                        <CardContent className="flex flex-col sm:flex-row items-center justify-between gap-6 pb-6">
+                            <div className="space-y-1 text-center sm:text-left">
+                                <h3 className="text-2xl font-bold">Gestión del Pedido</h3>
+                                <p className="text-muted-foreground text-sm max-w-md">
+                                    {pedido.estado === "Pendiente" && "El pedido ha sido recibido. El siguiente paso es empezar la preparación de los productos."}
+                                    {pedido.estado === "En preparación" && "Los productos están siendo preparados. Una vez listos, márcalos como enviados."}
+                                    {pedido.estado === "Tránsito" && "El pedido está en camino al cliente. Esperando confirmación de entrega."}
+                                    {pedido.estado === "Entregado" && "¡Proceso completado! El pedido ha sido entregado satisfactoriamente."}
+                                </p>
+                            </div>
+
+                            <div className="flex flex-col gap-3 min-w-[200px] w-full sm:w-auto">
+                                {pedido.estado !== "Entregado" && (
+                                    <>
+                                        {pedido.estado === "Pendiente" && (
+                                            <Button
+                                                size="lg"
+                                                className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold h-14 text-lg shadow-lg hover:shadow-blue-500/20 transition-all border-none"
+                                                onClick={() => handleUpdateStatus("En preparación")}
+                                                disabled={isUpdating}
+                                            >
+                                                {isUpdating ? <Loader className="w-6 h-6 animate-spin" /> : "Empezar Preparación"}
+                                            </Button>
+                                        )}
+                                        {pedido.estado === "En preparación" && (
+                                            <Button
+                                                size="lg"
+                                                className="w-full bg-orange-500 hover:bg-orange-600 text-white font-bold h-14 text-lg shadow-lg hover:shadow-orange-500/20 transition-all border-none"
+                                                onClick={() => handleUpdateStatus("Tránsito")}
+                                                disabled={isUpdating}
+                                            >
+                                                {isUpdating ? <Loader className="w-6 h-6 animate-spin" /> : "Marcar como Enviado"}
+                                            </Button>
+                                        )}
+                                        {pedido.estado === "Tránsito" && (
+                                            <Button
+                                                size="lg"
+                                                variant="outline"
+                                                className="w-full h-14 text-lg border-2 border-dashed border-primary/40 text-primary font-medium opacity-70"
+                                                disabled
+                                            >
+                                                Esperando al Comprador
+                                            </Button>
+                                        )}
+
+                                        <DropdownMenu>
+                                            <DropdownMenuTrigger asChild>
+                                                <Button variant="secondary" size="sm" className="w-full sm:w-auto bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium">
+                                                    Otros estados <ChevronDown className="w-4 h-4 ml-1" />
+                                                </Button>
+                                            </DropdownMenuTrigger>
+                                            <DropdownMenuContent align="center">
+                                                {estados.map((s) => {
+                                                    const statusRanks: Record<string, number> = {
+                                                        "Pendiente": 0,
+                                                        "En preparación": 1,
+                                                        "Tránsito": 2,
+                                                        "Entregado": 3
+                                                    }
+                                                    const isPastOrCurrent = statusRanks[s] <= statusRanks[pedido.estado]
+                                                    return (
+                                                        <DropdownMenuItem
+                                                            key={s}
+                                                            onClick={() => !isPastOrCurrent && handleUpdateStatus(s)}
+                                                            disabled={isPastOrCurrent}
+                                                        >
+                                                            {s}
+                                                        </DropdownMenuItem>
+                                                    )
+                                                })}
+                                            </DropdownMenuContent>
+                                        </DropdownMenu>
+                                    </>
+                                )}
+                                {pedido.estado === "Entregado" && (
+                                    <div className="flex items-center gap-2 text-green-600 bg-green-50 px-4 py-3 rounded-lg border border-green-200">
+                                        <Check className="w-6 h-6" />
+                                        <span className="font-bold">Ciclo Completado</span>
+                                    </div>
+                                )}
+                            </div>
+                        </CardContent>
+                    </Card>
+
                     <Card>
                         <CardHeader>
                             <CardTitle>Información del Producto</CardTitle>
@@ -197,10 +334,6 @@ export default function VentaDetailPage() {
                                         <p>
                                             <span className="font-semibold">Fecha de Orden:</span> {pedido.fecha}
                                         </p>
-                                        <div className="flex items-center gap-2">
-                                            <span className="font-semibold">Estado:</span>
-                                            <Badge className={getEstadoColor(pedido.estado)}>{pedido.estado}</Badge>
-                                        </div>
                                         <div className="pt-2">
                                             <Link href={`/producto/${pedido.slug}`}>
                                                 <Button variant="outline" size="sm" className="gap-2">
@@ -297,14 +430,14 @@ export default function VentaDetailPage() {
                         </CardHeader>
                         <CardContent>
                             <div className="space-y-4">
-                                {pedido.tracking.map((item: any, index: number) => (
+                                {pedido.tracking.slice().reverse().map((item: any, index: number) => (
                                     <div key={index} className="flex gap-4">
                                         <div className="flex flex-col items-center">
-                                            <div className={`w-4 h-4 rounded-full ${index === 0 ? "bg-green-500" : "bg-gray-300"}`} />
+                                            <div className={`w-4 h-4 rounded-full ${index === 0 ? "bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]" : "bg-gray-300"}`} />
                                             {index < pedido.tracking.length - 1 && <div className="w-1 h-12 bg-gray-300 my-1" />}
                                         </div>
                                         <div className="pb-4">
-                                            <p className="font-semibold">{item.estado}</p>
+                                            <p className={`font-semibold ${index === 0 ? "text-primary" : ""}`}>{item.estado}</p>
                                             <p className="text-sm text-muted-foreground">{item.fecha}</p>
                                             <p className="text-sm text-muted-foreground">{item.ubicacion}</p>
                                         </div>

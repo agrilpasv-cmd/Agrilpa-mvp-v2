@@ -3,8 +3,20 @@ import { type NextRequest, NextResponse } from "next/server"
 
 export async function POST(request: NextRequest) {
   try {
-    const { email, password, fullName, companyName, phone, country, userType, product1, product2, product3, volumeRange } =
-      await request.json()
+    const {
+      email,
+      password,
+      fullName,
+      companyName,
+      companyWebsite,
+      phone,
+      country,
+      userType,
+      product1,
+      product2,
+      product3,
+      volumeRange
+    } = await request.json()
 
     // Validar datos requeridos
     if (!email || !password || !fullName || !userType) {
@@ -21,6 +33,7 @@ export async function POST(request: NextRequest) {
       user_metadata: {
         full_name: fullName,
         company_name: companyName,
+        company_website: companyWebsite,
         user_type: userType,
         products_of_interest: [product1, product2, product3].filter(Boolean),
         annual_volume: volumeRange,
@@ -46,6 +59,7 @@ export async function POST(request: NextRequest) {
       email,
       full_name: fullName,
       company_name: companyName || null,
+      company_website: companyWebsite || null,
       phone: phone || null,
       country: country || null,
       user_type: userType,

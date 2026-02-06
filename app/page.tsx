@@ -33,15 +33,8 @@ export default function ComingSoon() {
       try {
         const localSession = AuthStorage.getSession()
         if (localSession) {
-          console.log("[v0] Local session found, redirecting based on role...")
-          if (localSession.role === "admin") {
-            console.log("[v0] Admin user detected, redirecting to /admin")
-            window.location.href = "/admin"
-            return
-          }
-          // console.log("[v0] Regular user detected, redirecting to /dashboard")
-          // window.location.href = "/dashboard"
-          // return
+          console.log("[v0] Local session found")
+          // Removed automatic redirect for admins to allow viewing home page
         }
 
         const supabase = createBrowserClient()
@@ -57,15 +50,7 @@ export default function ComingSoon() {
           const role = profile?.role || "user"
           AuthStorage.setSession(session.user.id, session.user.email || "", role)
 
-          if (role === "admin") {
-            console.log("[v0] Admin user detected, redirecting to /admin")
-            window.location.href = "/admin"
-            return
-          }
-
-          // console.log("[v0] Regular user detected, redirecting to /dashboard")
-          // window.location.href = "/dashboard"
-          // return
+          // Removed automatic redirect for admins to allow viewing home page
         }
       } catch (err) {
         console.error("[v0] Error checking auth:", err)

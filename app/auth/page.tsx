@@ -30,6 +30,7 @@ function AuthPageContent() {
     product2: "",
     product3: "",
     volumeRange: "",
+    companyWebsite: "",
   })
   const [submitted, setSubmitted] = useState(false)
   const [error, setError] = useState("")
@@ -161,6 +162,7 @@ function AuthPageContent() {
             product2: formData.product2,
             product3: formData.product3,
             volumeRange: formData.volumeRange,
+            companyWebsite: formData.companyWebsite,
           }),
         })
 
@@ -392,6 +394,21 @@ function AuthPageContent() {
                       </div>
 
                       <div>
+                        <label className="block text-sm font-medium text-foreground mb-2">Link de la página de su empresa (Opcional)</label>
+                        <div className="relative">
+                          <User className="absolute left-3 top-3 text-muted-foreground w-5 h-5" />
+                          <input
+                            type="url"
+                            name="companyWebsite"
+                            value={formData.companyWebsite}
+                            onChange={handleInputChange}
+                            placeholder="https://www.tuempresa.com"
+                            className="w-full pl-10 pr-4 py-3 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary transition"
+                          />
+                        </div>
+                      </div>
+
+                      <div>
                         <label className="block text-sm font-medium text-foreground mb-2">Correo Electrónico</label>
                         <div className="relative">
                           <Mail className="absolute left-3 top-3 text-muted-foreground w-5 h-5" />
@@ -479,7 +496,7 @@ function AuthPageContent() {
                                 onChange={handlePhoneInput}
                                 inputMode="numeric"
                                 placeholder="503"
-                                maxLength="4"
+                                maxLength={4}
                                 className="w-full pl-7 pr-4 py-3 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary transition"
                                 required
                               />
@@ -602,6 +619,7 @@ function AuthPageContent() {
                           product2: "",
                           product3: "",
                           volumeRange: "",
+                          companyWebsite: "",
                         })
                       }}
                       className="text-primary hover:underline font-medium"

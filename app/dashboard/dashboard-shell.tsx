@@ -23,6 +23,7 @@ import {
     Star,
     Mail,
     DollarSign,
+    MousePointer2,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -54,6 +55,8 @@ export default function DashboardShell({
         { href: "/", label: "Inicio", icon: Home, notifications: 0 },
         { href: "/dashboard", label: "Admin Dashboard", icon: LayoutDashboard, notifications: 0 },
         { href: "/admin/usuarios", label: "Gestión de Usuarios", icon: Users, notifications: 0 },
+        { href: "/admin/cotizaciones", label: "Cotizaciones", icon: ClipboardList, notifications: 0 },
+        { href: "/admin/contactar", label: "Contactar", icon: MousePointer2, notifications: 0 },
         { href: "/admin/publicaciones", label: "Publicaciones", icon: Package, notifications: 0 },
         { href: "/admin/visibilidad", label: "Visibilidad", icon: Eye, notifications: 0 },
         { href: "/admin/reviews", label: "Reviews", icon: Star, notifications: 0 },

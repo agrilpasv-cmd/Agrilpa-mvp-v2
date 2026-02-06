@@ -59,8 +59,13 @@ export async function middleware(request: NextRequest) {
     // Analytics Tracking (Fire and forget)
     // We only track main pages to avoid noise
     if (request.method === "GET" && !request.nextUrl.pathname.startsWith("/api")) {
+        // Detect country from header (Vercel/Cloudflare) or fallback to XX
         // @ts-ignore
-        const country = request.geo?.country || "SV" // "SV" for local testing (simulating El Salvador)
+        const country = request.geo?.country ||
+            request.headers.get("x-vercel-ip-country") ||
+            request.headers.get("cf-ipcountry") ||
+            "XX"
+
         const path = request.nextUrl.pathname
         const referrer = request.headers.get("referer") || ""
 

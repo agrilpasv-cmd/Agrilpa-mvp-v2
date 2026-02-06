@@ -87,7 +87,7 @@ export async function POST(request: Request) {
                 buyer_email: quotation.email,
                 buyer_phone: quotation.phone_number ? `+${quotation.country_code}${quotation.phone_number}` : null,
                 shipping_address: quotation.destination_country || "A convenir",
-                status: "pending",
+                status: "Pendiente",
                 origin: "quotation",
                 quotation_id: quotationId,
                 is_read_seller: false,
@@ -101,7 +101,14 @@ export async function POST(request: Request) {
                 certifications: productData?.certifications || null,
                 seller_contact_method: productData?.contact_method || null,
                 seller_contact_info: productData?.contact_info || null,
-                incoterm: quotation.incoterm || "EXW" // Use incoterm from quotation if available
+                incoterm: quotation.incoterm || "EXW", // Use incoterm from quotation if available
+                tracking: [
+                    {
+                        fecha: new Date().toISOString(),
+                        estado: "Orden Recibida",
+                        ubicacion: "Sistema Agrilpa"
+                    }
+                ]
             }
 
             const { data: orderData, error: orderError } = await supabaseAdmin

@@ -6,12 +6,23 @@ import Image from "next/image"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { ArrowLeft, Download, Printer, Loader, Eye } from "lucide-react"
+import { ArrowLeft, Download, Printer, Loader, Eye, Check } from "lucide-react"
 import { allProducts } from "@/lib/products-data"
 import { useEffect, useState } from "react"
 import { format } from "date-fns"
 import { es } from "date-fns/locale"
 import { useDashboard } from "../../context"
+import { toast } from "sonner"
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
 
 export default function CompraDetailPage() {
     const params = useParams()
@@ -21,7 +32,51 @@ export default function CompraDetailPage() {
     const [pedido, setPedido] = useState<any>(null)
     const [isLoading, setIsLoading] = useState(true)
     const [error, setError] = useState(false)
+    const [isUpdating, setIsUpdating] = useState(false)
+    const [showConfirmDialog, setShowConfirmDialog] = useState(false)
     const { refreshCounts } = useDashboard()
+
+    const handleConfirmDelivery = async () => {
+        setIsUpdating(true)
+        setShowConfirmDialog(false)
+
+        try {
+            const response = await fetch(`/api/user/orders/${orderId}`, {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ status: "Entregado" }),
+            })
+
+            const data = await response.json()
+
+            if (response.ok) {
+                const updatedOrder = data.order || data
+                const historyRaw = updatedOrder.tracking_history || updatedOrder.tracking || []
+
+                const formattedTracking = (Array.isArray(historyRaw) ? historyRaw : []).map((t: any) => ({
+                    fecha: format(new Date(t.fecha || new Date()), "dd/MM/yyyy HH:mm", { locale: es }),
+                    estado: t.estado,
+                    ubicacion: t.ubicacion
+                })).reverse()
+
+                setPedido((prev: any) => ({
+                    ...prev,
+                    estado: "Entregado",
+                    tracking: formattedTracking.length > 0 ? formattedTracking : prev.tracking
+                }))
+
+                toast.success("¡Pedido confirmado como entregado!")
+                refreshCounts()
+            } else {
+                toast.error(data.error || "Error al confirmar entrega")
+            }
+        } catch (err) {
+            console.error("Error confirming delivery:", err)
+            toast.error("Error al procesar la confirmación")
+        } finally {
+            setIsUpdating(false)
+        }
+    }
 
     useEffect(() => {
         if (!orderId) return
@@ -45,7 +100,7 @@ export default function CompraDetailPage() {
                         image: order.product_image,
                         cliente: order.full_name,
                         cantidad: `${order.quantity_kg} kg`,
-                        estado: order.status || "Preparación",
+                        estado: order.status === "pending" ? "Pendiente" : (order.status || "Pendiente"),
                         fecha: format(new Date(order.created_at), "dd 'de' MMMM, yyyy", { locale: es }),
                         total: new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(order.price_usd),
                         location: order.country,
@@ -74,13 +129,11 @@ export default function CompraDetailPage() {
                             company: order.seller_company,
                             phone: order.seller_phone
                         },
-                        tracking: [
-                            {
-                                fecha: format(new Date(order.created_at), "dd/MM/yyyy HH:mm", { locale: es }),
-                                estado: "Orden Recibida",
-                                ubicacion: "Sistema Agrilpa"
-                            }
-                        ],
+                        tracking: (Array.isArray(order.tracking_history) ? order.tracking_history : []).map((t: any) => ({
+                            fecha: format(new Date(t.fecha), "dd/MM/yyyy HH:mm", { locale: es }),
+                            estado: t.estado,
+                            ubicacion: t.ubicacion
+                        })).reverse(),
                         // Technical Specs
                         category: order.category,
                         origin_country: order.origin_country,
@@ -124,17 +177,12 @@ export default function CompraDetailPage() {
     }
 
     const getEstadoColor = (estado: string) => {
-        switch (estado) {
-            case "Preparación":
-            case "Pendiente":
-                return "bg-blue-100 text-blue-800"
-            case "En Tránsito":
-                return "bg-orange-100 text-orange-800"
-            case "Entregado":
-                return "bg-green-100 text-green-800"
-            default:
-                return "bg-gray-100 text-gray-800"
-        }
+        const s = estado?.toLowerCase()
+        if (s === "pendiente" || s === "pending") return "bg-slate-100 text-slate-800"
+        if (s === "en preparación") return "bg-blue-100 text-blue-800"
+        if (s === "tránsito") return "bg-orange-100 text-orange-800"
+        if (s === "entregado") return "bg-green-100 text-green-800"
+        return "bg-gray-100 text-gray-800"
     }
 
     if (isLoading) {
@@ -187,6 +235,72 @@ export default function CompraDetailPage() {
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 <div className="lg:col-span-2 space-y-6">
+                    {/* Buyer Action Card */}
+                    <Card className="border-2 border-green-100 shadow-sm overflow-hidden relative bg-white">
+                        <CardHeader className="pb-3 text-center sm:text-left">
+                            <CardTitle className="text-xl flex items-center gap-2 justify-center sm:justify-start">
+                                <Badge className={`${getEstadoColor(pedido.estado)} text-base px-4 py-1.5 border-none shadow-sm`}>
+                                    {pedido.estado}
+                                </Badge>
+                                <span className="text-muted-foreground font-normal">Estado de tu compra</span>
+                            </CardTitle>
+                        </CardHeader>
+                        <CardContent className="flex flex-col sm:flex-row items-center justify-between gap-6 pb-6">
+                            <div className="space-y-1 text-center sm:text-left">
+                                <h3 className="text-2xl font-bold text-green-800">Confirmación de Entrega</h3>
+                                <p className="text-green-700/80 text-sm max-w-md">
+                                    {pedido.estado !== "Entregado"
+                                        ? "Una vez que hayas recibido el producto y verificado que todo está en orden, por favor confirma la entrega."
+                                        : "Has confirmado la recepción de este pedido. ¡Gracias por confiar en Agrilpa!"}
+                                </p>
+                            </div>
+
+                            <div className="flex flex-col gap-3 min-w-[200px] w-full sm:w-auto">
+                                {pedido.estado !== "Entregado" && (
+                                    <Button
+                                        size="lg"
+                                        className="w-full bg-green-600 hover:bg-green-700 text-white font-bold h-14 text-lg shadow-lg hover:shadow-green-500/20 transition-all border-none"
+                                        onClick={() => setShowConfirmDialog(true)}
+                                        disabled={isUpdating}
+                                    >
+                                        {isUpdating ? <Loader className="w-6 h-6 animate-spin" /> : "Confirmar Entrega"}
+                                    </Button>
+                                )}
+
+                                <AlertDialog open={showConfirmDialog} onOpenChange={setShowConfirmDialog}>
+                                    <AlertDialogContent>
+                                        <AlertDialogHeader>
+                                            <div className="mx-auto w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mb-2">
+                                                <Check className="w-6 h-6 text-green-600" />
+                                            </div>
+                                            <AlertDialogTitle className="text-center text-xl">¿Confirmar entrega del pedido?</AlertDialogTitle>
+                                            <AlertDialogDescription className="text-center">
+                                                Al confirmar, declaras que has recibido tus productos satisfactoriamente. Esta acción actualizará el historial de rastreo y no podrá deshacerse.
+                                            </AlertDialogDescription>
+                                        </AlertDialogHeader>
+                                        <AlertDialogFooter className="sm:justify-center gap-3">
+                                            <AlertDialogCancel className="h-12 px-8 mt-0 border-slate-200 text-slate-600 hover:bg-slate-50">
+                                                Cancelar
+                                            </AlertDialogCancel>
+                                            <AlertDialogAction
+                                                onClick={handleConfirmDelivery}
+                                                className="h-12 px-8 bg-green-600 hover:bg-green-700 text-white font-semibold"
+                                            >
+                                                Sí, confirmar entrega
+                                            </AlertDialogAction>
+                                        </AlertDialogFooter>
+                                    </AlertDialogContent>
+                                </AlertDialog>
+                                {pedido.estado === "Entregado" && (
+                                    <div className="flex items-center gap-2 text-green-600 bg-white px-4 py-3 rounded-lg border border-green-200 shadow-sm">
+                                        <Check className="w-6 h-6" />
+                                        <span className="font-bold">Entrega Confirmada</span>
+                                    </div>
+                                )}
+                            </div>
+                        </CardContent>
+                    </Card>
+
                     <Card>
                         <CardHeader>
                             <CardTitle>Información del Producto</CardTitle>
@@ -210,10 +324,6 @@ export default function CompraDetailPage() {
                                         <p>
                                             <span className="font-semibold">Fecha de Orden:</span> {pedido.fecha}
                                         </p>
-                                        <div className="flex items-center gap-2">
-                                            <span className="font-semibold">Estado:</span>
-                                            <Badge className={getEstadoColor(pedido.estado)}>{pedido.estado}</Badge>
-                                        </div>
                                         <div className="pt-2">
                                             <Link href={`/producto/${pedido.slug}`}>
                                                 <Button variant="outline" size="sm" className="gap-2">
@@ -387,14 +497,14 @@ export default function CompraDetailPage() {
                         </CardHeader>
                         <CardContent>
                             <div className="space-y-4">
-                                {pedido.tracking.map((item: any, index: number) => (
+                                {pedido.tracking.slice().reverse().map((item: any, index: number) => (
                                     <div key={index} className="flex gap-4">
                                         <div className="flex flex-col items-center">
-                                            <div className={`w-4 h-4 rounded-full ${index === 0 ? "bg-green-500" : "bg-gray-300"}`} />
+                                            <div className={`w-4 h-4 rounded-full ${index === 0 ? "bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]" : "bg-gray-300"}`} />
                                             {index < pedido.tracking.length - 1 && <div className="w-1 h-12 bg-gray-300 my-1" />}
                                         </div>
                                         <div className="pb-4">
-                                            <p className="font-semibold">{item.estado}</p>
+                                            <p className={`font-semibold ${index === 0 ? "text-primary" : ""}`}>{item.estado}</p>
                                             <p className="text-sm text-muted-foreground">{item.fecha}</p>
                                             <p className="text-sm text-muted-foreground">{item.ubicacion}</p>
                                         </div>

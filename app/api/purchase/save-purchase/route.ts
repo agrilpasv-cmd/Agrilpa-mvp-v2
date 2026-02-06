@@ -76,6 +76,14 @@ export async function POST(request: NextRequest) {
           payment_method: data.paymentMethod,
           special_instructions: data.specialInstructions || null,
           is_read: false,
+          status: "Pendiente",
+          tracking: [
+            {
+              fecha: new Date().toISOString(),
+              estado: "Orden Recibida",
+              ubicacion: "Sistema Agrilpa"
+            }
+          ],
         },
       ])
       .select()

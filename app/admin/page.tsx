@@ -21,10 +21,11 @@ export default function AdminDashboardPage() {
   })
   const [analyticsData, setAnalyticsData] = useState<any>(null)
   const [loading, setLoading] = useState(true)
+  const [range, setRange] = useState("7d")
 
-  const fetchData = async () => {
+  const fetchData = async (currentRange = range) => {
     try {
-      const response = await fetch("/api/admin/stats", {
+      const response = await fetch(`/api/admin/stats?range=${currentRange}&t=${Date.now()}`, {
         cache: "no-store",
         headers: {
           "Cache-Control": "no-cache, no-store, must-revalidate",
@@ -135,7 +136,14 @@ export default function AdminDashboardPage() {
           </div>
 
           {analyticsData ? (
-            <AnalyticsDashboard data={analyticsData} />
+            <AnalyticsDashboard
+              data={analyticsData}
+              currentRange={range}
+              onRangeChange={(newRange) => {
+                setRange(newRange)
+                fetchData(newRange)
+              }}
+            />
           ) : (
             <div className="p-12 text-center border rounded-lg bg-muted/10">Cargando analíticas...</div>
           )}

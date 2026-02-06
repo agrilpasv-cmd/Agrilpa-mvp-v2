@@ -21,6 +21,8 @@ import {
   Package,
   Eye,
   LayoutDashboard,
+  ClipboardList,
+  MousePointer2,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
@@ -36,6 +38,8 @@ export default function AdminLayout({
     { href: "/", label: "Inicio", icon: Home },
     { href: "/admin", label: "Dashboard", icon: LayoutDashboard },
     { href: "/admin/usuarios", label: "Gestión de Usuarios", icon: Users },
+    { href: "/admin/cotizaciones", label: "Cotizaciones", icon: ClipboardList },
+    { href: "/admin/contactar", label: "Contactar", icon: MousePointer2 },
     { href: "/admin/publicaciones", label: "Publicaciones", icon: Package },
     { href: "/admin/visibilidad", label: "Visibilidad", icon: Eye },
     { href: "/admin/reviews", label: "Reviews", icon: Star },

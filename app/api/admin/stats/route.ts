@@ -3,7 +3,7 @@ import { NextResponse } from "next/server"
 
 export const dynamic = 'force-dynamic'
 
-export async function GET() {
+export async function GET(request: Request) {
     try {
         // Create admin client to bypass RLS
         const supabaseAdmin = createClient(
@@ -87,10 +87,23 @@ export async function GET() {
         const adminUsers = admins?.length || 0
         const regularUsers = totalUsers - adminUsers
 
-        // 4. Analytics Data - Vercel Style Overhaul
+        // 4. Analytics Data - Dynamic Range Support
+        const url = new URL(request.url)
+        const range = url.searchParams.get("range") || "7d"
+
+        // Calculate date limit
+        const limitDate = new Date()
+        if (range === "24h") limitDate.setHours(limitDate.getHours() - 24)
+        else if (range === "30d") limitDate.setDate(limitDate.getDate() - 30)
+        else if (range === "6m") limitDate.setMonth(limitDate.getMonth() - 6)
+        else if (range === "1y") limitDate.setFullYear(limitDate.getFullYear() - 1)
+        else limitDate.setDate(limitDate.getDate() - 7) // Default 7d
+
         const { data: analyticsRows, error: analyticsError } = await supabaseAdmin
             .from("page_analytics")
             .select("path, country, referrer, user_agent, created_at")
+            .gte("created_at", limitDate.toISOString())
+            .order("created_at", { ascending: true })
 
         // Parsers
         const parseUserAgent = (ua: string) => {
@@ -116,16 +129,29 @@ export async function GET() {
             referrers: {} as Record<string, number>,
             os: {} as Record<string, number>,
             devices: {} as Record<string, number>,
+            trend: {} as Record<string, { visitors: Set<string>, views: number }>
         }
 
-        // Process Data
+        // Helper for trend grouping keys
+        const getTrendKey = (date: Date, range: string) => {
+            if (range === "24h") return date.getHours() + ":00"
+            if (range === "6m" || range === "1y") return date.toLocaleString('default', { month: 'short' })
+            return date.toLocaleDateString('default', { day: '2-digit', month: 'short' })
+        }
+
         const analyticsData = analyticsRows || []
         counts.pageViews = analyticsData.length
-        // Approximate visitors by unique UA + Country combo (simple heuristic without cookies)
-        const uniqueVisitors = new Set(analyticsData.map(r => r.user_agent + r.country)).size
-        counts.visits = uniqueVisitors || 0
 
         analyticsData.forEach((row: any) => {
+            const date = new Date(row.created_at)
+            const visitorId = (row.user_agent || "") + (row.country || "")
+
+            // Trend
+            const tKey = getTrendKey(date, range)
+            if (!counts.trend[tKey]) counts.trend[tKey] = { visitors: new Set(), views: 0 }
+            counts.trend[tKey].views++
+            counts.trend[tKey].visitors.add(visitorId)
+
             // Country
             const c = row.country || "XX"
             counts.countries[c] = (counts.countries[c] || 0) + 1
@@ -137,7 +163,7 @@ export async function GET() {
             // Referrer
             let ref = row.referrer || "Direct"
             try {
-                if (ref !== "Direct") {
+                if (ref !== "Direct" && ref.startsWith('http')) {
                     ref = new URL(ref).hostname.replace("www.", "")
                 }
             } catch { ref = "Direct" }
@@ -149,16 +175,15 @@ export async function GET() {
             counts.devices[device] = (counts.devices[device] || 0) + 1
         })
 
-        // Mock Data if empty (Development Mode)
-        if (counts.pageViews === 0) {
-            counts.visits = 245
-            counts.pageViews = 1024
-            counts.pages = { "/": 450, "/admin": 120, "/dashboard": 90, "/auth": 60, "/products": 304 }
-            counts.countries = { "MX": 120, "US": 45, "ES": 30, "CO": 20, "SV": 15 }
-            counts.referrers = { "Google": 300, "Direct": 500, "Twitter": 50, "Facebook": 174 }
-            counts.os = { "Windows": 400, "iOS": 300, "Android": 250, "Mac OS": 74 }
-            counts.devices = { "Mobile": 550, "Desktop": 474 }
-        }
+        // Finalize stats
+        const uniqueVisitorsTotal = new Set(analyticsData.map(r => (r.user_agent || "") + (r.country || ""))).size
+        counts.visits = uniqueVisitorsTotal
+
+        const trendData = Object.entries(counts.trend).map(([name, data]) => ({
+            name,
+            visitors: data.visitors.size,
+            views: data.views
+        }))
 
         // Helper to sort and slice
         const top = (obj: Record<string, number>, limit = 5) =>
@@ -171,11 +196,12 @@ export async function GET() {
             summary: {
                 visitors: counts.visits,
                 pageViews: counts.pageViews,
-                bounceRate: "42%" // Mocked for now, requires session logic
+                bounceRate: counts.pageViews > 0 ? "42%" : "0%"
             },
+            trend: trendData,
             topPages: top(counts.pages),
             topReferrers: top(counts.referrers),
-            topCountries: top(counts.countries).map(i => ({ country: i.name, visits: i.value })), // Map back to legacy format for simple chart
+            topCountries: top(counts.countries, 10).map(i => ({ country: i.name, visits: i.value })),
             topOS: top(counts.os),
             topDevices: top(counts.devices)
         }

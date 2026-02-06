@@ -13,6 +13,7 @@ export function Navbar() {
   const [isOpen, setIsOpen] = useState(false)
   const [isLoggedIn, setIsLoggedIn] = useState(false)
   const [userRole, setUserRole] = useState<string | null>(null)
+  const [notificationCount, setNotificationCount] = useState(0)
   const pathname = usePathname()
 
   useEffect(() => {
@@ -20,8 +21,25 @@ export function Navbar() {
     if (session) {
       setIsLoggedIn(true)
       setUserRole(session.role)
+      fetchNotificationCount()
+
+      // Set up interval to fetch notification count every 60 seconds
+      const interval = setInterval(fetchNotificationCount, 60000)
+      return () => clearInterval(interval)
     }
   }, [])
+
+  const fetchNotificationCount = async () => {
+    try {
+      const response = await fetch("/api/notifications/count")
+      if (response.ok) {
+        const data = await response.json()
+        setNotificationCount(data.count || 0)
+      }
+    } catch (error) {
+      console.error("[Navbar] Fetch notification count error:", error)
+    }
+  }
 
   const handleLogout = async () => {
     try {
@@ -94,9 +112,15 @@ export function Navbar() {
             {isLoggedIn ? (
               <>
                 <Link href={getPanelUrl()}>
-                  <Button size="sm" className="gap-2 bg-primary hover:bg-primary/90 text-white">
+                  <Button size="sm" className="gap-2 bg-primary hover:bg-primary/90 text-white relative">
                     <User className="h-4 w-4" />
                     Panel
+                    {notificationCount > 0 && (
+                      <span className="absolute -top-1 -right-1 flex h-3 w-3">
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                        <span className="relative inline-flex rounded-full h-3 w-3 bg-red-500"></span>
+                      </span>
+                    )}
                   </Button>
                 </Link>
                 <Button
@@ -161,9 +185,15 @@ export function Navbar() {
               {isLoggedIn ? (
                 <>
                   <Link href={getPanelUrl()} className="block">
-                    <Button size="sm" className="w-full gap-2 bg-primary hover:bg-primary/90 text-white">
+                    <Button size="sm" className="w-full gap-2 bg-primary hover:bg-primary/90 text-white relative">
                       <User className="h-4 w-4" />
                       Panel
+                      {notificationCount > 0 && (
+                        <span className="absolute top-2 right-2 flex h-3 w-3">
+                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                          <span className="relative inline-flex rounded-full h-3 w-3 bg-red-500"></span>
+                        </span>
+                      )}
                     </Button>
                   </Link>
                   <Button

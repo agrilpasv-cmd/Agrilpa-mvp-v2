@@ -220,16 +220,51 @@ export default function ProductPage() {
     .slice(0, 3)
 
   const handleContactVendor = () => {
+    console.log(`[v0] handleContactVendor called for: ${product.name}`)
     const contactMethod = (product as any).contactMethod
     const contactInfo = (product as any).contactInfo
     const countryCode = (product as any).countryCode
     const phoneNumber = (product as any).phoneNumber
 
     if ((contactMethod === "WhatsApp" && countryCode && phoneNumber) || (contactMethod && contactInfo)) {
+      console.log(`[v0] Opening contact dialog for method: ${contactMethod}`)
       setIsContactDialogOpen(true)
     } else {
-      // Fallback to chat overlay for static products with no specific contact info
+      console.log(`[v0] No direct contact info, opening chat with vendor: ${(product as any).vendorId}`)
       setIsChatOpen(true)
+    }
+
+    // Track initial "Contact Vendor" click (generic)
+    // Use a small timeout to ensure tracking starts before potential UI shifts
+    setTimeout(() => trackContactClick("generic"), 0)
+  }
+
+  const trackContactClick = async (type: string) => {
+    if (!product) return
+
+    try {
+      console.log(`[v0] Tracking click: ${type}`, {
+        productId: product.id,
+        sellerId: (product as any).vendorId
+      })
+
+      const response = await fetch("/api/products/track-contact-click", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        keepalive: true,
+        body: JSON.stringify({
+          productId: product.id,
+          productTitle: product.name,
+          sellerId: (product as any).vendorId,
+          clickType: type,
+          userId: currentUserId
+        })
+      })
+
+      const result = await response.json()
+      console.log(`[v0] Tracking result for ${type}:`, result)
+    } catch (err) {
+      console.error("[v0] Failed to track contact click:", err)
     }
   }
 
@@ -333,10 +368,7 @@ export default function ProductPage() {
         })
       } else {
         console.error("Error Response:", result)
-        const detailedError = `[URL: ${apiUrl}] ${result.error || "Error desconocido"}` +
-          (result.details ? `\nDetalles: ${result.details}` : "") +
-          (result.missingFields ? `\nFaltan: ${result.missingFields.join(", ")}` : "")
-
+        const detailedError = result.details || result.error || "Error al enviar la cotización"
         alert(detailedError)
       }
     } catch (error) {
@@ -700,6 +732,7 @@ export default function ProductPage() {
                     onClick={() => {
                       const message = encodeURIComponent(`Hola, estoy interesado en su producto "${product.name}" publicado en Agrilpa.`)
                       window.open(`https://api.whatsapp.com/send?phone=${(product as any).countryCode}${(product as any).phoneNumber}&text=${message}`, '_blank')
+                      trackContactClick("whatsapp")
                     }}
                   >
                     <MessageCircle className="w-6 h-6" />
@@ -739,6 +772,7 @@ export default function ProductPage() {
                       className="w-full h-12 text-lg font-semibold shadow-md transition-all hover:scale-[1.02]"
                       onClick={() => {
                         window.open(`mailto:${(product as any).contactInfo}`, '_blank')
+                        trackContactClick("email")
                       }}
                     >
                       <FileText className="w-5 h-5 mr-2" />
@@ -749,6 +783,7 @@ export default function ProductPage() {
                       className="w-full bg-[#0088cc] hover:bg-[#007dbd] text-white h-12 text-lg font-semibold shadow-md transition-all hover:scale-[1.02]"
                       onClick={() => {
                         window.open(`https://t.me/${(product as any).contactInfo}`, '_blank')
+                        trackContactClick("telegram")
                       }}
                     >
                       <FileText className="w-5 h-5 mr-2" />

@@ -122,7 +122,14 @@ export async function GET(
             packaging_size: finalData.packaging_size || "N/A",
             certifications: finalData.certifications || "En proceso",
             seller_contact_method: finalData.seller_contact_method || "Plataforma Agrilpa",
-            seller_contact_info: finalData.seller_contact_info || ""
+            seller_contact_info: finalData.seller_contact_info || "",
+            tracking_history: finalData.tracking || [
+                {
+                    fecha: finalData.created_at,
+                    estado: "Orden Recibida",
+                    ubicacion: "Sistema Agrilpa"
+                }
+            ]
         } : {
             // Native purchase record (direct buy)
             id: finalData.id,
@@ -159,13 +166,182 @@ export async function GET(
             packaging_size: "N/A",
             certifications: "Verificada",
             seller_contact_method: "Plataforma Agrilpa",
-            seller_contact_info: ""
+            seller_contact_info: "",
+            tracking_history: finalData.tracking || [
+                {
+                    fecha: finalData.created_at,
+                    estado: "Orden Recibida",
+                    ubicacion: "Sistema Agrilpa"
+                }
+            ]
         }
 
         return NextResponse.json({ order: formattedOrder })
 
     } catch (error) {
         console.error("Error fetching order detail:", error)
+        return NextResponse.json({ error: "Internal Server Error" }, { status: 500 })
+    }
+}
+
+export async function PATCH(
+    request: Request,
+    { params }: { params: Promise<{ id: string }> }
+) {
+    try {
+        const { id } = await params
+        const body = await request.json()
+        const { status } = body
+
+        if (!status) {
+            return NextResponse.json({ error: "Missing status" }, { status: 400 })
+        }
+
+        const cookieStore = await cookies()
+        const supabase = createServerClient(
+            process.env.NEXT_PUBLIC_SUPABASE_URL!,
+            process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+            {
+                cookies: {
+                    getAll() {
+                        return cookieStore.getAll()
+                    },
+                    setAll(cookiesToSet) {
+                        cookiesToSet.forEach(({ name, value, options }) => cookieStore.set(name, value, options))
+                    },
+                },
+            },
+        )
+
+        const {
+            data: { session },
+        } = await supabase.auth.getSession()
+
+        if (!session) {
+            return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+        }
+
+        const userId = session.user.id
+
+        // Use Admin client for update
+        const supabaseAdmin = createClient(
+            process.env.NEXT_PUBLIC_SUPABASE_URL!,
+            process.env.SUPABASE_SERVICE_ROLE_KEY!
+        )
+
+        // Fetch current record to get tracking and ownership
+        let currentRecord: any = null
+        let table = "orders"
+        let userRole: 'seller' | 'buyer' = 'seller'
+
+        // Check if seller
+        const { data: orderAsSeller } = await supabaseAdmin.from("orders").select("*").eq("id", id).eq("seller_id", userId).single()
+        if (orderAsSeller) {
+            currentRecord = orderAsSeller
+            userRole = 'seller'
+        } else {
+            const { data: purchaseAsSeller } = await supabaseAdmin.from("purchases").select("*").eq("id", id).eq("seller_id", userId).single()
+            if (purchaseAsSeller) {
+                currentRecord = purchaseAsSeller
+                table = "purchases"
+                userRole = 'seller'
+            } else {
+                // Check if buyer
+                const { data: orderAsBuyer } = await supabaseAdmin.from("orders").select("*").eq("id", id).eq("buyer_id", userId).single()
+                if (orderAsBuyer) {
+                    currentRecord = orderAsBuyer
+                    userRole = 'buyer'
+                } else {
+                    const { data: purchaseAsBuyer } = await supabaseAdmin.from("purchases").select("*").eq("id", id).eq("user_id", userId).single()
+                    if (purchaseAsBuyer) {
+                        currentRecord = purchaseAsBuyer
+                        table = "purchases"
+                        userRole = 'buyer'
+                    }
+                }
+            }
+        }
+
+        if (!currentRecord) {
+            return NextResponse.json({ error: "Record not found or unauthorized" }, { status: 404 })
+        }
+
+        // Restrictions
+        if (userRole === 'buyer' && status !== "Entregado") {
+            return NextResponse.json({ error: "Compradores solo pueden marcar como 'Entregado'" }, { status: 403 })
+        }
+
+        // Status rank map (must go forward)
+        const statusRanks: Record<string, number> = {
+            "Pendiente": 0,
+            "En preparación": 1,
+            "Tránsito": 2,
+            "Entregado": 3
+        }
+
+        const currentRank = statusRanks[currentRecord.status] || 0
+        const newRank = statusRanks[status] || 0
+
+        if (newRank <= currentRank && currentRecord.status !== "Pendiente") {
+            return NextResponse.json({
+                error: `No se puede revertir el estado de '${currentRecord.status}' a '${status}'`
+            }, { status: 400 })
+        }
+
+        // Prepare tracking entries
+        const now = new Date().toISOString()
+
+        // Ensure we always start with "Orden Recibida" if the array is empty or null
+        const initialEntry = {
+            fecha: currentRecord.created_at || now,
+            estado: "Orden Recibida",
+            ubicacion: "Sistema Agrilpa"
+        }
+
+        let updatedTracking = []
+        if (Array.isArray(currentRecord.tracking) && currentRecord.tracking.length > 0) {
+            // Check if "Orden Recibida" is already there, if not, prepend it
+            const hasInitial = currentRecord.tracking.some((t: any) => t.estado === "Orden Recibida")
+            updatedTracking = hasInitial ? [...currentRecord.tracking] : [initialEntry, ...currentRecord.tracking]
+        } else {
+            updatedTracking = [initialEntry]
+        }
+
+        // Add the new status entry
+        updatedTracking.push({
+            fecha: now,
+            estado: status,
+            ubicacion: "Sistema Agrilpa"
+        })
+
+        // Update in DB
+        const { data: updateData, error: updateError } = await supabaseAdmin
+            .from(table)
+            .update({
+                status,
+                tracking: updatedTracking
+            })
+            .eq("id", id)
+            .select()
+
+        if (updateError) {
+            console.error(`Error updating ${table} status:`, updateError)
+            // If it's a "column does not exist" error, at least update the status!
+            if (updateError.message.includes("column \"tracking\" does not exist")) {
+                await supabaseAdmin.from(table).update({ status }).eq("id", id)
+                return NextResponse.json({
+                    success: true,
+                    warning: "Status updated but tracking failed (missing column). Please run the SQL script.",
+                    order: { ...currentRecord, status }
+                })
+            }
+            return NextResponse.json({ error: updateError.message }, { status: 500 })
+        }
+
+        return NextResponse.json({ success: true, order: updateData?.[0] })
+
+    } catch (error) {
+        console.error("Error updating order status:", error)
         return NextResponse.json({ error: "Internal Server Error" }, { status: 500 })
     }
 }

@@ -21,6 +21,7 @@ interface User {
   annual_volume?: string
   country_code?: string
   metadata_phone_number?: string
+  company_website?: string
 }
 
 export default function AdminUsersPage() {
@@ -141,6 +142,7 @@ export default function AdminUsersPage() {
                     <th className="text-left p-4 font-medium">Nombre</th>
                     <th className="text-left p-4 font-medium">Email</th>
                     <th className="text-left p-4 font-medium">Empresa</th>
+                    <th className="text-left p-4 font-medium">Web/Link</th>
                     <th className="text-left p-4 font-medium">Teléfono</th>
                     <th className="text-left p-4 font-medium">País</th>
                     <th className="text-left p-4 font-medium">Productos de Interés</th>
@@ -156,6 +158,20 @@ export default function AdminUsersPage() {
                       <td className="p-4">{user.full_name}</td>
                       <td className="p-4">{user.email}</td>
                       <td className="p-4">{user.company_name || "-"}</td>
+                      <td className="p-4">
+                        {user.company_website ? (
+                          <a
+                            href={user.company_website.startsWith('http') ? user.company_website : `https://${user.company_website}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-primary hover:underline text-sm truncate max-w-[150px] inline-block"
+                          >
+                            Visitar sitio
+                          </a>
+                        ) : (
+                          <span className="text-muted-foreground">-</span>
+                        )}
+                      </td>
                       <td className="p-4">
                         {user.country_code && user.metadata_phone_number
                           ? `+${user.country_code} ${user.metadata_phone_number}`

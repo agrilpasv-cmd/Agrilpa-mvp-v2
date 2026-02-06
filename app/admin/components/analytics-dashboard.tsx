@@ -10,6 +10,8 @@ const getCountryName = (code: string) => {
     const names: Record<string, string> = {
         "MX": "México", "US": "Estados Unidos", "CO": "Colombia", "ES": "España",
         "AR": "Argentina", "CL": "Chile", "PE": "Perú", "SV": "El Salvador",
+        "GT": "Guatemala", "HN": "Honduras", "NI": "Nicaragua", "CR": "Costa Rica",
+        "PA": "Panamá", "BR": "Brasil", "EC": "Ecuador", "VE": "Venezuela", "UY": "Uruguay", "PY": "Paraguay",
         "XX": "Desconocido",
     }
     return names[code] || code
@@ -22,26 +24,20 @@ interface AnalyticsDashboardProps {
             pageViews: number
             bounceRate: string
         }
+        trend: { name: string; visitors: number; views: number }[]
         topPages: { name: string; value: number }[]
         topReferrers: { name: string; value: number }[]
         topCountries: { country: string; visits: number }[]
         topOS: { name: string; value: number }[]
         topDevices: { name: string; value: number }[]
     }
+    currentRange: string
+    onRangeChange: (range: string) => void
 }
 
-export function AnalyticsDashboard({ data }: AnalyticsDashboardProps) {
-    // Mock trend data for the area chart (simulating last 7 days)
-    // Ideally this would come from the API as time-series data
-    const chartData = [
-        { name: "Mon", visitors: Math.floor(data.summary.visitors * 0.1), views: Math.floor(data.summary.pageViews * 0.1) },
-        { name: "Tue", visitors: Math.floor(data.summary.visitors * 0.15), views: Math.floor(data.summary.pageViews * 0.12) },
-        { name: "Wed", visitors: Math.floor(data.summary.visitors * 0.2), views: Math.floor(data.summary.pageViews * 0.25) },
-        { name: "Thu", visitors: Math.floor(data.summary.visitors * 0.1), views: Math.floor(data.summary.pageViews * 0.1) },
-        { name: "Fri", visitors: Math.floor(data.summary.visitors * 0.25), views: Math.floor(data.summary.pageViews * 0.3) },
-        { name: "Sat", visitors: Math.floor(data.summary.visitors * 0.15), views: Math.floor(data.summary.pageViews * 0.1) },
-        { name: "Sun", visitors: Math.floor(data.summary.visitors * 0.05), views: Math.floor(data.summary.pageViews * 0.03) },
-    ]
+export function AnalyticsDashboard({ data, currentRange, onRangeChange }: AnalyticsDashboardProps) {
+    // Use trend data directly from API
+    const chartData = data.trend || []
 
     return (
         <div className="space-y-6">
@@ -87,9 +83,20 @@ export function AnalyticsDashboard({ data }: AnalyticsDashboardProps) {
 
             {/* Main Chart */}
             <Card className="p-6">
-                <div className="mb-6">
-                    <h3 className="text-lg font-semibold">Traffic Overview</h3>
-                    <p className="text-sm text-muted-foreground">Visitors vs Page Views (Last 7 Days)</p>
+                <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
+                    <div>
+                        <h3 className="text-lg font-semibold">Traffic Overview</h3>
+                        <p className="text-sm text-muted-foreground">Real-time visitors vs page views</p>
+                    </div>
+                    <Tabs value={currentRange} onValueChange={onRangeChange} className="w-auto">
+                        <TabsList>
+                            <TabsTrigger value="24h" className="text-xs">24h</TabsTrigger>
+                            <TabsTrigger value="7d" className="text-xs">7 Days</TabsTrigger>
+                            <TabsTrigger value="30d" className="text-xs">Month</TabsTrigger>
+                            <TabsTrigger value="6m" className="text-xs">6 Months</TabsTrigger>
+                            <TabsTrigger value="1y" className="text-xs">Year</TabsTrigger>
+                        </TabsList>
+                    </Tabs>
                 </div>
                 <ResponsiveContainer width="100%" height={300}>
                     <AreaChart data={chartData}>
