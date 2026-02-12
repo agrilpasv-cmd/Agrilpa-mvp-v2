@@ -450,6 +450,7 @@ export default function ProductPage() {
                       target="_blank"
                       rel="noopener noreferrer"
                       className="inline-flex items-center gap-2 px-4 py-2 bg-[#25D366] hover:bg-[#128C7E] text-white font-semibold rounded-md transition-colors w-full justify-center"
+                      onClick={() => trackContactClick("whatsapp")}
                     >
                       <MessageCircle className="w-4 h-4" />
                       Mandar mensaje
@@ -461,6 +462,7 @@ export default function ProductPage() {
                     <a
                       href={`mailto:${(product as any).contactInfo}`}
                       className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-md transition-colors w-full justify-center"
+                      onClick={() => trackContactClick("email")}
                     >
                       <FileText className="w-4 h-4" />
                       Mandar correo
@@ -474,6 +476,7 @@ export default function ProductPage() {
                       target="_blank"
                       rel="noopener noreferrer"
                       className="inline-flex items-center gap-2 px-4 py-2 bg-[#0088cc] hover:bg-[#007dbd] text-white font-semibold rounded-md transition-colors w-full justify-center"
+                      onClick={() => trackContactClick("telegram")}
                     >
                       <FileText className="w-4 h-4" />
                       Mandar mensaje

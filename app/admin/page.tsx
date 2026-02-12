@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, useRef, useCallback } from "react"
 import { Card } from "@/components/ui/card"
 import { Users, MessageSquare, Shield, Database } from "lucide-react"
 import Link from "next/link"
@@ -21,42 +21,71 @@ export default function AdminDashboardPage() {
   })
   const [analyticsData, setAnalyticsData] = useState<any>(null)
   const [loading, setLoading] = useState(true)
+  const [analyticsLoading, setAnalyticsLoading] = useState(false)
   const [range, setRange] = useState("7d")
 
-  const fetchData = async (currentRange = range) => {
+  // Refs to handle race conditions
+  const rangeRef = useRef(range)
+  const abortControllerRef = useRef<AbortController | null>(null)
+
+  const fetchData = useCallback(async (currentRange?: string) => {
+    const fetchRange = currentRange || rangeRef.current
+
+    // Cancel any in-flight request
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort()
+    }
+    const controller = new AbortController()
+    abortControllerRef.current = controller
+
     try {
-      const response = await fetch(`/api/admin/stats?range=${currentRange}&t=${Date.now()}`, {
+      const response = await fetch(`/api/admin/stats?range=${fetchRange}&t=${Date.now()}`, {
         cache: "no-store",
+        signal: controller.signal,
         headers: {
           "Cache-Control": "no-cache, no-store, must-revalidate",
           Pragma: "no-cache",
         },
       })
 
+      // If this request was aborted, don't update state
+      if (controller.signal.aborted) return
+
       if (response.ok) {
         const data = await response.json()
-        setStats({
-          totalUsers: data.totalUsers,
-          adminUsers: data.adminUsers,
-          regularUsers: data.regularUsers,
-        })
-        if (data.detailedAnalytics) {
-          setAnalyticsData(data.detailedAnalytics)
+
+        // Only update if this is still the active range
+        if (rangeRef.current === fetchRange) {
+          setStats({
+            totalUsers: data.totalUsers,
+            adminUsers: data.adminUsers,
+            regularUsers: data.regularUsers,
+          })
+          if (data.detailedAnalytics) {
+            setAnalyticsData(data.detailedAnalytics)
+          }
         }
       }
-    } catch (error) {
+    } catch (error: any) {
+      if (error?.name === "AbortError") return
       console.error("Error fetching stats:", error)
     } finally {
-      setLoading(false)
+      if (!controller.signal.aborted) {
+        setLoading(false)
+        setAnalyticsLoading(false)
+      }
     }
-  }
+  }, [])
 
   useEffect(() => {
     fetchData()
-    // Auto-refresh every 30 seconds for real-time analytics
-    const interval = setInterval(fetchData, 30000)
-    return () => clearInterval(interval)
-  }, [])
+    // Auto-refresh every 30 seconds using the current range via ref
+    const interval = setInterval(() => fetchData(), 30000)
+    return () => {
+      clearInterval(interval)
+      if (abortControllerRef.current) abortControllerRef.current.abort()
+    }
+  }, [fetchData])
 
   if (loading) {
     return (
@@ -139,8 +168,11 @@ export default function AdminDashboardPage() {
             <AnalyticsDashboard
               data={analyticsData}
               currentRange={range}
+              loading={analyticsLoading}
               onRangeChange={(newRange) => {
                 setRange(newRange)
+                rangeRef.current = newRange
+                setAnalyticsLoading(true)
                 fetchData(newRange)
               }}
             />

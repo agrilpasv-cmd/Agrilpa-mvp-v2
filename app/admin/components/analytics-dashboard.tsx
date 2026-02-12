@@ -32,15 +32,16 @@ interface AnalyticsDashboardProps {
         topDevices: { name: string; value: number }[]
     }
     currentRange: string
+    loading?: boolean
     onRangeChange: (range: string) => void
 }
 
-export function AnalyticsDashboard({ data, currentRange, onRangeChange }: AnalyticsDashboardProps) {
+export function AnalyticsDashboard({ data, currentRange, loading, onRangeChange }: AnalyticsDashboardProps) {
     // Use trend data directly from API
     const chartData = data.trend || []
 
     return (
-        <div className="space-y-6">
+        <div className={`space-y-6 transition-opacity duration-300 ${loading ? 'opacity-50 pointer-events-none' : ''}`}>
             {/* KPI Cards */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <Card className="p-6">
