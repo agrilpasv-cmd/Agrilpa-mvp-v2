@@ -15,6 +15,9 @@ export async function POST(request: NextRequest) {
       product1,
       product2,
       product3,
+      supplyCountry1,
+      supplyCountry2,
+      supplyCountry3,
       volumeRange
     } = await request.json()
 
@@ -36,6 +39,7 @@ export async function POST(request: NextRequest) {
         company_website: companyWebsite,
         user_type: userType,
         products_of_interest: [product1, product2, product3].filter(Boolean),
+        supply_countries: [supplyCountry1, supplyCountry2, supplyCountry3].filter(Boolean),
         annual_volume: volumeRange,
       },
     })
@@ -65,6 +69,7 @@ export async function POST(request: NextRequest) {
       user_type: userType,
       role: role,
       products_of_interest: productsOfInterest,
+      supply_countries: [supplyCountry1, supplyCountry2, supplyCountry3].filter(Boolean),
       annual_volume: volumeRange || null,
     })
 

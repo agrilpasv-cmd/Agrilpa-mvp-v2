@@ -29,6 +29,9 @@ function AuthPageContent() {
     product1: "",
     product2: "",
     product3: "",
+    supplyCountry1: "",
+    supplyCountry2: "",
+    supplyCountry3: "",
     volumeRange: "",
     companyWebsite: "",
   })
@@ -163,6 +166,9 @@ function AuthPageContent() {
             product3: formData.product3,
             volumeRange: formData.volumeRange,
             companyWebsite: formData.companyWebsite,
+            supplyCountry1: formData.supplyCountry1,
+            supplyCountry2: formData.supplyCountry2,
+            supplyCountry3: formData.supplyCountry3,
           }),
         })
 
@@ -552,6 +558,36 @@ function AuthPageContent() {
                       </div>
 
                       <div>
+                        <label className="block text-sm font-medium text-foreground mb-2">Países a los que abastece o se abastece</label>
+                        <div className="grid grid-cols-3 gap-4">
+                          <input
+                            type="text"
+                            name="supplyCountry1"
+                            value={formData.supplyCountry1}
+                            onChange={handleInputChange}
+                            placeholder="ej. México"
+                            className="w-full px-4 py-3 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary transition"
+                          />
+                          <input
+                            type="text"
+                            name="supplyCountry2"
+                            value={formData.supplyCountry2}
+                            onChange={handleInputChange}
+                            placeholder="ej. Colombia"
+                            className="w-full px-4 py-3 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary transition"
+                          />
+                          <input
+                            type="text"
+                            name="supplyCountry3"
+                            value={formData.supplyCountry3}
+                            onChange={handleInputChange}
+                            placeholder="ej. Guatemala"
+                            className="w-full px-4 py-3 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary transition"
+                          />
+                        </div>
+                      </div>
+
+                      <div>
                         <label className="block text-sm font-medium text-foreground mb-2">
                           Volumen de Movimiento Anual
                         </label>
@@ -618,6 +654,9 @@ function AuthPageContent() {
                           product1: "",
                           product2: "",
                           product3: "",
+                          supplyCountry1: "",
+                          supplyCountry2: "",
+                          supplyCountry3: "",
                           volumeRange: "",
                           companyWebsite: "",
                         })
