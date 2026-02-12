@@ -398,11 +398,11 @@ function AuthPageContent() {
                         <div className="relative">
                           <User className="absolute left-3 top-3 text-muted-foreground w-5 h-5" />
                           <input
-                            type="url"
+                            type="text"
                             name="companyWebsite"
                             value={formData.companyWebsite}
                             onChange={handleInputChange}
-                            placeholder="https://www.tuempresa.com"
+                            placeholder="www.tuempresa.com"
                             className="w-full pl-10 pr-4 py-3 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary transition"
                           />
                         </div>
