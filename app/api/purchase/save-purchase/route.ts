@@ -94,34 +94,51 @@ export async function POST(request: NextRequest) {
     }
 
     // Send email notification to the seller (fire-and-forget)
+    // Send email notification to the seller (fire-and-forget)
     try {
-      const supabaseAdmin = createClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.SUPABASE_SERVICE_ROLE_KEY!,
-      )
-      // Look up product → vendor → email
-      const { data: product } = await supabaseAdmin
-        .from("user_products")
-        .select("vendor_id, name")
-        .eq("id", data.productSlug)
-        .single()
+      console.log("[Purchase] Attempting to notify seller for product:", data.productSlug)
 
-      if (product?.vendor_id) {
-        const { data: seller } = await supabaseAdmin
-          .from("users")
-          .select("email, full_name, company_name")
-          .eq("id", product.vendor_id)
+      // Check if productSlug is a UUID (user product) or string (static product)
+      const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(data.productSlug)
+
+      if (!isUUID) {
+        console.log("[Purchase] Product slug is not a UUID (static product). Skipping seller email.")
+      } else {
+        const supabaseAdmin = createClient(
+          process.env.NEXT_PUBLIC_SUPABASE_URL!,
+          process.env.SUPABASE_SERVICE_ROLE_KEY!,
+        )
+        // Look up product → vendor → email
+        const { data: product, error: productError } = await supabaseAdmin
+          .from("user_products")
+          .select("vendor_id, name")
+          .eq("id", data.productSlug)
           .single()
 
-        if (seller?.email) {
-          sendPurchaseNotification({
-            sellerEmail: seller.email,
-            sellerName: seller.company_name || seller.full_name || "Vendedor",
-            buyerName: data.fullName,
-            productName: data.productName,
-            quantity: data.quantityKg,
-            price: data.priceUsd,
-          }).catch(err => console.error("[Email] Background send failed:", err))
+        if (productError) {
+          console.error("[Purchase] Error fetching product for email:", productError.message)
+        } else if (product?.vendor_id) {
+          const { data: seller } = await supabaseAdmin
+            .from("users")
+            .select("email, full_name, company_name")
+            .eq("id", product.vendor_id)
+            .single()
+
+          if (seller?.email) {
+            console.log("[Purchase] Sending email to seller:", seller.email)
+            sendPurchaseNotification({
+              sellerEmail: seller.email,
+              sellerName: seller.company_name || seller.full_name || "Vendedor",
+              buyerName: data.fullName,
+              productName: data.productName,
+              quantity: data.quantityKg,
+              price: data.priceUsd,
+            }).catch(err => console.error("[Email] Background send failed:", err))
+          } else {
+            console.log("[Purchase] Seller has no email or not found")
+          }
+        } else {
+          console.log("[Purchase] Product has no vendor_id")
         }
       }
     } catch (emailErr) {
