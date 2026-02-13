@@ -196,19 +196,21 @@ export default function NewsletterPage() {
                             <div className="flex-1 overflow-hidden">
                                 {result.success ? (
                                     <>
-                                        <p className="font-medium">¡Newsletter enviado exitosamente!</p>
+                                        <p className="font-medium">¡Proceso finalizado!</p>
                                         <p className="text-sm mt-1">
                                             <Users className="w-4 h-4 inline mr-1" />
                                             {result.sent} de {result.totalUsers} correos enviados
                                             {result.failed ? ` (${result.failed} fallidos)` : ""}
                                         </p>
                                         {result.error && (
-                                            <p className="text-xs mt-2 text-red-600">{result.error}</p>
+                                            <div className="mt-2 p-2 bg-red-100/50 rounded text-xs font-mono text-red-700 whitespace-pre-wrap">
+                                                {result.error}
+                                            </div>
                                         )}
                                     </>
                                 ) : (
                                     <>
-                                        <p className="font-medium">Error al enviar</p>
+                                        <p className="font-medium">Error al iniciar el envío</p>
                                         <p className="text-sm mt-1">{result.error}</p>
                                     </>
                                 )}
