@@ -10,6 +10,56 @@ const getResendClient = () => {
 
 const FROM_EMAIL = process.env.RESEND_FROM_EMAIL || 'Agrilpa <onboarding@resend.dev>'
 
+// Colors from the requested "Minimalist Black, White, Dark Green" theme
+const THEME = {
+    primary: '#1a4d2e', // Dark Green
+    secondary: '#f3f4f6', // Light Gray/White
+    text: '#111827', // Almost Black
+    accent: '#4ade80', // Lighter Green for highlights
+    border: '#e5e7eb'
+}
+
+/**
+ * Helper to generate consistent minimalist email HTML
+ */
+const getMinimalistTemplate = (title: string, content: string, cta?: { text: string, url: string }) => `
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body style="margin: 0; padding: 0; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; background-color: #f9fafb;">
+    <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; border: 1px solid ${THEME.border}; border-radius: 8px; overflow: hidden; margin-top: 20px; margin-bottom: 20px;">
+        <!-- Minimalist Header -->
+        <div style="background-color: ${THEME.primary}; padding: 30px 40px; text-align: left;">
+            <h1 style="color: #ffffff; margin: 0; font-size: 24px; font-weight: 600; letter-spacing: -0.5px;">Agrilpa</h1>
+        </div>
+        
+        <!-- Content -->
+        <div style="padding: 40px;">
+            <h2 style="color: ${THEME.text}; margin-top: 0; margin-bottom: 20px; font-size: 20px; font-weight: 600;">${title}</h2>
+            
+            <div style="color: #4b5563; font-size: 16px; line-height: 1.6;">
+                ${content}
+            </div>
+
+            ${cta ? `
+            <div style="margin-top: 30px; margin-bottom: 10px;">
+                <a href="${cta.url}" style="display: inline-block; background-color: ${THEME.primary}; color: #ffffff; text-decoration: none; padding: 12px 24px; border-radius: 6px; font-weight: 500; font-size: 16px;">${cta.text}</a>
+            </div>
+            ` : ''}
+        </div>
+
+        <!-- Minimalist Footer -->
+        <div style="background-color: ${THEME.secondary}; padding: 20px 40px; border-top: 1px solid ${THEME.border}; text-align: center;">
+            <p style="margin: 0; font-size: 12px; color: #6b7280;">© ${new Date().getFullYear()} Agrilpa. Comercio Justo y Sostenible.</p>
+        </div>
+    </div>
+</body>
+</html>
+`
+
 /**
  * Notify seller when someone purchases their product
  */
@@ -30,54 +80,44 @@ export async function sendPurchaseNotification({
 }) {
     try {
         const resend = getResendClient()
+
+        const content = `
+            <p>Hola <strong>${sellerName}</strong>,</p>
+            <p>Has recibido una nueva orden de compra.</p>
+            
+            <table style="width: 100%; border-collapse: collapse; margin: 24px 0; font-size: 15px;">
+                <tr style="border-bottom: 1px solid ${THEME.border};">
+                    <td style="padding: 12px 0; color: #6b7280;">Producto</td>
+                    <td style="padding: 12px 0; text-align: right; font-weight: 600; color: ${THEME.text};">${productName}</td>
+                </tr>
+                <tr style="border-bottom: 1px solid ${THEME.border};">
+                    <td style="padding: 12px 0; color: #6b7280;">Comprador</td>
+                    <td style="padding: 12px 0; text-align: right; font-weight: 600; color: ${THEME.text};">${buyerName}</td>
+                </tr>
+                <tr style="border-bottom: 1px solid ${THEME.border};">
+                    <td style="padding: 12px 0; color: #6b7280;">Cantidad</td>
+                    <td style="padding: 12px 0; text-align: right; font-weight: 600; color: ${THEME.text};">${quantity} kg</td>
+                </tr>
+                <tr>
+                    <td style="padding: 12px 0; color: #6b7280;">Total</td>
+                    <td style="padding: 12px 0; text-align: right; font-weight: 700; color: ${THEME.primary}; font-size: 18px;">$${price.toFixed(2)} USD</td>
+                </tr>
+            </table>
+            
+            <p>Por favor ingresa a la plataforma para gestionar el envío.</p>
+        `
+
         const { data, error } = await resend.emails.send({
             from: FROM_EMAIL,
             to: sellerEmail,
-            subject: `🛒 Nueva compra: ${productName}`,
-            html: `
-                <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; background-color: #ffffff;">
-                    <div style="background: linear-gradient(135deg, #16a34a, #15803d); padding: 32px; text-align: center;">
-                        <h1 style="color: white; margin: 0; font-size: 24px;">🎉 ¡Nueva Compra Recibida!</h1>
-                    </div>
-                    <div style="padding: 32px;">
-                        <p style="font-size: 16px; color: #374151;">Hola <strong>${sellerName}</strong>,</p>
-                        <p style="font-size: 16px; color: #374151;">Tienes una nueva orden de compra en Agrilpa:</p>
-                        
-                        <div style="background-color: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 12px; padding: 24px; margin: 24px 0;">
-                            <table style="width: 100%; border-collapse: collapse;">
-                                <tr>
-                                    <td style="padding: 8px 0; color: #6b7280; font-size: 14px;">Producto</td>
-                                    <td style="padding: 8px 0; text-align: right; font-weight: bold; color: #111827;">${productName}</td>
-                                </tr>
-                                <tr>
-                                    <td style="padding: 8px 0; color: #6b7280; font-size: 14px;">Comprador</td>
-                                    <td style="padding: 8px 0; text-align: right; font-weight: bold; color: #111827;">${buyerName}</td>
-                                </tr>
-                                <tr>
-                                    <td style="padding: 8px 0; color: #6b7280; font-size: 14px;">Cantidad</td>
-                                    <td style="padding: 8px 0; text-align: right; font-weight: bold; color: #111827;">${quantity} kg</td>
-                                </tr>
-                                <tr>
-                                    <td style="padding: 8px 0; border-top: 1px solid #d1fae5; color: #6b7280; font-size: 14px;">Total</td>
-                                    <td style="padding: 8px 0; border-top: 1px solid #d1fae5; text-align: right; font-weight: bold; color: #16a34a; font-size: 20px;">$${price.toFixed(2)} USD</td>
-                                </tr>
-                            </table>
-                        </div>
-
-                        <p style="font-size: 14px; color: #6b7280;">Ingresa a tu panel de vendedor en Agrilpa para gestionar este pedido.</p>
-                    </div>
-                    <div style="background-color: #f9fafb; padding: 24px; text-align: center; border-top: 1px solid #e5e7eb;">
-                        <p style="margin: 0; font-size: 12px; color: #9ca3af;">© ${new Date().getFullYear()} Agrilpa - Comercio Agrícola de El Salvador</p>
-                    </div>
-                </div>
-            `,
+            subject: `Nueva Venta: ${productName}`,
+            html: getMinimalistTemplate('¡Nueva Venta Realizada!', content, { text: 'Gestionar Orden', url: 'https://agrilpa.com/admin/sales' }),
         })
 
         if (error) {
             console.error('[Email] Error sending purchase notification:', error)
             return { success: false, error }
         }
-        console.log('[Email] Purchase notification sent to:', sellerEmail)
         return { success: true, data }
     } catch (err: any) {
         console.error('[Email] Failed to send purchase notification:', err)
@@ -100,53 +140,35 @@ export async function sendQuotationStatusEmail({
     status: 'accepted' | 'rejected'
 }) {
     const isAccepted = status === 'accepted'
-    const emoji = isAccepted ? '✅' : '❌'
-    const statusText = isAccepted ? 'Aceptada' : 'Rechazada'
-    const statusColor = isAccepted ? '#16a34a' : '#dc2626'
-    const bgColor = isAccepted ? '#f0fdf4' : '#fef2f2'
-    const borderColor = isAccepted ? '#bbf7d0' : '#fecaca'
+    const statusText = isAccepted ? 'Aprobada' : 'Rechazada'
     const message = isAccepted
-        ? 'Tu cotización ha sido aceptada por el vendedor. Se ha creado una orden de compra automáticamente.'
-        : 'Lamentablemente, el vendedor ha rechazado tu cotización. Te invitamos a explorar más productos en Agrilpa.'
+        ? 'El vendedor ha aceptado tu oferta. Se ha generado una orden de compra automáticamente.'
+        : 'El vendedor ha decidido no aceptar tu oferta en esta ocasión.'
 
     try {
         const resend = getResendClient()
+
+        const content = `
+            <p>Hola <strong>${buyerName}</strong>,</p>
+            <p>Tu cotización para <strong>${productName}</strong> ha sido <strong>${statusText}</strong>.</p>
+            <p>${message}</p>
+        `
+
         const { data, error } = await resend.emails.send({
             from: FROM_EMAIL,
             to: buyerEmail,
-            subject: `${emoji} Cotización ${statusText}: ${productName}`,
-            html: `
-                <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; background-color: #ffffff;">
-                    <div style="background: linear-gradient(135deg, ${statusColor}, ${isAccepted ? '#15803d' : '#b91c1c'}); padding: 32px; text-align: center;">
-                        <h1 style="color: white; margin: 0; font-size: 24px;">${emoji} Cotización ${statusText}</h1>
-                    </div>
-                    <div style="padding: 32px;">
-                        <p style="font-size: 16px; color: #374151;">Hola <strong>${buyerName}</strong>,</p>
-                        
-                        <div style="background-color: ${bgColor}; border: 1px solid ${borderColor}; border-radius: 12px; padding: 24px; margin: 24px 0;">
-                            <p style="margin: 0 0 8px 0; font-size: 14px; color: #6b7280;">Producto</p>
-                            <p style="margin: 0; font-size: 18px; font-weight: bold; color: #111827;">${productName}</p>
-                            <div style="margin-top: 16px; padding-top: 16px; border-top: 1px solid ${borderColor};">
-                                <span style="display: inline-block; background-color: ${statusColor}; color: white; padding: 6px 16px; border-radius: 20px; font-size: 14px; font-weight: bold;">
-                                    ${statusText}
-                                </span>
-                            </div>
-                        </div>
-
-                        <p style="font-size: 16px; color: #374151;">${message}</p>
-                    </div>
-                    <div style="background-color: #f9fafb; padding: 24px; text-align: center; border-top: 1px solid #e5e7eb;">
-                        <p style="margin: 0; font-size: 12px; color: #9ca3af;">© ${new Date().getFullYear()} Agrilpa - Comercio Agrícola de El Salvador</p>
-                    </div>
-                </div>
-            `,
+            subject: `Cotización ${statusText}: ${productName}`,
+            html: getMinimalistTemplate(
+                `Cotización ${statusText}`,
+                content,
+                isAccepted ? { text: 'Ver Orden', url: 'https://agrilpa.com/admin/purchases' } : undefined
+            ),
         })
 
         if (error) {
             console.error('[Email] Error sending quotation status email:', error)
             return { success: false, error }
         }
-        console.log('[Email] Quotation status email sent to:', buyerEmail)
         return { success: true, data }
     } catch (err: any) {
         console.error('[Email] Failed to send quotation status email:', err)
@@ -176,60 +198,31 @@ export async function sendNewQuotationNotification({
 }) {
     try {
         const resend = getResendClient()
+
+        const content = `
+            <p>Hola <strong>${sellerName}</strong>,</p>
+            <p>Un comprador está interesado en tu producto.</p>
+            
+            <div style="background-color: ${THEME.secondary}; padding: 20px; border-radius: 8px; margin: 20px 0;">
+                <p style="margin: 0 0 10px 0;"><strong>Producto:</strong> ${productName}</p>
+                <p style="margin: 0 0 10px 0;"><strong>Comprador:</strong> ${buyerName}</p>
+                <p style="margin: 0 0 10px 0;"><strong>Cantidad:</strong> ${quantity} kg</p>
+                ${targetPrice ? `<p style="margin: 0 0 10px 0;"><strong>Oferta:</strong> $${targetPrice.toFixed(2)} USD</p>` : ''}
+                <p style="margin: 0;"><strong>Destino:</strong> ${location}</p>
+            </div>
+        `
+
         const { data, error } = await resend.emails.send({
             from: FROM_EMAIL,
             to: sellerEmail,
-            subject: `📝 Nueva Cotización: ${productName}`,
-            html: `
-                <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; background-color: #ffffff;">
-                    <div style="background: linear-gradient(135deg, #0284c7, #0369a1); padding: 32px; text-align: center;">
-                        <h1 style="color: white; margin: 0; font-size: 24px;">📝 Nueva Cotización Recibida</h1>
-                    </div>
-                    <div style="padding: 32px;">
-                        <p style="font-size: 16px; color: #374151;">Hola <strong>${sellerName}</strong>,</p>
-                        <p style="font-size: 16px; color: #374151;">Has recibido una nueva solicitud de cotización en Agrilpa:</p>
-                        
-                        <div style="background-color: #f0f9ff; border: 1px solid #bae6fd; border-radius: 12px; padding: 24px; margin: 24px 0;">
-                            <table style="width: 100%; border-collapse: collapse;">
-                                <tr>
-                                    <td style="padding: 8px 0; color: #6b7280; font-size: 14px;">Producto</td>
-                                    <td style="padding: 8px 0; text-align: right; font-weight: bold; color: #111827;">${productName}</td>
-                                </tr>
-                                <tr>
-                                    <td style="padding: 8px 0; color: #6b7280; font-size: 14px;">Solicitante</td>
-                                    <td style="padding: 8px 0; text-align: right; font-weight: bold; color: #111827;">${buyerName}</td>
-                                </tr>
-                                <tr>
-                                    <td style="padding: 8px 0; color: #6b7280; font-size: 14px;">Cantidad</td>
-                                    <td style="padding: 8px 0; text-align: right; font-weight: bold; color: #111827;">${quantity} kg</td>
-                                </tr>
-                                <tr>
-                                    <td style="padding: 8px 0; color: #6b7280; font-size: 14px;">Destino</td>
-                                    <td style="padding: 8px 0; text-align: right; font-weight: bold; color: #111827;">${location}</td>
-                                </tr>
-                                ${targetPrice ? `
-                                <tr>
-                                    <td style="padding: 8px 0; border-top: 1px solid #e0f2fe; color: #6b7280; font-size: 14px;">Precio Objetivo</td>
-                                    <td style="padding: 8px 0; border-top: 1px solid #e0f2fe; text-align: right; font-weight: bold; color: #0284c7; font-size: 18px;">$${targetPrice.toFixed(2)} USD</td>
-                                </tr>
-                                ` : ''}
-                            </table>
-                        </div>
-
-                        <p style="font-size: 14px; color: #6b7280;">Ingresa a tu panel de vendedor para responder a esta cotización.</p>
-                    </div>
-                    <div style="background-color: #f9fafb; padding: 24px; text-align: center; border-top: 1px solid #e5e7eb;">
-                        <p style="margin: 0; font-size: 12px; color: #9ca3af;">© ${new Date().getFullYear()} Agrilpa - Comercio Agrícola de El Salvador</p>
-                    </div>
-                </div>
-            `,
+            subject: `Nueva Cotización: ${productName}`,
+            html: getMinimalistTemplate('Solicitud de Cotización', content, { text: 'Responder Oferta', url: 'https://agrilpa.com/admin/quotations' }),
         })
 
         if (error) {
             console.error('[Email] Error sending quotation notification:', error)
             return { success: false, error }
         }
-        console.log('[Email] Quotation notification sent to:', sellerEmail)
         return { success: true, data }
     } catch (err: any) {
         console.error('[Email] Failed to send quotation notification:', err)
@@ -253,26 +246,19 @@ export async function sendNewsletterEmail({
 }) {
     try {
         const resend = getResendClient()
+
+        const content = `
+            <p>Hola <strong>${recipientName}</strong>,</p>
+            <div style="margin-top: 20px;">
+                ${htmlContent}
+            </div>
+        `
+
         const { data, error } = await resend.emails.send({
             from: FROM_EMAIL,
             to: recipientEmail,
             subject,
-            html: `
-                <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; background-color: #ffffff;">
-                    <div style="background: linear-gradient(135deg, #16a34a, #15803d); padding: 32px; text-align: center;">
-                        <h1 style="color: white; margin: 0; font-size: 24px;">📬 Agrilpa</h1>
-                    </div>
-                    <div style="padding: 32px;">
-                        <p style="font-size: 16px; color: #374151;">Hola <strong>${recipientName}</strong>,</p>
-                        <div style="font-size: 16px; color: #374151; line-height: 1.6;">
-                            ${htmlContent}
-                        </div>
-                    </div>
-                    <div style="background-color: #f9fafb; padding: 24px; text-align: center; border-top: 1px solid #e5e7eb;">
-                        <p style="margin: 0; font-size: 12px; color: #9ca3af;">© ${new Date().getFullYear()} Agrilpa - Comercio Agrícola de El Salvador</p>
-                    </div>
-                </div>
-            `,
+            html: getMinimalistTemplate(subject, content),
         })
 
         if (error) {
