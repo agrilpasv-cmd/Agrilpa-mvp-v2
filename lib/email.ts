@@ -32,8 +32,8 @@ const getMinimalistTemplate = (title: string, content: string, cta?: { text: str
 <body style="margin: 0; padding: 0; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; background-color: #f9fafb;">
     <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; border: 1px solid ${THEME.border}; border-radius: 8px; overflow: hidden; margin-top: 20px; margin-bottom: 20px;">
         <!-- Minimalist Header -->
-        <div style="background-color: ${THEME.primary}; padding: 30px 40px; text-align: left;">
-            <h1 style="color: #ffffff; margin: 0; font-size: 24px; font-weight: 600; letter-spacing: -0.5px;">Agrilpa</h1>
+        <div style="background-color: ${THEME.primary}; padding: 30px 40px; text-align: center;">
+            <img src="https://agrilpa-mvp-v2.vercel.app/agrilpa-logo-white.svg" alt="Agrilpa" height="50" style="display: block; margin: 0 auto; max-width: 150px;" />
         </div>
         
         <!-- Content -->
