@@ -63,16 +63,24 @@ export default function NewsletterPage() {
             }
 
             if (res.ok) {
-                setResult({
-                    success: true,
-                    sent: data.sent,
-                    failed: data.failed,
-                    totalUsers: data.totalUsers,
-                    error: data.errors ? `Enviado con algunos errores: ${JSON.stringify(data.errors)}` : undefined
-                })
-                if (recipientType === "all") {
-                    setSubject("")
-                    setContent("")
+                if (data.success) {
+                    setResult({
+                        success: true,
+                        sent: data.sent,
+                        failed: data.failed,
+                        totalUsers: data.totalUsers,
+                        error: data.errors ? `Enviado con algunos errores: ${JSON.stringify(data.errors)}` : undefined
+                    })
+                    if (recipientType === "all") {
+                        setSubject("")
+                        setContent("")
+                    }
+                } else {
+                    // API returned 200 but execution failed (e.g. single email failed)
+                    setResult({
+                        success: false,
+                        error: data.error || "La operación falló sin mensaje específico."
+                    })
                 }
             } else {
                 setResult({ success: false, error: data.error || `Error ${res.status}: ${res.statusText}` })
