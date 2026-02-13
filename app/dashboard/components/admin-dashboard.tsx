@@ -1,8 +1,8 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, useRef, useCallback } from "react"
 import { Card } from "@/components/ui/card"
-import { Users, MessageSquare, Shield, Database } from "lucide-react"
+import { Users, MessageSquare, Shield, Database, ClipboardList, Package, Settings } from "lucide-react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { AnalyticsDashboard } from "@/app/admin/components/analytics-dashboard"
@@ -21,41 +21,65 @@ export function AdminDashboard() {
     })
     const [analyticsData, setAnalyticsData] = useState<any>(null)
     const [loading, setLoading] = useState(true)
+    const [analyticsLoading, setAnalyticsLoading] = useState(false)
+    const [range, setRange] = useState("7d")
+    const rangeRef = useRef(range)
+    const abortControllerRef = useRef<AbortController | null>(null)
 
-    const fetchData = async () => {
+    const fetchData = useCallback(async (currentRange?: string) => {
+        const fetchRange = currentRange || rangeRef.current
+
+        if (abortControllerRef.current) {
+            abortControllerRef.current.abort()
+        }
+        const controller = new AbortController()
+        abortControllerRef.current = controller
+
         try {
-            const response = await fetch("/api/admin/stats", {
+            const response = await fetch(`/api/admin/stats?range=${fetchRange}&t=${Date.now()}`, {
                 cache: "no-store",
+                signal: controller.signal,
                 headers: {
                     "Cache-Control": "no-cache, no-store, must-revalidate",
                     Pragma: "no-cache",
                 },
             })
 
+            if (controller.signal.aborted) return
+
             if (response.ok) {
                 const data = await response.json()
-                setStats({
-                    totalUsers: data.totalUsers,
-                    adminUsers: data.adminUsers,
-                    regularUsers: data.regularUsers,
-                })
-                if (data.detailedAnalytics) {
-                    setAnalyticsData(data.detailedAnalytics)
+                if (rangeRef.current === fetchRange) {
+                    setStats({
+                        totalUsers: data.totalUsers,
+                        adminUsers: data.adminUsers,
+                        regularUsers: data.regularUsers,
+                    })
+                    if (data.detailedAnalytics) {
+                        setAnalyticsData(data.detailedAnalytics)
+                    }
                 }
             }
-        } catch (error) {
+        } catch (error: any) {
+            if (error?.name === "AbortError") return
             console.error("Error fetching stats:", error)
         } finally {
-            setLoading(false)
+            if (!controller.signal.aborted) {
+                setLoading(false)
+                setAnalyticsLoading(false)
+            }
         }
-    }
+    }, [])
 
     useEffect(() => {
         fetchData()
         // Auto-refresh every 30 seconds for real-time analytics
-        const interval = setInterval(fetchData, 30000)
-        return () => clearInterval(interval)
-    }, [])
+        const interval = setInterval(() => fetchData(), 30000)
+        return () => {
+            clearInterval(interval)
+            if (abortControllerRef.current) abortControllerRef.current.abort()
+        }
+    }, [fetchData])
 
     if (loading) {
         return (
@@ -81,49 +105,57 @@ export function AdminDashboard() {
 
                 {/* Stats Grid - System Health */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
-                    <Card className="p-6 border-l-4 border-l-primary">
-                        <div className="flex items-center justify-between">
-                            <div>
-                                <p className="text-sm text-muted-foreground mb-2">Total Usuarios</p>
-                                <p className="text-3xl font-bold text-foreground">{stats.totalUsers}</p>
-                                <p className="text-xs text-green-600 mt-2">{stats.regularUsers} regulares</p>
+                    <Link href="/admin/usuarios">
+                        <Card className="p-6 border-l-4 border-l-primary cursor-pointer hover:shadow-lg hover:scale-[1.02] transition-all duration-200">
+                            <div className="flex items-center justify-between">
+                                <div>
+                                    <p className="text-sm text-muted-foreground mb-2">Total Usuarios</p>
+                                    <p className="text-3xl font-bold text-foreground">{stats.totalUsers}</p>
+                                    <p className="text-xs text-green-600 mt-2">{stats.regularUsers} regulares</p>
+                                </div>
+                                <Users className="w-12 h-12 text-primary/20" />
                             </div>
-                            <Users className="w-12 h-12 text-primary/20" />
-                        </div>
-                    </Card>
+                        </Card>
+                    </Link>
 
-                    <Card className="p-6 border-l-4 border-l-primary">
-                        <div className="flex items-center justify-between">
-                            <div>
-                                <p className="text-sm text-muted-foreground mb-2">Administradores</p>
-                                <p className="text-3xl font-bold text-foreground">{stats.adminUsers}</p>
-                                <p className="text-xs text-blue-600 mt-2">Con acceso completo</p>
+                    <Link href="/admin/cotizaciones">
+                        <Card className="p-6 border-l-4 border-l-primary cursor-pointer hover:shadow-lg hover:scale-[1.02] transition-all duration-200">
+                            <div className="flex items-center justify-between">
+                                <div>
+                                    <p className="text-sm text-muted-foreground mb-2">Cotizaciones</p>
+                                    <p className="text-3xl font-bold text-foreground">{stats.adminUsers}</p>
+                                    <p className="text-xs text-blue-600 mt-2">Gestionar solicitudes</p>
+                                </div>
+                                <ClipboardList className="w-12 h-12 text-primary/20" />
                             </div>
-                            <Shield className="w-12 h-12 text-primary/20" />
-                        </div>
-                    </Card>
+                        </Card>
+                    </Link>
 
-                    <Card className="p-6 border-l-4 border-l-primary">
-                        <div className="flex items-center justify-between">
-                            <div>
-                                <p className="text-sm text-muted-foreground mb-2">Suscripciones</p>
-                                <p className="text-3xl font-bold text-foreground">Activas</p>
-                                <p className="text-xs text-green-600 mt-2">Newsletter</p>
+                    <Link href="/admin/suscripciones">
+                        <Card className="p-6 border-l-4 border-l-primary cursor-pointer hover:shadow-lg hover:scale-[1.02] transition-all duration-200">
+                            <div className="flex items-center justify-between">
+                                <div>
+                                    <p className="text-sm text-muted-foreground mb-2">Suscripciones</p>
+                                    <p className="text-3xl font-bold text-foreground">Activas</p>
+                                    <p className="text-xs text-green-600 mt-2">Newsletter</p>
+                                </div>
+                                <MessageSquare className="w-12 h-12 text-primary/20" />
                             </div>
-                            <MessageSquare className="w-12 h-12 text-primary/20" />
-                        </div>
-                    </Card>
+                        </Card>
+                    </Link>
 
-                    <Card className="p-6 border-l-4 border-l-primary">
-                        <div className="flex items-center justify-between">
-                            <div>
-                                <p className="text-sm text-muted-foreground mb-2">Base de Datos</p>
-                                <p className="text-3xl font-bold text-foreground">Activa</p>
-                                <p className="text-xs text-green-600 mt-2">Todas las tablas</p>
+                    <Link href="/admin/publicaciones">
+                        <Card className="p-6 border-l-4 border-l-primary cursor-pointer hover:shadow-lg hover:scale-[1.02] transition-all duration-200">
+                            <div className="flex items-center justify-between">
+                                <div>
+                                    <p className="text-sm text-muted-foreground mb-2">Publicaciones</p>
+                                    <p className="text-3xl font-bold text-foreground">Ver</p>
+                                    <p className="text-xs text-green-600 mt-2">Todas las publicaciones</p>
+                                </div>
+                                <Package className="w-12 h-12 text-primary/20" />
                             </div>
-                            <Database className="w-12 h-12 text-primary/20" />
-                        </div>
-                    </Card>
+                        </Card>
+                    </Link>
                 </div>
 
                 {/* Vercel-Style Analytics Section */}
@@ -137,7 +169,17 @@ export function AdminDashboard() {
                     </div>
 
                     {analyticsData ? (
-                        <AnalyticsDashboard data={analyticsData} />
+                        <AnalyticsDashboard
+                            data={analyticsData}
+                            currentRange={range}
+                            loading={analyticsLoading}
+                            onRangeChange={(newRange) => {
+                                setRange(newRange)
+                                rangeRef.current = newRange
+                                setAnalyticsLoading(true)
+                                fetchData(newRange)
+                            }}
+                        />
                     ) : (
                         <div className="p-12 text-center border rounded-lg bg-muted/10">Cargando analíticas...</div>
                     )}
@@ -154,28 +196,30 @@ export function AdminDashboard() {
                         <Link href="/admin/usuarios">
                             <Button
                                 variant="outline"
-                                className="w-full h-24 flex flex-col items-center justify-center gap-2 bg-transparent"
+                                className="w-full h-24 flex flex-col items-center justify-center gap-2 bg-transparent hover:border-primary"
                             >
                                 <Users className="w-8 h-8 text-primary" />
                                 <span className="font-semibold">Gestión de Usuarios</span>
                             </Button>
                         </Link>
-                        <Button
-                            variant="outline"
-                            className="w-full h-24 flex flex-col items-center justify-center gap-2 bg-transparent"
-                            disabled
-                        >
-                            <Database className="w-8 h-8 text-muted-foreground" />
-                            <span className="font-semibold text-muted-foreground">Sistema</span>
-                        </Button>
-                        <Button
-                            variant="outline"
-                            className="w-full h-24 flex flex-col items-center justify-center gap-2 bg-transparent"
-                            disabled
-                        >
-                            <Shield className="w-8 h-8 text-muted-foreground" />
-                            <span className="font-semibold text-muted-foreground">Configuración</span>
-                        </Button>
+                        <Link href="/admin/publicaciones">
+                            <Button
+                                variant="outline"
+                                className="w-full h-24 flex flex-col items-center justify-center gap-2 bg-transparent hover:border-primary"
+                            >
+                                <Package className="w-8 h-8 text-primary" />
+                                <span className="font-semibold">Publicaciones</span>
+                            </Button>
+                        </Link>
+                        <Link href="/admin/contactanos">
+                            <Button
+                                variant="outline"
+                                className="w-full h-24 flex flex-col items-center justify-center gap-2 bg-transparent hover:border-primary"
+                            >
+                                <MessageSquare className="w-8 h-8 text-primary" />
+                                <span className="font-semibold">Contáctanos</span>
+                            </Button>
+                        </Link>
                     </div>
                 </Card>
             </div>

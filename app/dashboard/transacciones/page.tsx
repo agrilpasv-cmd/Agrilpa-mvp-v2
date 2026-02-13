@@ -32,7 +32,6 @@ interface Transaction {
     type: 'purchase' | 'sale'
 }
 
-import ConstructionOverlay from "@/components/dashboard/construction-overlay"
 
 export default function TransaccionesPage() {
     const [transactions, setTransactions] = useState<Transaction[]>([])
@@ -126,111 +125,109 @@ export default function TransaccionesPage() {
     }
 
     return (
-        <ConstructionOverlay>
-            <div className="p-8 space-y-8 max-w-7xl mx-auto">
-                <div className="flex flex-col gap-1">
-                    <h1 className="text-3xl font-bold tracking-tight text-foreground">Mis Transacciones</h1>
-                    <p className="text-muted-foreground">
-                        Historial de compras y ventas
-                    </p>
-                </div>
+        <div className="p-8 space-y-8 max-w-7xl mx-auto">
+            <div className="flex flex-col gap-1">
+                <h1 className="text-3xl font-bold tracking-tight text-foreground">Mis Transacciones</h1>
+                <p className="text-muted-foreground">
+                    Historial de compras y ventas
+                </p>
+            </div>
 
-                {/* Filter Section */}
-                <Card className="shadow-sm border border-border">
-                    <CardContent className="p-6">
-                        <div className="mb-4">
-                            <h2 className="font-semibold text-base mb-4">Filtros de Búsqueda</h2>
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                <div className="relative">
-                                    <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
-                                    <Input
-                                        placeholder="Buscar por producto, cliente, tipo..."
-                                        className="pl-9 bg-background"
-                                        value={searchTerm}
-                                        onChange={(e) => setSearchTerm(e.target.value)}
-                                    />
-                                </div>
-                                <div className="relative">
-                                    <Calendar className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
-                                    <Input
-                                        type="date"
-                                        placeholder="dd/mm/aaaa"
-                                        className="pl-9 bg-background"
-                                    />
-                                </div>
-                                <div className="relative">
-                                    <Calendar className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
-                                    <Input
-                                        type="date"
-                                        placeholder="dd/mm/aaaa"
-                                        className="pl-9 bg-background"
-                                    />
-                                </div>
+            {/* Filter Section */}
+            <Card className="shadow-sm border border-border">
+                <CardContent className="p-6">
+                    <div className="mb-4">
+                        <h2 className="font-semibold text-base mb-4">Filtros de Búsqueda</h2>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div className="relative">
+                                <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+                                <Input
+                                    placeholder="Buscar por producto, cliente, tipo..."
+                                    className="pl-9 bg-background"
+                                    value={searchTerm}
+                                    onChange={(e) => setSearchTerm(e.target.value)}
+                                />
+                            </div>
+                            <div className="relative">
+                                <Calendar className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+                                <Input
+                                    type="date"
+                                    placeholder="dd/mm/aaaa"
+                                    className="pl-9 bg-background"
+                                />
+                            </div>
+                            <div className="relative">
+                                <Calendar className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+                                <Input
+                                    type="date"
+                                    placeholder="dd/mm/aaaa"
+                                    className="pl-9 bg-background"
+                                />
                             </div>
                         </div>
-                    </CardContent>
-                </Card>
+                    </div>
+                </CardContent>
+            </Card>
 
-                {/* Table Section */}
-                <Card className="shadow-sm border border-border overflow-hidden">
-                    <div className="p-0">
-                        <Table>
-                            <TableHeader>
-                                <TableRow className="bg-muted/40 hover:bg-muted/40 border-b border-border">
-                                    <TableHead className="w-[120px] font-semibold text-foreground pl-6">Tipo</TableHead>
-                                    <TableHead className="font-semibold text-foreground">Producto/Cliente</TableHead>
-                                    <TableHead className="font-semibold text-foreground">Monto</TableHead>
-                                    <TableHead className="font-semibold text-foreground">Fecha</TableHead>
-                                    <TableHead className="font-semibold text-foreground">Estado</TableHead>
+            {/* Table Section */}
+            <Card className="shadow-sm border border-border overflow-hidden">
+                <div className="p-0">
+                    <Table>
+                        <TableHeader>
+                            <TableRow className="bg-muted/40 hover:bg-muted/40 border-b border-border">
+                                <TableHead className="w-[120px] font-semibold text-foreground pl-6">Tipo</TableHead>
+                                <TableHead className="font-semibold text-foreground">Producto/Cliente</TableHead>
+                                <TableHead className="font-semibold text-foreground">Monto</TableHead>
+                                <TableHead className="font-semibold text-foreground">Fecha</TableHead>
+                                <TableHead className="font-semibold text-foreground">Estado</TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            {filteredTransactions.length === 0 ? (
+                                <TableRow>
+                                    <TableCell colSpan={5} className="h-32 text-center text-muted-foreground">
+                                        No se encontraron transacciones recientes.
+                                    </TableCell>
                                 </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                                {filteredTransactions.length === 0 ? (
-                                    <TableRow>
-                                        <TableCell colSpan={5} className="h-32 text-center text-muted-foreground">
-                                            No se encontraron transacciones recientes.
+                            ) : (
+                                filteredTransactions.map((t) => (
+                                    <TableRow key={t.id} className="hover:bg-muted/10 border-b border-border/50 last:border-0">
+                                        <TableCell className="pl-6 py-4">
+                                            <div className="flex items-center gap-2">
+                                                {t.type === 'sale' ? (
+                                                    <ArrowUpRight className="h-4 w-4 text-green-600" />
+                                                ) : (
+                                                    <ArrowDownLeft className="h-4 w-4 text-red-600" />
+                                                )}
+                                                <span className="font-medium text-foreground">
+                                                    {t.type === 'sale' ? 'Venta' : 'Compra'}
+                                                </span>
+                                            </div>
+                                        </TableCell>
+                                        <TableCell className="py-4">
+                                            <div className="flex flex-col">
+                                                <span className="font-bold text-foreground">{t.product_name}</span>
+                                                <span className="text-sm text-muted-foreground">{t.client_name}</span>
+                                            </div>
+                                        </TableCell>
+                                        <TableCell className="py-4">
+                                            <span className="font-bold text-foreground">
+                                                ${t.price_usd.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}
+                                            </span>
+                                        </TableCell>
+                                        <TableCell className="py-4 text-muted-foreground">
+                                            {format(new Date(t.created_at), "yyyy-MM-dd", { locale: es })}
+                                        </TableCell>
+                                        <TableCell className="py-4">
+                                            {getStatusBadge(t.status)}
                                         </TableCell>
                                     </TableRow>
-                                ) : (
-                                    filteredTransactions.map((t) => (
-                                        <TableRow key={t.id} className="hover:bg-muted/10 border-b border-border/50 last:border-0">
-                                            <TableCell className="pl-6 py-4">
-                                                <div className="flex items-center gap-2">
-                                                    {t.type === 'sale' ? (
-                                                        <ArrowUpRight className="h-4 w-4 text-green-600" />
-                                                    ) : (
-                                                        <ArrowDownLeft className="h-4 w-4 text-red-600" />
-                                                    )}
-                                                    <span className="font-medium text-foreground">
-                                                        {t.type === 'sale' ? 'Venta' : 'Compra'}
-                                                    </span>
-                                                </div>
-                                            </TableCell>
-                                            <TableCell className="py-4">
-                                                <div className="flex flex-col">
-                                                    <span className="font-bold text-foreground">{t.product_name}</span>
-                                                    <span className="text-sm text-muted-foreground">{t.client_name}</span>
-                                                </div>
-                                            </TableCell>
-                                            <TableCell className="py-4">
-                                                <span className="font-bold text-foreground">
-                                                    ${t.price_usd.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 })}
-                                                </span>
-                                            </TableCell>
-                                            <TableCell className="py-4 text-muted-foreground">
-                                                {format(new Date(t.created_at), "yyyy-MM-dd", { locale: es })}
-                                            </TableCell>
-                                            <TableCell className="py-4">
-                                                {getStatusBadge(t.status)}
-                                            </TableCell>
-                                        </TableRow>
-                                    ))
-                                )}
-                            </TableBody>
-                        </Table>
-                    </div>
-                </Card>
-            </div>
-        </ConstructionOverlay>
+                                ))
+                            )}
+                        </TableBody>
+                    </Table>
+                </div>
+            </Card>
+        </div>
     )
 }

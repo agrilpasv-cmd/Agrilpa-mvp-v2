@@ -53,13 +53,24 @@ export async function middleware(request: NextRequest) {
 
     // Admin routes require admin role
     if (user && request.nextUrl.pathname.startsWith("/admin")) {
-        const { data: profile } = await supabase
+        // Known admin emails as fallback when DB is unavailable
+        const ADMIN_EMAILS = ["agrilpasv@gmail.com"]
+        const isAdminByEmail = ADMIN_EMAILS.includes(user.email || "")
+
+        const { data: profile, error: profileError } = await supabase
             .from("users")
             .select("role")
             .eq("id", user.id)
             .single()
 
-        if (!profile || profile.role !== "admin") {
+        if (profileError) {
+            console.error("[Middleware] Error fetching user role:", profileError.message)
+        }
+
+        const isAdminByRole = profile?.role === "admin"
+
+        // Allow access if admin by role OR by email fallback
+        if (!isAdminByRole && !isAdminByEmail) {
             // Non-admin users get redirected to dashboard
             return NextResponse.redirect(new URL("/dashboard", request.url))
         }

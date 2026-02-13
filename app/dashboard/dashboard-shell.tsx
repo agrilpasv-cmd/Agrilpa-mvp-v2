@@ -212,7 +212,7 @@ export default function DashboardShell({
                 </aside>
 
                 {/* Main Content */}
-                <main className="flex-1 overflow-hidden">{children}</main>
+                <main className="flex-1 overflow-auto">{children}</main>
             </div>
         </div>
     )

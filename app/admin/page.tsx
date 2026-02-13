@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useRef, useCallback } from "react"
 import { Card } from "@/components/ui/card"
-import { Users, MessageSquare, Shield, Database } from "lucide-react"
+import { Users, MessageSquare, Shield, Database, ClipboardList, Package } from "lucide-react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { AnalyticsDashboard } from "./components/analytics-dashboard"
@@ -109,49 +109,57 @@ export default function AdminDashboardPage() {
 
         {/* Stats Grid - System Health */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
-          <Card className="p-6 border-l-4 border-l-primary">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground mb-2">Total Usuarios</p>
-                <p className="text-3xl font-bold text-foreground">{stats.totalUsers}</p>
-                <p className="text-xs text-green-600 mt-2">{stats.regularUsers} regulares</p>
+          <Link href="/admin/usuarios">
+            <Card className="p-6 border-l-4 border-l-primary cursor-pointer hover:shadow-lg hover:scale-[1.02] transition-all duration-200">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-muted-foreground mb-2">Total Usuarios</p>
+                  <p className="text-3xl font-bold text-foreground">{stats.totalUsers}</p>
+                  <p className="text-xs text-green-600 mt-2">{stats.regularUsers} regulares</p>
+                </div>
+                <Users className="w-12 h-12 text-primary/20" />
               </div>
-              <Users className="w-12 h-12 text-primary/20" />
-            </div>
-          </Card>
+            </Card>
+          </Link>
 
-          <Card className="p-6 border-l-4 border-l-primary">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground mb-2">Administradores</p>
-                <p className="text-3xl font-bold text-foreground">{stats.adminUsers}</p>
-                <p className="text-xs text-blue-600 mt-2">Con acceso completo</p>
+          <Link href="/admin/cotizaciones">
+            <Card className="p-6 border-l-4 border-l-primary cursor-pointer hover:shadow-lg hover:scale-[1.02] transition-all duration-200">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-muted-foreground mb-2">Cotizaciones</p>
+                  <p className="text-3xl font-bold text-foreground">{stats.adminUsers}</p>
+                  <p className="text-xs text-blue-600 mt-2">Gestionar solicitudes</p>
+                </div>
+                <ClipboardList className="w-12 h-12 text-primary/20" />
               </div>
-              <Shield className="w-12 h-12 text-primary/20" />
-            </div>
-          </Card>
+            </Card>
+          </Link>
 
-          <Card className="p-6 border-l-4 border-l-primary">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground mb-2">Suscripciones</p>
-                <p className="text-3xl font-bold text-foreground">Activas</p>
-                <p className="text-xs text-green-600 mt-2">Newsletter</p>
+          <Link href="/admin/suscripciones">
+            <Card className="p-6 border-l-4 border-l-primary cursor-pointer hover:shadow-lg hover:scale-[1.02] transition-all duration-200">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-muted-foreground mb-2">Suscripciones</p>
+                  <p className="text-3xl font-bold text-foreground">Activas</p>
+                  <p className="text-xs text-green-600 mt-2">Newsletter</p>
+                </div>
+                <MessageSquare className="w-12 h-12 text-primary/20" />
               </div>
-              <MessageSquare className="w-12 h-12 text-primary/20" />
-            </div>
-          </Card>
+            </Card>
+          </Link>
 
-          <Card className="p-6 border-l-4 border-l-primary">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground mb-2">Base de Datos</p>
-                <p className="text-3xl font-bold text-foreground">Activa</p>
-                <p className="text-xs text-green-600 mt-2">Todas las tablas</p>
+          <Link href="/admin/publicaciones">
+            <Card className="p-6 border-l-4 border-l-primary cursor-pointer hover:shadow-lg hover:scale-[1.02] transition-all duration-200">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-muted-foreground mb-2">Publicaciones</p>
+                  <p className="text-3xl font-bold text-foreground">Ver</p>
+                  <p className="text-xs text-green-600 mt-2">Todas las publicaciones</p>
+                </div>
+                <Package className="w-12 h-12 text-primary/20" />
               </div>
-              <Database className="w-12 h-12 text-primary/20" />
-            </div>
-          </Card>
+            </Card>
+          </Link>
         </div>
 
         {/* Vercel-Style Analytics Section */}
@@ -192,28 +200,30 @@ export default function AdminDashboardPage() {
             <Link href="/admin/usuarios">
               <Button
                 variant="outline"
-                className="w-full h-24 flex flex-col items-center justify-center gap-2 bg-transparent"
+                className="w-full h-24 flex flex-col items-center justify-center gap-2 bg-transparent hover:border-primary"
               >
                 <Users className="w-8 h-8 text-primary" />
                 <span className="font-semibold">Gestión de Usuarios</span>
               </Button>
             </Link>
-            <Button
-              variant="outline"
-              className="w-full h-24 flex flex-col items-center justify-center gap-2 bg-transparent"
-              disabled
-            >
-              <Database className="w-8 h-8 text-muted-foreground" />
-              <span className="font-semibold text-muted-foreground">Sistema</span>
-            </Button>
-            <Button
-              variant="outline"
-              className="w-full h-24 flex flex-col items-center justify-center gap-2 bg-transparent"
-              disabled
-            >
-              <Shield className="w-8 h-8 text-muted-foreground" />
-              <span className="font-semibold text-muted-foreground">Configuración</span>
-            </Button>
+            <Link href="/admin/publicaciones">
+              <Button
+                variant="outline"
+                className="w-full h-24 flex flex-col items-center justify-center gap-2 bg-transparent hover:border-primary"
+              >
+                <Package className="w-8 h-8 text-primary" />
+                <span className="font-semibold">Publicaciones</span>
+              </Button>
+            </Link>
+            <Link href="/admin/contactanos">
+              <Button
+                variant="outline"
+                className="w-full h-24 flex flex-col items-center justify-center gap-2 bg-transparent hover:border-primary"
+              >
+                <MessageSquare className="w-8 h-8 text-primary" />
+                <span className="font-semibold">Contáctanos</span>
+              </Button>
+            </Link>
           </div>
         </Card>
       </div>

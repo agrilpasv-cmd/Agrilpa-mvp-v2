@@ -4,6 +4,7 @@ import { Card } from "@/components/ui/card"
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, Area, AreaChart } from "recharts"
 import { TrendingUp, Users, FileText, MessageSquare, Activity } from 'lucide-react'
 import { useState, useEffect } from "react"
+import Link from "next/link"
 
 export function UserDashboard() {
     const [stats, setStats] = useState({
@@ -74,49 +75,57 @@ export function UserDashboard() {
 
                 {/* Stats Grid */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-                    <Card className="p-6 border-l-4 border-l-primary">
-                        <div className="flex items-center justify-between">
-                            <div>
-                                <p className="text-sm text-muted-foreground mb-2">Mis Compras</p>
-                                <p className="text-3xl font-bold text-foreground">${stats.totalSales.toLocaleString()}</p>
-                                <p className="text-xs text-green-600 mt-2">Total gastado</p>
+                    <Link href="/dashboard/compras">
+                        <Card className="p-6 border-l-4 border-l-primary cursor-pointer hover:shadow-lg hover:scale-[1.02] transition-all duration-200">
+                            <div className="flex items-center justify-between">
+                                <div>
+                                    <p className="text-sm text-muted-foreground mb-2">Mis Compras</p>
+                                    <p className="text-3xl font-bold text-foreground">${stats.totalSales.toLocaleString()}</p>
+                                    <p className="text-xs text-green-600 mt-2">Total gastado</p>
+                                </div>
+                                <TrendingUp className="w-12 h-12 text-primary/20" />
                             </div>
-                            <TrendingUp className="w-12 h-12 text-primary/20" />
-                        </div>
-                    </Card>
+                        </Card>
+                    </Link>
 
-                    <Card className="p-6 border-l-4 border-l-primary">
-                        <div className="flex items-center justify-between">
-                            <div>
-                                <p className="text-sm text-muted-foreground mb-2">Cotizaciones</p>
-                                <p className="text-3xl font-bold text-foreground">{stats.quotationsCount}</p>
-                                <p className="text-xs text-blue-600 mt-2">Solicitudes pendientes</p>
+                    <Link href="/dashboard/cotizaciones">
+                        <Card className="p-6 border-l-4 border-l-primary cursor-pointer hover:shadow-lg hover:scale-[1.02] transition-all duration-200">
+                            <div className="flex items-center justify-between">
+                                <div>
+                                    <p className="text-sm text-muted-foreground mb-2">Cotizaciones</p>
+                                    <p className="text-3xl font-bold text-foreground">{stats.quotationsCount}</p>
+                                    <p className="text-xs text-blue-600 mt-2">Solicitudes pendientes</p>
+                                </div>
+                                <MessageSquare className="w-12 h-12 text-primary/20" />
                             </div>
-                            <MessageSquare className="w-12 h-12 text-primary/20" />
-                        </div>
-                    </Card>
+                        </Card>
+                    </Link>
 
-                    <Card className="p-6 border-l-4 border-l-primary">
-                        <div className="flex items-center justify-between">
-                            <div>
-                                <p className="text-sm text-muted-foreground mb-2">Productos Activos</p>
-                                <p className="text-3xl font-bold text-foreground">{stats.activeProducts}</p>
-                                <p className="text-xs text-green-600 mt-2">Todos verificados</p>
+                    <Link href="/dashboard/mis-publicaciones">
+                        <Card className="p-6 border-l-4 border-l-primary cursor-pointer hover:shadow-lg hover:scale-[1.02] transition-all duration-200">
+                            <div className="flex items-center justify-between">
+                                <div>
+                                    <p className="text-sm text-muted-foreground mb-2">Productos Activos</p>
+                                    <p className="text-3xl font-bold text-foreground">{stats.activeProducts}</p>
+                                    <p className="text-xs text-green-600 mt-2">Todos verificados</p>
+                                </div>
+                                <FileText className="w-12 h-12 text-primary/20" />
                             </div>
-                            <FileText className="w-12 h-12 text-primary/20" />
-                        </div>
-                    </Card>
+                        </Card>
+                    </Link>
 
-                    <Card className="p-6 border-l-4 border-l-primary">
-                        <div className="flex items-center justify-between">
-                            <div>
-                                <p className="text-sm text-muted-foreground mb-2">Mensajes</p>
-                                <p className="text-3xl font-bold text-foreground">5</p>
-                                <p className="text-xs text-orange-600 mt-2">3 sin leer</p>
+                    <Link href="/dashboard/mensajes">
+                        <Card className="p-6 border-l-4 border-l-primary cursor-pointer hover:shadow-lg hover:scale-[1.02] transition-all duration-200">
+                            <div className="flex items-center justify-between">
+                                <div>
+                                    <p className="text-sm text-muted-foreground mb-2">Mensajes</p>
+                                    <p className="text-3xl font-bold text-foreground">5</p>
+                                    <p className="text-xs text-orange-600 mt-2">3 sin leer</p>
+                                </div>
+                                <MessageSquare className="w-12 h-12 text-primary/20" />
                             </div>
-                            <MessageSquare className="w-12 h-12 text-primary/20" />
-                        </div>
-                    </Card>
+                        </Card>
+                    </Link>
                 </div>
 
                 {/* Charts */}
