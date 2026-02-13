@@ -1,6 +1,12 @@
 import { Resend } from 'resend'
 
-const resend = new Resend(process.env.RESEND_API_KEY)
+const getResendClient = () => {
+    if (!process.env.RESEND_API_KEY) {
+        console.error("RESEND_API_KEY is not defined")
+        throw new Error("RESEND_API_KEY no está configurada en las variables de entorno (.env.local)")
+    }
+    return new Resend(process.env.RESEND_API_KEY)
+}
 
 const FROM_EMAIL = 'Agrilpa <onboarding@resend.dev>'
 
@@ -23,6 +29,7 @@ export async function sendPurchaseNotification({
     price: number
 }) {
     try {
+        const resend = getResendClient()
         const { data, error } = await resend.emails.send({
             from: FROM_EMAIL,
             to: sellerEmail,
@@ -72,9 +79,9 @@ export async function sendPurchaseNotification({
         }
         console.log('[Email] Purchase notification sent to:', sellerEmail)
         return { success: true, data }
-    } catch (err) {
+    } catch (err: any) {
         console.error('[Email] Failed to send purchase notification:', err)
-        return { success: false, error: err }
+        return { success: false, error: { message: err.message } }
     }
 }
 
@@ -103,6 +110,7 @@ export async function sendQuotationStatusEmail({
         : 'Lamentablemente, el vendedor ha rechazado tu cotización. Te invitamos a explorar más productos en Agrilpa.'
 
     try {
+        const resend = getResendClient()
         const { data, error } = await resend.emails.send({
             from: FROM_EMAIL,
             to: buyerEmail,
@@ -140,9 +148,9 @@ export async function sendQuotationStatusEmail({
         }
         console.log('[Email] Quotation status email sent to:', buyerEmail)
         return { success: true, data }
-    } catch (err) {
+    } catch (err: any) {
         console.error('[Email] Failed to send quotation status email:', err)
-        return { success: false, error: err }
+        return { success: false, error: { message: err.message } }
     }
 }
 
@@ -167,6 +175,7 @@ export async function sendNewQuotationNotification({
     location: string
 }) {
     try {
+        const resend = getResendClient()
         const { data, error } = await resend.emails.send({
             from: FROM_EMAIL,
             to: sellerEmail,
@@ -222,9 +231,9 @@ export async function sendNewQuotationNotification({
         }
         console.log('[Email] Quotation notification sent to:', sellerEmail)
         return { success: true, data }
-    } catch (err) {
+    } catch (err: any) {
         console.error('[Email] Failed to send quotation notification:', err)
-        return { success: false, error: err }
+        return { success: false, error: { message: err.message } }
     }
 }
 
@@ -243,6 +252,7 @@ export async function sendNewsletterEmail({
     htmlContent: string
 }) {
     try {
+        const resend = getResendClient()
         const { data, error } = await resend.emails.send({
             from: FROM_EMAIL,
             to: recipientEmail,
@@ -270,8 +280,8 @@ export async function sendNewsletterEmail({
             return { success: false, error }
         }
         return { success: true, data }
-    } catch (err) {
+    } catch (err: any) {
         console.error('[Email] Failed to send newsletter:', err)
-        return { success: false, error: err }
+        return { success: false, error: { message: err.message } }
     }
 }
