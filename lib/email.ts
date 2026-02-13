@@ -53,7 +53,7 @@ const getMinimalistTemplate = (title: string, content: string, cta?: { text: str
 
         <!-- Minimalist Footer -->
         <div style="background-color: ${THEME.secondary}; padding: 20px 40px; border-top: 1px solid ${THEME.border}; text-align: center;">
-            <p style="margin: 0; font-size: 12px; color: #6b7280;">© ${new Date().getFullYear()} Agrilpa. Comercio Justo y Sostenible.</p>
+            <p style="margin: 0; font-size: 12px; color: #6b7280;">© ${new Date().getFullYear()} Agrilpa. Comercio Justo y Sostenible 🌍</p>
         </div>
     </div>
 </body>
@@ -111,8 +111,8 @@ export async function sendPurchaseNotification({
         const { data, error } = await resend.emails.send({
             from: FROM_EMAIL,
             to: sellerEmail,
-            subject: `¡Felicidades! Nueva Venta de ${productName}`,
-            html: getMinimalistTemplate('¡Nueva Venta Confirmada!', content, { text: 'Gestionar Orden', url: 'https://agrilpa.com/admin/sales' }),
+            subject: `🌿 ¡Felicidades! Nueva Venta de ${productName}`,
+            html: getMinimalistTemplate('🌱 ¡Nueva Venta Confirmada!', content, { text: 'Gestionar Orden', url: 'https://agrilpa.com/admin/sales' }),
         })
 
         if (error) {
@@ -158,9 +158,9 @@ export async function sendQuotationStatusEmail({
         const { data, error } = await resend.emails.send({
             from: FROM_EMAIL,
             to: buyerEmail,
-            subject: `Tu Cotización fue ${statusText}: ${productName}`,
+            subject: `🍃 Tu Cotización fue ${statusText}: ${productName}`,
             html: getMinimalistTemplate(
-                `Estado de tu Cotización`,
+                `🌿 Estado de tu Cotización`,
                 content,
                 isAccepted ? { text: 'Ver Orden', url: 'https://agrilpa.com/admin/purchases' } : undefined
             ),
@@ -217,8 +217,8 @@ export async function sendNewQuotationNotification({
         const { data, error } = await resend.emails.send({
             from: FROM_EMAIL,
             to: sellerEmail,
-            subject: `¡Nueva Cotización Pendiente! - ${productName}`,
-            html: getMinimalistTemplate('¡Tienes una Cotización Pendiente!', content, { text: 'Responder Oferta', url: 'https://agrilpa.com/admin/quotations' }),
+            subject: `🍂 ¡Nueva Cotización Pendiente! - ${productName}`,
+            html: getMinimalistTemplate('🍁 ¡Tienes una Cotización Pendiente!', content, { text: 'Responder Oferta', url: 'https://agrilpa.com/admin/quotations' }),
         })
 
         if (error) {
