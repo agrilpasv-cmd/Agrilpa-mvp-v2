@@ -1,5 +1,6 @@
 import { createClient } from "@supabase/supabase-js"
 import { NextResponse } from "next/server"
+import { sendNewQuotationNotification } from "@/lib/email"
 
 export const dynamic = 'force-dynamic'
 
@@ -149,6 +150,29 @@ CREATE POLICY "Service role can manage quotations" ON quotations FOR ALL USING (
         }
 
         console.log("Quotation created successfully:", data)
+
+        // Send email notification to seller
+        try {
+            const { data: seller } = await supabaseAdmin
+                .from("users")
+                .select("email, full_name, company_name")
+                .eq("id", sellerId)
+                .single()
+
+            if (seller?.email) {
+                sendNewQuotationNotification({
+                    sellerEmail: seller.email,
+                    sellerName: seller.company_name || seller.full_name || "Vendedor",
+                    buyerName: buyerName,
+                    productName: productTitle,
+                    quantity: parseInt(quantity),
+                    targetPrice: targetPrice ? parseFloat(targetPrice) : undefined,
+                    location: destinationCountry,
+                }).catch(err => console.error("[Email] Background quotation email failed:", err))
+            }
+        } catch (emailErr) {
+            console.error("[Email] Error fetching seller for quotation notification:", emailErr)
+        }
 
         return NextResponse.json({ success: true, quotation: data[0] })
 
