@@ -83,7 +83,8 @@ export async function sendPurchaseNotification({
 
         const content = `
             <p>Hola <strong>${sellerName}</strong>,</p>
-            <p>Has recibido una nueva orden de compra.</p>
+            <p style="font-size: 18px; color: ${THEME.primary}; font-weight: 500;">Tienes una nueva notificación de una compra.</p>
+            <p>Un comprador ha adquirido tu producto:</p>
             
             <table style="width: 100%; border-collapse: collapse; margin: 24px 0; font-size: 15px;">
                 <tr style="border-bottom: 1px solid ${THEME.border};">
@@ -110,8 +111,8 @@ export async function sendPurchaseNotification({
         const { data, error } = await resend.emails.send({
             from: FROM_EMAIL,
             to: sellerEmail,
-            subject: `Nueva Venta: ${productName}`,
-            html: getMinimalistTemplate('¡Nueva Venta Realizada!', content, { text: 'Gestionar Orden', url: 'https://agrilpa.com/admin/sales' }),
+            subject: `¡Felicidades! Nueva Venta de ${productName}`,
+            html: getMinimalistTemplate('¡Nueva Venta Confirmada!', content, { text: 'Gestionar Orden', url: 'https://agrilpa.com/admin/sales' }),
         })
 
         if (error) {
@@ -142,8 +143,8 @@ export async function sendQuotationStatusEmail({
     const isAccepted = status === 'accepted'
     const statusText = isAccepted ? 'Aprobada' : 'Rechazada'
     const message = isAccepted
-        ? 'El vendedor ha aceptado tu oferta. Se ha generado una orden de compra automáticamente.'
-        : 'El vendedor ha decidido no aceptar tu oferta en esta ocasión.'
+        ? `El vendedor aceptó tu cotización de <strong>${productName}</strong>. Ahora puedes proceder con la compra.`
+        : `El vendedor rechazó tu cotización de <strong>${productName}</strong>.`
 
     try {
         const resend = getResendClient()
@@ -157,9 +158,9 @@ export async function sendQuotationStatusEmail({
         const { data, error } = await resend.emails.send({
             from: FROM_EMAIL,
             to: buyerEmail,
-            subject: `Cotización ${statusText}: ${productName}`,
+            subject: `Tu Cotización fue ${statusText}: ${productName}`,
             html: getMinimalistTemplate(
-                `Cotización ${statusText}`,
+                `Estado de tu Cotización`,
                 content,
                 isAccepted ? { text: 'Ver Orden', url: 'https://agrilpa.com/admin/purchases' } : undefined
             ),
@@ -201,7 +202,8 @@ export async function sendNewQuotationNotification({
 
         const content = `
             <p>Hola <strong>${sellerName}</strong>,</p>
-            <p>Un comprador está interesado en tu producto.</p>
+            <p style="font-size: 18px; color: ${THEME.primary}; font-weight: 500;">Tienes una nueva cotización pendiente.</p>
+            <p>Un comprador está interesado en tu producto:</p>
             
             <div style="background-color: ${THEME.secondary}; padding: 20px; border-radius: 8px; margin: 20px 0;">
                 <p style="margin: 0 0 10px 0;"><strong>Producto:</strong> ${productName}</p>
@@ -215,8 +217,8 @@ export async function sendNewQuotationNotification({
         const { data, error } = await resend.emails.send({
             from: FROM_EMAIL,
             to: sellerEmail,
-            subject: `Nueva Cotización: ${productName}`,
-            html: getMinimalistTemplate('Solicitud de Cotización', content, { text: 'Responder Oferta', url: 'https://agrilpa.com/admin/quotations' }),
+            subject: `¡Nueva Cotización Pendiente! - ${productName}`,
+            html: getMinimalistTemplate('¡Tienes una Cotización Pendiente!', content, { text: 'Responder Oferta', url: 'https://agrilpa.com/admin/quotations' }),
         })
 
         if (error) {
