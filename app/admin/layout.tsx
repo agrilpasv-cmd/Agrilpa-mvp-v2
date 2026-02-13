@@ -48,6 +48,7 @@ export default function AdminLayout({
     { href: "/admin/logistica", label: "Logística", icon: Truck },
     { href: "/admin/compras", label: "Compras", icon: ShoppingCart },
     { href: "/admin/contactanos", label: "Contáctanos", icon: MessageSquare },
+    { href: "/admin/newsletter", label: "Newsletter", icon: Mail },
   ]
 
   const handleLogout = async () => {

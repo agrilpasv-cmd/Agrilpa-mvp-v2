@@ -2,6 +2,7 @@ import { createServerClient } from "@supabase/ssr"
 import { createClient } from "@supabase/supabase-js"
 import { cookies } from "next/headers"
 import { type NextRequest, NextResponse } from "next/server"
+import { sendPurchaseNotification } from "@/lib/email"
 
 interface PurchaseData {
   productName: string
@@ -90,6 +91,42 @@ export async function POST(request: NextRequest) {
     if (error) {
       console.error("[v0] Purchase save error:", error.message)
       return NextResponse.json({ error: "Error saving purchase" }, { status: 500 })
+    }
+
+    // Send email notification to the seller (fire-and-forget)
+    try {
+      const supabaseAdmin = createClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.SUPABASE_SERVICE_ROLE_KEY!,
+      )
+      // Look up product → vendor → email
+      const { data: product } = await supabaseAdmin
+        .from("user_products")
+        .select("vendor_id, name")
+        .eq("id", data.productSlug)
+        .single()
+
+      if (product?.vendor_id) {
+        const { data: seller } = await supabaseAdmin
+          .from("users")
+          .select("email, full_name, company_name")
+          .eq("id", product.vendor_id)
+          .single()
+
+        if (seller?.email) {
+          sendPurchaseNotification({
+            sellerEmail: seller.email,
+            sellerName: seller.company_name || seller.full_name || "Vendedor",
+            buyerName: data.fullName,
+            productName: data.productName,
+            quantity: data.quantityKg,
+            price: data.priceUsd,
+          }).catch(err => console.error("[Email] Background send failed:", err))
+        }
+      }
+    } catch (emailErr) {
+      console.error("[Email] Error looking up seller for notification:", emailErr)
+      // Don't fail the purchase if email fails
     }
 
     return NextResponse.json({ success: true, purchase }, { status: 200 })

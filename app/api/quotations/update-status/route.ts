@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server"
 import { createClient } from "@supabase/supabase-js"
+import { sendQuotationStatusEmail } from "@/lib/email"
 
 const supabaseAdmin = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -173,6 +174,22 @@ CREATE POLICY "Service role has full access to orders" ON orders FOR ALL USING (
             } else {
                 orderCreated = orderData?.[0]
                 console.log("Order created from quotation:", orderCreated)
+            }
+        }
+
+        // Send email notification to buyer about status change
+        if (status === "accepted" || status === "rejected") {
+            try {
+                if (quotation.email && quotation.buyer_name) {
+                    sendQuotationStatusEmail({
+                        buyerEmail: quotation.email,
+                        buyerName: quotation.buyer_name,
+                        productName: quotation.product_title || "Producto",
+                        status: status as 'accepted' | 'rejected',
+                    }).catch(err => console.error("[Email] Background quotation email failed:", err))
+                }
+            } catch (emailErr) {
+                console.error("[Email] Error sending quotation status email:", emailErr)
             }
         }
 
