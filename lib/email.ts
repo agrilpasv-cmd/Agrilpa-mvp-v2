@@ -8,7 +8,7 @@ const getResendClient = () => {
     return new Resend(process.env.RESEND_API_KEY)
 }
 
-const FROM_EMAIL = process.env.RESEND_FROM_EMAIL || 'Agrilpa <onboarding@resend.dev>'
+const FROM_EMAIL = process.env.RESEND_FROM_EMAIL ? `Agrilpa <${process.env.RESEND_FROM_EMAIL}>` : 'Agrilpa <onboarding@resend.dev>'
 
 // Colors from the requested "Minimalist Black, White, Dark Green" theme
 const THEME = {
