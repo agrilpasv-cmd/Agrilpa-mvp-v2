@@ -32,12 +32,43 @@ export async function POST(request: Request) {
             return NextResponse.json({ error: "No autorizado" }, { status: 401 })
         }
 
-        const { subject, content } = await request.json()
+        const { subject, content, specificEmail } = await request.json()
 
         if (!subject || !content) {
             return NextResponse.json({ error: "Asunto y contenido son requeridos" }, { status: 400 })
         }
 
+        // Convert newlines to <br> for HTML
+        const htmlContent = content.replace(/\n/g, '<br>')
+
+        // OPTION 1: Send to Specific Email
+        if (specificEmail) {
+            const result = await sendNewsletterEmail({
+                recipientEmail: specificEmail,
+                recipientName: "Usuario",
+                subject,
+                htmlContent,
+            })
+
+            if (result.success) {
+                return NextResponse.json({
+                    success: true,
+                    totalUsers: 1,
+                    sent: 1,
+                    failed: 0,
+                })
+            } else {
+                return NextResponse.json({
+                    success: false,
+                    totalUsers: 1,
+                    sent: 0,
+                    failed: 1,
+                    error: JSON.stringify(result.error)
+                })
+            }
+        }
+
+        // OPTION 2: Send to All Users
         // Get all registered users
         const supabaseAdmin = createClient(
             process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -56,9 +87,6 @@ export async function POST(request: Request) {
         if (!users || users.length === 0) {
             return NextResponse.json({ error: "No hay usuarios registrados" }, { status: 404 })
         }
-
-        // Convert newlines to <br> for HTML
-        const htmlContent = content.replace(/\n/g, '<br>')
 
         // Send emails one by one (Resend free tier doesn't support batch)
         let sent = 0

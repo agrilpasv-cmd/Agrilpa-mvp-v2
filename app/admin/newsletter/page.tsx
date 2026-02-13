@@ -11,6 +11,8 @@ import { Mail, Send, Loader, CheckCircle2, AlertCircle, Users } from "lucide-rea
 export default function NewsletterPage() {
     const [subject, setSubject] = useState("")
     const [content, setContent] = useState("")
+    const [recipientType, setRecipientType] = useState<"all" | "specific">("all")
+    const [specificEmail, setSpecificEmail] = useState("")
     const [isSending, setIsSending] = useState(false)
     const [result, setResult] = useState<{
         success: boolean
@@ -26,8 +28,15 @@ export default function NewsletterPage() {
             return
         }
 
+        if (recipientType === "specific" && !specificEmail.trim()) {
+            setResult({ success: false, error: "El correo del destinatario es requerido" })
+            return
+        }
+
+        const targetDescription = recipientType === "all" ? "TODOS los usuarios registrados" : `el usuario ${specificEmail}`
+
         const confirmed = window.confirm(
-            `¿Estás seguro de enviar este newsletter a TODOS los usuarios registrados?\n\nAsunto: ${subject}`
+            `¿Estás seguro de enviar este newsletter a ${targetDescription}?\n\nAsunto: ${subject}`
         )
         if (!confirmed) return
 
@@ -38,7 +47,11 @@ export default function NewsletterPage() {
             const res = await fetch("/api/admin/send-newsletter", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ subject, content }),
+                body: JSON.stringify({
+                    subject,
+                    content,
+                    specificEmail: recipientType === "specific" ? specificEmail : undefined
+                }),
             })
 
             const data = await res.json()
@@ -50,8 +63,11 @@ export default function NewsletterPage() {
                     failed: data.failed,
                     totalUsers: data.totalUsers,
                 })
-                setSubject("")
-                setContent("")
+                if (recipientType === "all") {
+                    setSubject("")
+                    setContent("")
+                }
+                // Don't clear form if specific email, easier for testing multiple
             } else {
                 setResult({ success: false, error: data.error || "Error al enviar" })
             }
@@ -70,7 +86,7 @@ export default function NewsletterPage() {
                     Newsletter
                 </h1>
                 <p className="text-muted-foreground mt-1">
-                    Envía notificaciones por correo electrónico a todos los usuarios registrados
+                    Envía notificaciones por correo electrónico a los usuarios
                 </p>
             </div>
 
@@ -81,10 +97,51 @@ export default function NewsletterPage() {
                         Componer Newsletter
                     </CardTitle>
                     <CardDescription>
-                        El correo será enviado a todos los usuarios registrados en la plataforma
+                        {recipientType === "all"
+                            ? "El correo será enviado a todos los usuarios registrados en la plataforma"
+                            : "El correo será enviado únicamente al destinatario especificado"
+                        }
                     </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-6">
+
+                    <div className="space-y-3 p-4 bg-muted/30 rounded-lg border">
+                        <Label className="text-sm font-medium">Destinatarios</Label>
+                        <div className="flex flex-col gap-2">
+                            <label className="flex items-center gap-2 cursor-pointer">
+                                <input
+                                    type="radio"
+                                    name="recipientType"
+                                    checked={recipientType === "all"}
+                                    onChange={() => setRecipientType("all")}
+                                    className="accent-primary w-4 h-4"
+                                />
+                                <span>Enviar a todos los usuarios registrados</span>
+                            </label>
+                            <label className="flex items-center gap-2 cursor-pointer">
+                                <input
+                                    type="radio"
+                                    name="recipientType"
+                                    checked={recipientType === "specific"}
+                                    onChange={() => setRecipientType("specific")}
+                                    className="accent-primary w-4 h-4"
+                                />
+                                <span>Enviar a un correo específico</span>
+                            </label>
+                        </div>
+
+                        {recipientType === "specific" && (
+                            <div className="mt-3 pl-6">
+                                <Input
+                                    placeholder="correo@ejemplo.com"
+                                    value={specificEmail}
+                                    onChange={(e) => setSpecificEmail(e.target.value)}
+                                    type="email"
+                                />
+                            </div>
+                        )}
+                    </div>
+
                     <div className="space-y-2">
                         <Label htmlFor="subject" className="text-sm font-medium">
                             Asunto del correo
@@ -120,8 +177,8 @@ export default function NewsletterPage() {
                     {result && (
                         <div
                             className={`p-4 rounded-lg border flex items-start gap-3 ${result.success
-                                    ? "bg-green-50 border-green-200 text-green-800"
-                                    : "bg-red-50 border-red-200 text-red-800"
+                                ? "bg-green-50 border-green-200 text-green-800"
+                                : "bg-red-50 border-red-200 text-red-800"
                                 }`}
                         >
                             {result.success ? (
