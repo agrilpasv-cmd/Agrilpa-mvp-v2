@@ -54,7 +54,13 @@ export default function NewsletterPage() {
                 }),
             })
 
-            const data = await res.json()
+            let data
+            try {
+                data = await res.json()
+            } catch (e) {
+                console.error("Error parsing JSON:", e)
+                throw new Error(`Error del servidor (${res.status}): ${res.statusText || "Respuesta inválida"}`)
+            }
 
             if (res.ok) {
                 setResult({
@@ -62,17 +68,18 @@ export default function NewsletterPage() {
                     sent: data.sent,
                     failed: data.failed,
                     totalUsers: data.totalUsers,
+                    error: data.errors ? `Enviado con algunos errores: ${JSON.stringify(data.errors)}` : undefined
                 })
                 if (recipientType === "all") {
                     setSubject("")
                     setContent("")
                 }
-                // Don't clear form if specific email, easier for testing multiple
             } else {
-                setResult({ success: false, error: data.error || "Error al enviar" })
+                setResult({ success: false, error: data.error || `Error ${res.status}: ${res.statusText}` })
             }
-        } catch (err) {
-            setResult({ success: false, error: "Error de red. Intenta de nuevo." })
+        } catch (err: any) {
+            console.error("Newsletter send error:", err)
+            setResult({ success: false, error: err.message || "Error desconocido al enviar." })
         } finally {
             setIsSending(false)
         }
@@ -186,7 +193,7 @@ export default function NewsletterPage() {
                             ) : (
                                 <AlertCircle className="w-5 h-5 mt-0.5 text-red-600 shrink-0" />
                             )}
-                            <div>
+                            <div className="flex-1 overflow-hidden">
                                 {result.success ? (
                                     <>
                                         <p className="font-medium">¡Newsletter enviado exitosamente!</p>
@@ -195,9 +202,15 @@ export default function NewsletterPage() {
                                             {result.sent} de {result.totalUsers} correos enviados
                                             {result.failed ? ` (${result.failed} fallidos)` : ""}
                                         </p>
+                                        {result.error && (
+                                            <p className="text-xs mt-2 text-red-600">{result.error}</p>
+                                        )}
                                     </>
                                 ) : (
-                                    <p className="font-medium">{result.error}</p>
+                                    <>
+                                        <p className="font-medium">Error al enviar</p>
+                                        <p className="text-sm mt-1">{result.error}</p>
+                                    </>
                                 )}
                             </div>
                         </div>
@@ -212,7 +225,7 @@ export default function NewsletterPage() {
                         {isSending ? (
                             <>
                                 <Loader className="w-5 h-5 animate-spin" />
-                                Enviando a todos los usuarios...
+                                Enviando...
                             </>
                         ) : (
                             <>
