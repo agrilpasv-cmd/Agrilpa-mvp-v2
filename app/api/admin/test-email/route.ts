@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server"
-import { Resend } from "resend"
+import { sendNewsletterEmail } from "@/lib/email"
 
 export const dynamic = 'force-dynamic'
 
@@ -11,29 +11,29 @@ export async function POST(request: Request) {
             return NextResponse.json({ error: "RESEND_API_KEY is missing in server environment" }, { status: 500 })
         }
 
-        const resend = new Resend(process.env.RESEND_API_KEY)
-        const FROM_EMAIL = 'Agrilpa <onboarding@resend.dev>'
-
-        const { data, error } = await resend.emails.send({
-            from: FROM_EMAIL,
-            to: email, // This must be the verified email if domain is not verified
-            subject: '🧪 Test Email from Agrilpa',
-            html: `
-                <div style="font-family: sans-serif; padding: 20px;">
-                    <h1>It Works! 🚀</h1>
-                    <p>This is a test email from your Agrilpa local environment.</p>
-                    <p><strong>Time:</strong> ${new Date().toLocaleString()}</p>
-                    <p><strong>API Key Status:</strong> Configured ✅</p>
-                </div>
-            `,
+        const result = await sendNewsletterEmail({
+            recipientEmail: email,
+            recipientName: "Usuario de Prueba",
+            subject: "✨ Prueba del Nuevo Diseño Agrilpa",
+            htmlContent: `
+                <p>¡Hola!</p>
+                <p>Este es un correo de prueba para verificar que el <strong>nuevo diseño minimalista</strong> está funcionando correctamente.</p>
+                <p>Deberías ver:</p>
+                <ul>
+                    <li>El logo de Agrilpa en la cabecera (sobre fondo verde oscuro).</li>
+                    <li>Este texto en un contenedor limpio.</li>
+                    <li>Un pie de página sencillo.</li>
+                </ul>
+                <p>Si ves esto bien, ¡todo está listo!</p>
+            `
         })
 
-        if (error) {
-            console.error("Resend API Error:", error)
-            return NextResponse.json({ error: error.message, details: error }, { status: 500 })
+        if (!result.success) {
+            console.error("Resend API Error:", result.error)
+            return NextResponse.json({ error: "Failed to send email", details: result.error }, { status: 500 })
         }
 
-        return NextResponse.json({ success: true, data })
+        return NextResponse.json({ success: true, data: result.data })
 
     } catch (error: any) {
         console.error("Test email internal error:", error)
