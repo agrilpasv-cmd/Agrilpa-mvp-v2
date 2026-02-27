@@ -2,8 +2,7 @@
 
 import { Card } from "@/components/ui/card"
 import {
-    Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid,
-    Area, ComposedChart, LabelList
+    AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid
 } from "recharts"
 
 interface PipelineProps {
@@ -22,20 +21,11 @@ interface PipelineProps {
     }
 }
 
-// Custom Tooltip for better UI integration
-const CustomTooltip = ({ active, payload, label }: any) => {
-    if (active && payload && payload.length) {
-        return (
-            <div className="bg-card border border-border p-3 rounded-lg shadow-sm">
-                <p className="font-semibold text-foreground mb-1">{label}</p>
-                <p className="font-bold flex items-center gap-2">
-                    <span className="w-3 h-3 rounded-full" style={{ backgroundColor: payload[0].payload.fillColor }}></span>
-                    {payload[0].value} interacciones
-                </p>
-            </div>
-        )
-    }
-    return null
+// Standard Tooltip mimicking admin dashboard style
+const tooltipStyle = {
+    backgroundColor: 'var(--color-background)',
+    borderRadius: '8px',
+    border: '1px solid var(--color-border)'
 }
 
 export function Pipeline({ activityType, pipelineVentas, pipelineCompras }: PipelineProps) {
@@ -44,10 +34,10 @@ export function Pipeline({ activityType, pipelineVentas, pipelineCompras }: Pipe
     const renderSellerPipeline = () => {
         const pv = pipelineVentas || { solicitudes: 0, cotizaciones_enviadas: 0, negociacion: 0, pedidos_confirmados: 0 }
         const data = [
-            { name: 'Solicitudes', cantidad: pv.solicitudes || 0, fillColor: "hsl(var(--primary))" },
-            { name: 'Cotizadas', cantidad: pv.cotizaciones_enviadas || 0, fillColor: "hsl(var(--primary))" },
-            { name: 'Negociación', cantidad: pv.negociacion || 0, fillColor: "hsl(var(--primary))" },
-            { name: 'Pedidos', cantidad: pv.pedidos_confirmados || 0, fillColor: "hsl(var(--primary))" },
+            { name: 'Solicitudes', cantidad: pv.solicitudes || 0 },
+            { name: 'Cotizadas', cantidad: pv.cotizaciones_enviadas || 0 },
+            { name: 'Negociación', cantidad: pv.negociacion || 0 },
+            { name: 'Pedidos', cantidad: pv.pedidos_confirmados || 0 },
         ]
 
         if (data.every(d => d.cantidad === 0)) {
@@ -55,51 +45,21 @@ export function Pipeline({ activityType, pipelineVentas, pipelineCompras }: Pipe
         }
 
         return (
-            <div className="h-[320px] w-full mt-4">
-                <ResponsiveContainer width="100%" height="100%">
-                    <ComposedChart data={data} margin={{ top: 30, right: 10, left: 10, bottom: 5 }}>
+            <div className="h-[300px] w-full mt-4">
+                <ResponsiveContainer width="100%" height={300}>
+                    <AreaChart data={data}>
                         <defs>
                             <linearGradient id="colorVentas" x1="0" y1="0" x2="0" y2="1">
-                                <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.6} />
-                                <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0.05} />
-                            </linearGradient>
-                            <linearGradient id="barVentas" x1="0" y1="0" x2="0" y2="1">
-                                <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity={1} />
-                                <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity={0.6} />
+                                <stop offset="5%" stopColor="#22c55e" stopOpacity={0.3} />
+                                <stop offset="95%" stopColor="#22c55e" stopOpacity={0} />
                             </linearGradient>
                         </defs>
-                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" opacity={0.4} />
-                        <XAxis dataKey="name" tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 13, fontWeight: 500 }} axisLine={false} tickLine={false} dy={10} />
-                        <YAxis hide domain={[0, 'dataMax + 2']} />
-                        <Tooltip content={<CustomTooltip />} cursor={{ fill: 'hsl(var(--primary))', opacity: 0.1 }} />
-
-                        <Area
-                            type="monotone"
-                            dataKey="cantidad"
-                            stroke="hsl(var(--primary))"
-                            strokeWidth={3}
-                            fillOpacity={1}
-                            fill="url(#colorVentas)"
-                            activeDot={{ r: 6, strokeWidth: 0, fill: "hsl(var(--primary))" }}
-                            animationDuration={1500}
-                        />
-                        <Bar
-                            dataKey="cantidad"
-                            barSize={32}
-                            radius={[6, 6, 0, 0]}
-                            fill="url(#barVentas)"
-                            animationDuration={1500}
-                        >
-                            <LabelList
-                                dataKey="cantidad"
-                                position="top"
-                                fill="hsl(var(--foreground))"
-                                fontSize={15}
-                                fontWeight="bold"
-                                offset={12}
-                            />
-                        </Bar>
-                    </ComposedChart>
+                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--color-border)" opacity={0.3} />
+                        <XAxis dataKey="name" axisLine={false} tickLine={false} tickMargin={10} fontSize={12} stroke="var(--color-muted-foreground)" />
+                        <YAxis axisLine={false} tickLine={false} fontSize={12} stroke="var(--color-muted-foreground)" />
+                        <Tooltip contentStyle={tooltipStyle} cursor={{ fill: 'var(--color-muted)', opacity: 0.1 }} />
+                        <Area type="monotone" dataKey="cantidad" stroke="#22c55e" strokeWidth={2} fillOpacity={1} fill="url(#colorVentas)" animationDuration={1000} />
+                    </AreaChart>
                 </ResponsiveContainer>
             </div>
         )
@@ -108,9 +68,9 @@ export function Pipeline({ activityType, pipelineVentas, pipelineCompras }: Pipe
     const renderBuyerPipeline = () => {
         const pc = pipelineCompras || { busqueda: 0, solicitudes_enviadas: 0, ofertas_recibidas: 0, compras_completadas: 0 }
         const data = [
-            { name: 'Sol. Enviadas', cantidad: pc.solicitudes_enviadas || 0, fillColor: "#3b82f6" },
-            { name: 'Ofertas Recibidas', cantidad: pc.ofertas_recibidas || 0, fillColor: "#3b82f6" },
-            { name: 'Compras Finalizadas', cantidad: pc.compras_completadas || 0, fillColor: "#3b82f6" },
+            { name: 'Sol. Enviadas', cantidad: pc.solicitudes_enviadas || 0 },
+            { name: 'Ofertas Recibidas', cantidad: pc.ofertas_recibidas || 0 },
+            { name: 'Compras Finalizadas', cantidad: pc.compras_completadas || 0 },
         ]
 
         if (data.every(d => d.cantidad === 0)) {
@@ -118,51 +78,21 @@ export function Pipeline({ activityType, pipelineVentas, pipelineCompras }: Pipe
         }
 
         return (
-            <div className="h-[320px] w-full mt-4">
-                <ResponsiveContainer width="100%" height="100%">
-                    <ComposedChart data={data} margin={{ top: 30, right: 10, left: 10, bottom: 5 }}>
+            <div className="h-[300px] w-full mt-4">
+                <ResponsiveContainer width="100%" height={300}>
+                    <AreaChart data={data}>
                         <defs>
                             <linearGradient id="colorCompras" x1="0" y1="0" x2="0" y2="1">
-                                <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.6} />
-                                <stop offset="95%" stopColor="#3b82f6" stopOpacity={0.05} />
-                            </linearGradient>
-                            <linearGradient id="barCompras" x1="0" y1="0" x2="0" y2="1">
-                                <stop offset="0%" stopColor="#3b82f6" stopOpacity={1} />
-                                <stop offset="100%" stopColor="#2563eb" stopOpacity={0.6} />
+                                <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3} />
+                                <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
                             </linearGradient>
                         </defs>
-                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" opacity={0.4} />
-                        <XAxis dataKey="name" tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 13, fontWeight: 500 }} axisLine={false} tickLine={false} dy={10} />
-                        <YAxis hide domain={[0, 'dataMax + 2']} />
-                        <Tooltip content={<CustomTooltip />} cursor={{ fill: '#3b82f6', opacity: 0.1 }} />
-
-                        <Area
-                            type="monotone"
-                            dataKey="cantidad"
-                            stroke="#3b82f6"
-                            strokeWidth={3}
-                            fillOpacity={1}
-                            fill="url(#colorCompras)"
-                            activeDot={{ r: 6, strokeWidth: 0, fill: "#3b82f6" }}
-                            animationDuration={1500}
-                        />
-                        <Bar
-                            dataKey="cantidad"
-                            barSize={32}
-                            radius={[6, 6, 0, 0]}
-                            fill="url(#barCompras)"
-                            animationDuration={1500}
-                        >
-                            <LabelList
-                                dataKey="cantidad"
-                                position="top"
-                                fill="hsl(var(--foreground))"
-                                fontSize={15}
-                                fontWeight="bold"
-                                offset={12}
-                            />
-                        </Bar>
-                    </ComposedChart>
+                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--color-border)" opacity={0.3} />
+                        <XAxis dataKey="name" axisLine={false} tickLine={false} tickMargin={10} fontSize={12} stroke="var(--color-muted-foreground)" />
+                        <YAxis axisLine={false} tickLine={false} fontSize={12} stroke="var(--color-muted-foreground)" />
+                        <Tooltip contentStyle={tooltipStyle} cursor={{ fill: 'var(--color-muted)', opacity: 0.1 }} />
+                        <Area type="monotone" dataKey="cantidad" stroke="#3b82f6" strokeWidth={2} fillOpacity={1} fill="url(#colorCompras)" animationDuration={1000} />
+                    </AreaChart>
                 </ResponsiveContainer>
             </div>
         )
