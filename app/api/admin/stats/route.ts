@@ -209,11 +209,46 @@ export async function GET(request: Request) {
                 .sort((a, b) => b.value - a.value)
                 .slice(0, limit)
 
+        // ── Active Users (last 7 days, always fixed window) ───────────────────
+        const sevenDaysAgo = new Date()
+        sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7)
+
+        // Fetch only the fields we need for the 7-day active users calculation
+        const ACTIVE_PATHS = ["/dashboard", "/productos", "/auth"]
+        const { data: activeRows } = await supabaseAdmin
+            .from("page_analytics")
+            .select("user_id, user_agent, country")
+            .gte("created_at", sevenDaysAgo.toISOString())
+
+        const activeData = activeRows || []
+
+        // Registered: distinct user_id values (non-null)
+        const registeredSet = new Set(
+            activeData
+                .filter((r: any) => r.user_id != null)
+                .map((r: any) => r.user_id as string)
+        )
+
+        // Guests: distinct fingerprint among rows with no user_id
+        const guestSet = new Set(
+            activeData
+                .filter((r: any) => r.user_id == null)
+                .map((r: any) => (r.user_agent || "") + "|" + (r.country || ""))
+        )
+
+        const activeUsers = {
+            total: registeredSet.size + guestSet.size,
+            registered: registeredSet.size,
+            guests: guestSet.size,
+        }
+        // ─────────────────────────────────────────────────────────────────────
+
         const detailedAnalytics = {
             summary: {
                 visitors: counts.visits,
                 pageViews: counts.pageViews,
-                bounceRate: counts.pageViews > 0 ? "42%" : "0%"
+                bounceRate: counts.pageViews > 0 ? "42%" : "0%",
+                activeUsers,
             },
             trend: trendData,
             topPages: top(counts.pages),

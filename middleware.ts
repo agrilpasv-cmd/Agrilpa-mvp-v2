@@ -100,7 +100,8 @@ export async function middleware(request: NextRequest) {
             path,
             country,
             referrer,
-            user_agent: request.headers.get("user-agent") || "unknown"
+            user_agent: request.headers.get("user-agent") || "unknown",
+            user_id: user?.id ?? null
         }).then(({ error }) => {
             if (error) console.error("Analytics error:", error.message)
         })

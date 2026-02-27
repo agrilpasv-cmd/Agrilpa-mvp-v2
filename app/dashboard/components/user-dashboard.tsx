@@ -1,50 +1,38 @@
 "use client"
 
-import { Card } from "@/components/ui/card"
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, Area, AreaChart } from "recharts"
-import { TrendingUp, Users, FileText, MessageSquare, Activity } from 'lucide-react'
 import { useState, useEffect } from "react"
+import { Button } from "@/components/ui/button"
 import Link from "next/link"
+import { PlusCircle, Search } from "lucide-react"
+import { DynamicKpis } from "./dynamic-kpis"
+import { PendingActions } from "./pending-actions"
+import { Pipeline } from "./pipeline"
+import { RecentActivity } from "./recent-activity"
+import { Insights } from "./insights"
+import { PerformanceSection } from "./performance-section"
+
+export interface DashboardData {
+    activityType: 'empty' | 'buyer' | 'seller' | 'mixed'
+    seller: any
+    buyer: any
+    pipelineVentas: any
+    pipelineCompras: any
+    pendingActions: any[]
+    performance: any[]
+    recentActivity: any[]
+}
 
 export function UserDashboard() {
-    const [stats, setStats] = useState({
-        totalSales: 0,
-        activeProducts: 0,
-        totalPurchases: 0,
-        messagesCount: 5,
-        transaccionesCount: 0,
-        quotationsCount: 0
-    })
-    const [salesData, setSalesData] = useState<any[]>([])
-    const [activityData, setActivityData] = useState<any[]>([])
-    const [recentActivity, setRecentActivity] = useState<any[]>([])
+    const [data, setData] = useState<DashboardData | null>(null)
     const [loading, setLoading] = useState(true)
 
     const fetchData = async () => {
         try {
-            // 1. Fetch Stats & Visuals from API
-            const statsRes = await fetch("/api/dashboard/stats")
-            if (statsRes.ok) {
-                const data = await statsRes.json()
-                setStats(prev => ({
-                    ...prev,
-                    totalSales: data.totalSales, // mapped to 'totalPurchases' really
-                    totalPurchases: data.totalSales,
-                    transaccionesCount: data.totalTransactions,
-                    quotationsCount: data.quotationsCount
-                }))
-                setSalesData(data.monthlyData)
-                setActivityData(data.weeklyData)
-                setRecentActivity(data.recentActivity)
+            const response = await fetch('/api/dashboard/dynamic-data', { cache: 'no-store' })
+            if (response.ok) {
+                const result = await response.json()
+                setData(result)
             }
-
-            // 2. Fetch Active Products Count (Keep existing logic or API)
-            const productsRes = await fetch("/api/products/get-user-products")
-            if (productsRes.ok) {
-                const pData = await productsRes.json()
-                setStats(prev => ({ ...prev, activeProducts: pData.products?.length || 0 }))
-            }
-
         } catch (e) {
             console.error("Dashboard fetch error:", e)
         } finally {
@@ -56,7 +44,7 @@ export function UserDashboard() {
         fetchData()
     }, [])
 
-    if (loading) {
+    if (loading || !data) {
         return (
             <div className="flex items-center justify-center min-h-screen">
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
@@ -64,226 +52,87 @@ export function UserDashboard() {
         )
     }
 
-    return (
-        <div className="p-8">
-            <div className="max-w-7xl mx-auto">
-                {/* Header */}
-                <div className="mb-8">
-                    <h1 className="text-4xl font-bold text-foreground mb-2">Bienvenido de vuelta</h1>
-                    <p className="text-muted-foreground">Aquí está el resumen de tu actividad en Agrilpa</p>
-                </div>
+    const { activityType } = data;
 
-                {/* Stats Grid */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-                    <Link href="/dashboard/compras">
-                        <Card className="p-6 border-l-4 border-l-primary cursor-pointer hover:shadow-lg hover:scale-[1.02] transition-all duration-200">
-                            <div className="flex items-center justify-between">
-                                <div>
-                                    <p className="text-sm text-muted-foreground mb-2">Mis Compras</p>
-                                    <p className="text-3xl font-bold text-foreground">${stats.totalSales.toLocaleString()}</p>
-                                    <p className="text-xs text-green-600 mt-2">Total gastado</p>
-                                </div>
-                                <TrendingUp className="w-12 h-12 text-primary/20" />
-                            </div>
-                        </Card>
-                    </Link>
+    // Estado vacío (Call to Actions limpios)
+    if (activityType === 'empty') {
+        return (
+            <div className="p-8 max-w-7xl mx-auto min-h-[80vh] flex flex-col items-center justify-center text-center">
+                <h1 className="text-4xl font-bold text-foreground mb-4">¡Bienvenido a Agrilpa!</h1>
+                <p className="text-xl text-muted-foreground mb-12 max-w-2xl">
+                    Comienza tu viaje en el principal marketplace B2B agrícola.
+                </p>
 
-                    <Link href="/dashboard/cotizaciones">
-                        <Card className="p-6 border-l-4 border-l-primary cursor-pointer hover:shadow-lg hover:scale-[1.02] transition-all duration-200">
-                            <div className="flex items-center justify-between">
-                                <div>
-                                    <p className="text-sm text-muted-foreground mb-2">Cotizaciones</p>
-                                    <p className="text-3xl font-bold text-foreground">{stats.quotationsCount}</p>
-                                    <p className="text-xs text-blue-600 mt-2">Solicitudes pendientes</p>
-                                </div>
-                                <MessageSquare className="w-12 h-12 text-primary/20" />
-                            </div>
-                        </Card>
-                    </Link>
-
-                    <Link href="/dashboard/mis-publicaciones">
-                        <Card className="p-6 border-l-4 border-l-primary cursor-pointer hover:shadow-lg hover:scale-[1.02] transition-all duration-200">
-                            <div className="flex items-center justify-between">
-                                <div>
-                                    <p className="text-sm text-muted-foreground mb-2">Productos Activos</p>
-                                    <p className="text-3xl font-bold text-foreground">{stats.activeProducts}</p>
-                                    <p className="text-xs text-green-600 mt-2">Todos verificados</p>
-                                </div>
-                                <FileText className="w-12 h-12 text-primary/20" />
-                            </div>
-                        </Card>
-                    </Link>
-
-                    <Link href="/dashboard/mensajes">
-                        <Card className="p-6 border-l-4 border-l-primary cursor-pointer hover:shadow-lg hover:scale-[1.02] transition-all duration-200">
-                            <div className="flex items-center justify-between">
-                                <div>
-                                    <p className="text-sm text-muted-foreground mb-2">Mensajes</p>
-                                    <p className="text-3xl font-bold text-foreground">5</p>
-                                    <p className="text-xs text-orange-600 mt-2">3 sin leer</p>
-                                </div>
-                                <MessageSquare className="w-12 h-12 text-primary/20" />
-                            </div>
-                        </Card>
-                    </Link>
-                </div>
-
-                {/* Charts */}
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    <Card className="p-6 bg-gradient-to-br from-card to-card/50 shadow-lg border-2">
-                        <div className="flex items-center justify-between mb-6">
-                            <div>
-                                <h3 className="text-xl font-bold text-foreground">Compras por Mes</h3>
-                                <p className="text-sm text-muted-foreground mt-1">Gasto mensual del año</p>
-                            </div>
-                            <div className="bg-primary/10 p-3 rounded-full">
-                                <TrendingUp className="w-6 h-6 text-primary" />
-                            </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8 w-full max-w-4xl">
+                    <div className="p-8 bg-card rounded-2xl border border-border shadow-sm flex flex-col items-center hover:shadow-lg transition-all">
+                        <div className="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center mb-6">
+                            <PlusCircle className="w-10 h-10 text-primary" />
                         </div>
-
-                        <div className="mb-4 p-4 bg-primary/5 rounded-lg border border-primary/10">
-                            <div className="flex items-baseline justify-between">
-                                <div>
-                                    <p className="text-sm text-muted-foreground">Total Acumulado</p>
-                                    <p className="text-3xl font-bold text-primary mt-1">${stats.totalSales.toLocaleString()}</p>
-                                </div>
-                                <div className="text-right">
-                                    <p className="text-sm text-muted-foreground">Promedio / Compra</p>
-                                    <p className="text-xl font-semibold text-foreground mt-1">
-                                        {stats.transaccionesCount > 0 ? `$${(stats.totalSales / stats.transaccionesCount).toFixed(0)}` : '$0'}
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-
-                        <ResponsiveContainer width="100%" height={300}>
-                            <BarChart data={salesData.length > 0 ? salesData : [{ name: 'Sin datos', ventas: 0 }]}>
-                                <defs>
-                                    <linearGradient id="colorVentas" x1="0" y1="0" x2="0" y2="1">
-                                        <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity={0.9} />
-                                        <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity={0.6} />
-                                    </linearGradient>
-                                </defs>
-                                <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" opacity={0.3} />
-                                <XAxis
-                                    dataKey="name"
-                                    stroke="var(--color-muted-foreground)"
-                                    fontSize={12}
-                                    fontWeight={500}
-                                />
-                                <YAxis
-                                    stroke="var(--color-muted-foreground)"
-                                    fontSize={12}
-                                    tickFormatter={(value) => `$${value}`}
-                                />
-                                <Tooltip
-                                    contentStyle={{
-                                        backgroundColor: "var(--color-card)",
-                                        border: "2px solid var(--color-primary)",
-                                        borderRadius: "12px",
-                                        boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
-                                    }}
-                                    labelStyle={{ fontWeight: "bold", color: "var(--color-foreground)" }}
-                                    formatter={(value: any) => [`$${value.toLocaleString()}`, "Gasto"]}
-                                />
-                                <Bar
-                                    dataKey="ventas"
-                                    fill="url(#colorVentas)"
-                                    radius={[12, 12, 0, 0]}
-                                    maxBarSize={60}
-                                />
-                            </BarChart>
-                        </ResponsiveContainer>
-                    </Card>
-
-                    <Card className="p-6 bg-gradient-to-br from-card to-card/50 shadow-lg border-2">
-                        <div className="flex items-center justify-between mb-6">
-                            <div>
-                                <h3 className="text-xl font-bold text-foreground">Transacciones Recientes</h3>
-                                <p className="text-sm text-muted-foreground mt-1">Actividad por semana</p>
-                            </div>
-                            <div className="bg-primary/10 p-3 rounded-full">
-                                <Activity className="w-6 h-6 text-primary" />
-                            </div>
-                        </div>
-
-                        <div className="mb-4 p-4 bg-primary/5 rounded-lg border border-primary/10">
-                            <div className="flex items-baseline justify-between">
-                                <div>
-                                    <p className="text-sm text-muted-foreground">Total de Compras</p>
-                                    <p className="text-3xl font-bold text-primary mt-1">{stats.transaccionesCount}</p>
-                                </div>
-                            </div>
-                        </div>
-
-                        <ResponsiveContainer width="100%" height={300}>
-                            <AreaChart data={activityData.length > 0 ? activityData : [{ name: 'Sin datos', transacciones: 0 }]}>
-                                <defs>
-                                    <linearGradient id="colorTransacciones" x1="0" y1="0" x2="0" y2="1">
-                                        <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity={0.4} />
-                                        <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity={0.05} />
-                                    </linearGradient>
-                                </defs>
-                                <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" opacity={0.3} />
-                                <XAxis
-                                    dataKey="name"
-                                    stroke="var(--color-muted-foreground)"
-                                    fontSize={12}
-                                    fontWeight={500}
-                                />
-                                <YAxis
-                                    stroke="var(--color-muted-foreground)"
-                                    fontSize={12}
-                                />
-                                <Tooltip
-                                    contentStyle={{
-                                        backgroundColor: "var(--color-card)",
-                                        border: "2px solid var(--color-primary)",
-                                        borderRadius: "12px",
-                                        boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
-                                    }}
-                                    labelStyle={{ fontWeight: "bold", color: "var(--color-foreground)" }}
-                                    formatter={(value: any) => [value, "Compras"]}
-                                />
-                                <Area
-                                    type="monotone"
-                                    dataKey="transacciones"
-                                    stroke="hsl(var(--primary))"
-                                    strokeWidth={3}
-                                    fill="url(#colorTransacciones)"
-                                    dot={{ fill: "hsl(var(--primary))", strokeWidth: 2, r: 5 }}
-                                    activeDot={{ r: 7, strokeWidth: 2 }}
-                                />
-                            </AreaChart>
-                        </ResponsiveContainer>
-                    </Card>
-                </div>
-
-                {/* Recent Activity */}
-                <Card className="p-6 mt-6">
-                    <h3 className="text-lg font-semibold text-foreground mb-4">Actividad Reciente</h3>
-                    <div className="space-y-4">
-                        {(recentActivity.length > 0 ? recentActivity : [
-                            { action: "Bienvenido a tu panel", time: "Ahora mismo", type: "success" }
-                        ]).map((item: any, index: number) => (
-                            <div
-                                key={index}
-                                className="flex items-center justify-between pb-4 border-b border-border last:border-b-0"
-                            >
-                                <div>
-                                    <p className="font-medium text-foreground">{item.action}</p>
-                                    <p className="text-sm text-muted-foreground">{item.time}</p>
-                                </div>
-                                <span
-                                    className={`px-3 py-1 rounded-full text-xs font-medium ${item.type === "success" ? "bg-green-100 text-green-800" : "bg-blue-100 text-blue-800"
-                                        }`}
-                                >
-                                    {item.type === "success" ? "Completado" : "Nuevo"}
-                                </span>
-                            </div>
-                        ))}
+                        <h3 className="text-2xl font-bold text-foreground mb-3">Quiero Vender</h3>
+                        <p className="text-muted-foreground mb-8 text-center text-lg">
+                            Abre nuevos mercados globales.
+                        </p>
+                        <Button className="w-full text-lg py-6" asChild>
+                            <Link href="/dashboard/mis-publicaciones/nueva">Publica tu primer producto</Link>
+                        </Button>
                     </div>
-                </Card>
+
+                    <div className="p-8 bg-card rounded-2xl border border-border shadow-sm flex flex-col items-center hover:shadow-lg transition-all">
+                        <div className="w-20 h-20 bg-blue-500/10 rounded-full flex items-center justify-center mb-6">
+                            <Search className="w-10 h-10 text-blue-500" />
+                        </div>
+                        <h3 className="text-2xl font-bold text-foreground mb-3">Quiero Comprar</h3>
+                        <p className="text-muted-foreground mb-8 text-center text-lg">
+                            Encuentra los mejores proveedores.
+                        </p>
+                        <Button variant="outline" className="w-full text-lg py-6 border-blue-500 text-blue-500 hover:bg-blue-500 hover:text-white" asChild>
+                            <Link href="/sourcing">Explora productos para comprar</Link>
+                        </Button>
+                    </div>
+                </div>
+
+                <div className="mt-16 pt-8 border-t border-border w-full max-w-2xl text-sm text-muted-foreground">
+                    Tu dashboard se configurará automáticamente cuando tengas actividad comercial.
+                </div>
+            </div>
+        )
+    }
+
+    return (
+        <div className="p-4 md:p-8 bg-muted/10 min-h-screen">
+            <div className="max-w-7xl mx-auto space-y-8">
+
+                {/* Header  */}
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                    <div>
+                        <h1 className="text-3xl font-bold text-foreground tracking-tight">Panel de Control</h1>
+                        <p className="text-muted-foreground mt-1">Resumen de decisiones y estado comercial.</p>
+                    </div>
+                </div>
+
+                {/* Zona 1: Acciones Pendientes (Lo más importante primero) */}
+                <PendingActions activityType={activityType} data={data.pendingActions} />
+
+                {/* Zona 2: KPIs y Métricas */}
+                <DynamicKpis activityType={activityType} seller={data.seller} buyer={data.buyer} />
+
+                {/* Zona 3: Visualización del Proceso / Pipeline */}
+                <Pipeline activityType={activityType} pipelineVentas={data.pipelineVentas} pipelineCompras={data.pipelineCompras} />
+
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    <div className="lg:col-span-2 space-y-8">
+                        {/* Zona 4: Rendimiento (Solo Vendedores) */}
+                        {(activityType === 'seller' || activityType === 'mixed') && (
+                            <PerformanceSection activityType={activityType} data={data.performance} />
+                        )}
+                        <RecentActivity activityType={activityType} data={data.recentActivity} />
+                    </div>
+                    <div>
+                        {/* Zona 5: Insights */}
+                        <Insights activityType={activityType} data={{ seller: data.seller, buyer: data.buyer }} />
+                    </div>
+                </div>
+
             </div>
         </div>
     )

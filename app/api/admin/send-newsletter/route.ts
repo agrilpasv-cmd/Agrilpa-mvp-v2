@@ -32,7 +32,7 @@ export async function POST(request: Request) {
             return NextResponse.json({ error: "No autorizado" }, { status: 401 })
         }
 
-        const { subject, content, specificEmail } = await request.json()
+        const { subject, content, specificEmail, selectedEmails } = await request.json()
 
         if (!subject || !content) {
             return NextResponse.json({ error: "Asunto y contenido son requeridos" }, { status: 400 })
@@ -51,21 +51,45 @@ export async function POST(request: Request) {
             })
 
             if (result.success) {
-                return NextResponse.json({
-                    success: true,
-                    totalUsers: 1,
-                    sent: 1,
-                    failed: 0,
-                })
+                return NextResponse.json({ success: true, totalUsers: 1, sent: 1, failed: 0 })
             } else {
-                return NextResponse.json({
-                    success: false,
-                    totalUsers: 1,
-                    sent: 0,
-                    failed: 1,
-                    error: JSON.stringify(result.error)
-                })
+                return NextResponse.json({ success: false, totalUsers: 1, sent: 0, failed: 1, error: JSON.stringify(result.error) })
             }
+        }
+
+        // OPTION 2: Send to Selected Users (multi-select from admin UI)
+        if (selectedEmails && Array.isArray(selectedEmails) && selectedEmails.length > 0) {
+            let sent = 0
+            let failed = 0
+            const errors: string[] = []
+
+            for (const recipient of selectedEmails as { email: string; name: string }[]) {
+                if (!recipient.email) continue
+
+                const result = await sendNewsletterEmail({
+                    recipientEmail: recipient.email,
+                    recipientName: recipient.name || "Usuario",
+                    subject,
+                    htmlContent,
+                })
+
+                if (result.success) {
+                    sent++
+                } else {
+                    failed++
+                    errors.push(`${recipient.email}: ${JSON.stringify(result.error)}`)
+                }
+
+                await new Promise(resolve => setTimeout(resolve, 200))
+            }
+
+            return NextResponse.json({
+                success: true,
+                totalUsers: selectedEmails.length,
+                sent,
+                failed,
+                errors: errors.length > 0 ? errors : undefined,
+            })
         }
 
         // OPTION 2: Send to All Users

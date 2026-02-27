@@ -23,6 +23,7 @@ import {
   LayoutDashboard,
   ClipboardList,
   MousePointer2,
+  UserMinus,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
@@ -49,6 +50,7 @@ export default function AdminLayout({
     { href: "/admin/compras", label: "Compras", icon: ShoppingCart },
     { href: "/admin/contactanos", label: "Contáctanos", icon: MessageSquare },
     { href: "/admin/newsletter", label: "Newsletter", icon: Mail },
+    { href: "/admin/bajas", label: "Reportes de Bajas", icon: UserMinus },
   ]
 
   const handleLogout = async () => {

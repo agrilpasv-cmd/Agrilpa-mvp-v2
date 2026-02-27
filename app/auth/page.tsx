@@ -6,7 +6,8 @@ import Link from "next/link"
 import Image from "next/image"
 import { useRouter } from "next/navigation"
 import { useSearchParams } from "next/navigation"
-import { Mail, Lock, User, Phone, MapPin, ArrowRight, ArrowLeft } from "lucide-react"
+import { Mail, Lock, User, Phone, ArrowRight, ArrowLeft, Eye, EyeOff } from "lucide-react"
+import { CountryPicker, PhoneCodePicker } from "@/components/ui/country-picker"
 import { createBrowserClient } from "@/lib/supabase/client"
 import { AuthStorage } from "@/lib/auth-storage"
 
@@ -38,6 +39,10 @@ function AuthPageContent() {
   const [submitted, setSubmitted] = useState(false)
   const [error, setError] = useState("")
   const [loading, setLoading] = useState(false)
+  // Show/hide password toggles
+  const [showLoginPwd, setShowLoginPwd] = useState(false)
+  const [showRegPwd, setShowRegPwd] = useState(false)
+  const [showRegConfirmPwd, setShowRegConfirmPwd] = useState(false)
 
   useEffect(() => {
     const checkExistingSession = async () => {
@@ -75,11 +80,16 @@ function AuthPageContent() {
 
   useEffect(() => {
     const mode = searchParams.get("mode")
+    const emailParam = searchParams.get("email")
     if (mode === "register") {
       setIsLogin(false)
     } else if (mode === "login") {
       setIsLogin(true)
-      setRegistrationStep(1) // Reset registration step for next registration
+      setRegistrationStep(1)
+      // Pre-fill email if coming from registration
+      if (emailParam) {
+        setFormData(prev => ({ ...prev, email: decodeURIComponent(emailParam) }))
+      }
     }
   }, [searchParams])
 
@@ -185,7 +195,7 @@ function AuthPageContent() {
 
         setTimeout(() => {
           console.log("[v0] Reloading page and redirecting to login")
-          window.location.href = "/auth?mode=login"
+          window.location.href = `/auth?mode=login&email=${encodeURIComponent(formData.email)}`
         }, 2000) // Show success message for 2 seconds before redirecting
       } catch (err) {
         console.error("[v0] Auth error:", err)
@@ -330,14 +340,21 @@ function AuthPageContent() {
                         <div className="relative">
                           <Lock className="absolute left-3 top-3 text-muted-foreground w-5 h-5" />
                           <input
-                            type="password"
+                            type={showLoginPwd ? "text" : "password"}
                             name="password"
                             value={formData.password}
                             onChange={handleInputChange}
                             placeholder="••••••••"
-                            className="w-full pl-10 pr-4 py-3 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary transition"
+                            className="w-full pl-10 pr-10 py-3 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary transition"
                             required
                           />
+                          <button
+                            type="button"
+                            onClick={() => setShowLoginPwd(p => !p)}
+                            className="absolute right-3 top-3 text-muted-foreground hover:text-foreground transition-colors"
+                          >
+                            {showLoginPwd ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                          </button>
                         </div>
                       </div>
 
@@ -435,14 +452,21 @@ function AuthPageContent() {
                         <div className="relative">
                           <Lock className="absolute left-3 top-3 text-muted-foreground w-5 h-5" />
                           <input
-                            type="password"
+                            type={showRegPwd ? "text" : "password"}
                             name="password"
                             value={formData.password}
                             onChange={handleInputChange}
                             placeholder="••••••••"
-                            className="w-full pl-10 pr-4 py-3 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary transition"
+                            className="w-full pl-10 pr-10 py-3 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary transition"
                             required
                           />
+                          <button
+                            type="button"
+                            onClick={() => setShowRegPwd(p => !p)}
+                            className="absolute right-3 top-3 text-muted-foreground hover:text-foreground transition-colors"
+                          >
+                            {showRegPwd ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                          </button>
                         </div>
                       </div>
 
@@ -451,14 +475,21 @@ function AuthPageContent() {
                         <div className="relative">
                           <Lock className="absolute left-3 top-3 text-muted-foreground w-5 h-5" />
                           <input
-                            type="password"
+                            type={showRegConfirmPwd ? "text" : "password"}
                             name="confirmPassword"
                             value={formData.confirmPassword}
                             onChange={handleInputChange}
                             placeholder="••••••••"
-                            className="w-full pl-10 pr-4 py-3 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary transition"
+                            className="w-full pl-10 pr-10 py-3 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary transition"
                             required
                           />
+                          <button
+                            type="button"
+                            onClick={() => setShowRegConfirmPwd(p => !p)}
+                            className="absolute right-3 top-3 text-muted-foreground hover:text-foreground transition-colors"
+                          >
+                            {showRegConfirmPwd ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                          </button>
                         </div>
                       </div>
 
@@ -475,39 +506,31 @@ function AuthPageContent() {
                     <>
                       <div>
                         <label className="block text-sm font-medium text-foreground mb-2">País</label>
-                        <div className="relative">
-                          <MapPin className="absolute left-3 top-3 text-muted-foreground w-5 h-5" />
-                          <input
-                            type="text"
-                            name="country"
-                            value={formData.country}
-                            onChange={handleInputChange}
-                            placeholder="El Salvador"
-                            className="w-full pl-10 pr-4 py-3 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary transition"
-                            required
-                          />
-                        </div>
+                        <CountryPicker
+                          value={formData.country}
+                          syncPhoneCode
+                          onChange={(countryName, phoneCode) => {
+                            setFormData(prev => ({
+                              ...prev,
+                              country: countryName,
+                              ...(phoneCode ? { countryCode: phoneCode } : {}),
+                            }))
+                          }}
+                          placeholder="Selecciona tu país"
+                        />
                       </div>
 
                       <div>
                         <label className="block text-sm font-medium text-foreground mb-2">Teléfono</label>
                         <div className="flex gap-3">
-                          <div className="w-24">
-                            <div className="relative">
-                              <span className="absolute left-3 top-3 text-muted-foreground text-sm font-medium">+</span>
-                              <input
-                                type="text"
-                                name="countryCode"
-                                value={formData.countryCode}
-                                onChange={handlePhoneInput}
-                                inputMode="numeric"
-                                placeholder="503"
-                                maxLength={4}
-                                className="w-full pl-7 pr-4 py-3 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary transition"
-                                required
-                              />
-                            </div>
-                          </div>
+                          {/* Phone code picker — flag + dial code dropdown */}
+                          <PhoneCodePicker
+                            value={formData.countryCode}
+                            onChange={(phoneCode) =>
+                              setFormData(prev => ({ ...prev, countryCode: phoneCode }))
+                            }
+                            className="w-36 shrink-0"
+                          />
 
                           <div className="flex-1">
                             <div className="relative">
@@ -518,7 +541,7 @@ function AuthPageContent() {
                                 value={formData.phoneNumber}
                                 onChange={handlePhoneInput}
                                 inputMode="numeric"
-                                placeholder="6000-0000"
+                                placeholder="00000000"
                                 className="w-full pl-10 pr-4 py-3 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary transition"
                                 required
                               />

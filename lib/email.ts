@@ -188,6 +188,7 @@ export async function sendNewQuotationNotification({
     quantity,
     targetPrice,
     location,
+    productImage,
 }: {
     sellerEmail: string
     sellerName: string
@@ -196,6 +197,7 @@ export async function sendNewQuotationNotification({
     quantity: number
     targetPrice?: number
     location: string
+    productImage?: string
 }) {
     try {
         const resend = getResendClient()
@@ -205,12 +207,15 @@ export async function sendNewQuotationNotification({
             <p style="font-size: 18px; color: ${THEME.primary}; font-weight: 500;">Tienes una nueva cotización pendiente.</p>
             <p>Un comprador está interesado en tu producto:</p>
             
-            <div style="background-color: ${THEME.secondary}; padding: 20px; border-radius: 8px; margin: 20px 0;">
-                <p style="margin: 0 0 10px 0;"><strong>Producto:</strong> ${productName}</p>
-                <p style="margin: 0 0 10px 0;"><strong>Comprador:</strong> ${buyerName}</p>
-                <p style="margin: 0 0 10px 0;"><strong>Cantidad:</strong> ${quantity} kg</p>
-                ${targetPrice ? `<p style="margin: 0 0 10px 0;"><strong>Oferta:</strong> $${targetPrice.toFixed(2)} USD</p>` : ''}
-                <p style="margin: 0;"><strong>Destino:</strong> ${location}</p>
+            <div style="background-color: ${THEME.secondary}; padding: 20px; border-radius: 8px; margin: 20px 0; text-align: center;">
+                ${productImage ? `<img src="${productImage}" alt="${productName}" style="width: 100%; max-width: 200px; height: auto; border-radius: 8px; margin-bottom: 15px; object-fit: cover;" />` : ''}
+                <div style="text-align: left;">
+                    <p style="margin: 0 0 10px 0;"><strong>Producto:</strong> ${productName}</p>
+                    <p style="margin: 0 0 10px 0;"><strong>Comprador:</strong> ${buyerName}</p>
+                    <p style="margin: 0 0 10px 0;"><strong>Cantidad:</strong> ${quantity} kg</p>
+                    ${targetPrice ? `<p style="margin: 0 0 10px 0;"><strong>Oferta:</strong> $${targetPrice.toFixed(2)} USD</p>` : ''}
+                    <p style="margin: 0;"><strong>Destino:</strong> ${location}</p>
+                </div>
             </div>
         `
 

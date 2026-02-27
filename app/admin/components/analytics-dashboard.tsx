@@ -3,7 +3,7 @@
 import { Card } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts"
-import { Users, FileText, MousePointer2 } from "lucide-react"
+import { Users, FileText, MousePointer2, ActivitySquare } from "lucide-react"
 
 
 const getCountryName = (code: string) => {
@@ -23,6 +23,11 @@ interface AnalyticsDashboardProps {
             visitors: number
             pageViews: number
             bounceRate: string
+            activeUsers?: {
+                total: number
+                registered: number
+                guests: number
+            }
         }
         trend: { name: string; visitors: number; views: number }[]
         topPages: { name: string; value: number }[]
@@ -43,7 +48,7 @@ export function AnalyticsDashboard({ data, currentRange, loading, onRangeChange 
     return (
         <div className={`space-y-6 transition-opacity duration-300 ${loading ? 'opacity-50 pointer-events-none' : ''}`}>
             {/* KPI Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
                 <Card className="p-6">
                     <div className="flex items-center justify-between">
                         <div>
@@ -78,6 +83,31 @@ export function AnalyticsDashboard({ data, currentRange, loading, onRangeChange 
                             </div>
                         </div>
                         <MousePointer2 className="w-8 h-8 text-primary/20" />
+                    </div>
+                </Card>
+
+                {/* Active Users — 7-day fixed window */}
+                <Card className="p-6 border-l-4 border-l-emerald-500">
+                    <div className="flex items-center justify-between">
+                        <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2">
+                                <p className="text-sm font-medium text-muted-foreground">Usuarios Activos</p>
+                                <span className="text-[10px] font-semibold bg-emerald-100 text-emerald-700 px-1.5 py-0.5 rounded-full">7d</span>
+                            </div>
+                            <div className="flex items-baseline gap-2 mt-1">
+                                <h3 className="text-3xl font-bold">
+                                    {data.summary.activeUsers?.total ?? "—"}
+                                </h3>
+                            </div>
+                            {data.summary.activeUsers && (
+                                <p className="text-xs text-muted-foreground mt-1.5">
+                                    <span className="text-emerald-600 font-medium">{data.summary.activeUsers.registered}</span> registrados
+                                    {" · "}
+                                    <span className="font-medium">{data.summary.activeUsers.guests}</span> guests
+                                </p>
+                            )}
+                        </div>
+                        <ActivitySquare className="w-8 h-8 text-emerald-500/30 shrink-0" />
                     </div>
                 </Card>
             </div>
