@@ -126,7 +126,16 @@ export async function GET() {
         }
 
         // -- Pending Actions Array --
-        const pendingActions = []
+        interface PendingAction {
+            id: string
+            type: 'alert' | 'info' | 'success'
+            title: string
+            description: string
+            actionText: string
+            actionLink: string
+        }
+
+        const pendingActions: PendingAction[] = []
 
         if (isSeller) {
             const pendingQs = sellerQuotes?.filter(q => q.status === "pending") || []
@@ -188,6 +197,64 @@ export async function GET() {
             .sort((a, b) => b.vistas - a.vistas) // Sort by views descending
             .slice(0, 5) // Top 5
 
+        // -- Recent Activity (Timeline) --
+        const recentActivity: any[] = []
+
+        // Helper to add activity items
+        const addActivity = (id: string, text: string, time: string, isPositive: boolean = true) => {
+            recentActivity.push({
+                id,
+                text,
+                time, // ISO string, will be formatted by frontend
+                isPositive
+            })
+        }
+
+        // 1. Seller Quotes received
+        sellerQuotes?.forEach(q => {
+            if (q.status === 'pending') {
+                addActivity(`rq-${q.id}`, `Recibiste una nueva solicitud de ${q.buyer_name || 'un comprador'}`, q.created_at, true)
+            } else if (q.status === 'accepted') {
+                addActivity(`aq-${q.id}`, `Aceptaste negociar con ${q.buyer_name || 'un comprador'}`, q.updated_at || q.created_at, true)
+            } else if (q.status === 'rejected') {
+                addActivity(`rjq-${q.id}`, `Rechazaste la solicitud de ${q.buyer_name || 'un comprador'}`, q.updated_at || q.created_at, false)
+            }
+        })
+
+        // 2. Buyer Quotes Updates (Seller responded)
+        buyerQuotes?.forEach(q => {
+            if (q.status === 'accepted') {
+                addActivity(`bq-a-${q.id}`, `Tu oferta por ${q.product_title || 'un producto'} fue aceptada`, q.updated_at || q.created_at, true)
+            } else if (q.status === 'rejected') {
+                addActivity(`bq-r-${q.id}`, `Tu oferta por ${q.product_title || 'un producto'} fue rechazada`, q.updated_at || q.created_at, false)
+            } else if (q.status === 'pending') {
+                addActivity(`bq-p-${q.id}`, `Enviaste una solicitud por ${q.product_title || 'un producto'}`, q.created_at, true)
+            }
+        })
+
+        // 3. Seller Orders
+        sellerOrders?.forEach(o => {
+            if (o.status === 'Preparación') {
+                addActivity(`so-p-${o.id}`, `Nuevo pedido a preparar: #${o.id.slice(0, 6)}`, o.created_at, true)
+            } else if (o.status === 'En Tránsito') {
+                addActivity(`so-t-${o.id}`, `Pedido #${o.id.slice(0, 6)} marcado en tránsito`, o.updated_at || o.created_at, true)
+            } else if (o.status === 'Entregado') {
+                addActivity(`so-d-${o.id}`, `Pedido #${o.id.slice(0, 6)} entregado con éxito`, o.updated_at || o.created_at, true)
+            }
+        })
+
+        // 4. Buyer Orders
+        buyerOrders?.forEach(o => {
+            if (o.status === 'En Tránsito') {
+                addActivity(`bo-t-${o.id}`, `Tu compra #${o.id.slice(0, 6)} va en camino`, o.updated_at || o.created_at, true)
+            } else if (o.status === 'Entregado') {
+                addActivity(`bo-d-${o.id}`, `Recibiste tu compra #${o.id.slice(0, 6)}`, o.updated_at || o.created_at, true)
+            }
+        })
+
+        // Sort by time descending and take Top 6
+        recentActivity.sort((a, b) => new Date(b.time).getTime() - new Date(a.time).getTime())
+
         // Return unified structure
         return NextResponse.json({
             activityType,
@@ -207,7 +274,7 @@ export async function GET() {
             pipelineCompras,
             pendingActions: pendingActions.slice(0, 4), // Top 4 pending actions
             performance,
-            recentActivity: [] // Could be populated by merging dates, omitting for brevity right now.
+            recentActivity: recentActivity.slice(0, 6) // Top 6 chronological activities
         })
 
     } catch (error) {
