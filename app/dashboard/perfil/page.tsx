@@ -1,25 +1,38 @@
 "use client"
 
 import type React from "react"
-
 import { useState, useEffect } from "react"
-import { Card } from "@/components/ui/card"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
-import { Edit2, Save, X } from 'lucide-react'
+import {
+  User, Mail, Phone, Building2, Globe, MapPin, FileText,
+  Edit2, Save, X, Loader, CheckCircle2, AlertCircle,
+  Package, ShoppingCart, Star, TrendingUp, Calendar, Link as LinkIcon
+} from "lucide-react"
+
+type Status = { type: "success" | "error"; message: string } | null
 
 export default function ProfilePage() {
   const [isEditing, setIsEditing] = useState(false)
   const [loading, setLoading] = useState(true)
+  const [saving, setSaving] = useState(false)
+  const [saveStatus, setSaveStatus] = useState<Status>(null)
+  const [originalData, setOriginalData] = useState<any>(null)
+  const [stats, setStats] = useState({ products: 0, purchases: 0, quotations: 0 })
   const [formData, setFormData] = useState({
     fullName: "",
     email: "",
     phone: "",
     company: "",
+    companyLink: "",
     country: "",
     address: "",
     bio: "",
   })
+  const [memberSince, setMemberSince] = useState("")
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -28,15 +41,25 @@ export default function ProfilePage() {
         if (res.ok) {
           const data = await res.json()
           if (data.user) {
-            setFormData({
+            const userData = {
               fullName: data.user.full_name || "",
               email: data.user.email || "",
               phone: data.user.phone || "",
               company: data.user.company_name || "",
+              companyLink: data.user.company_website || "",
               country: data.user.country || "",
-              address: data.user.address || "", // Assuming address is in public table or metadata
+              address: data.user.address || "",
               bio: data.user.bio || "",
-            })
+            }
+            setFormData(userData)
+            setOriginalData(userData)
+
+            if (data.user.created_at) {
+              const date = new Date(data.user.created_at)
+              setMemberSince(
+                date.toLocaleDateString("es-ES", { month: "long", year: "numeric" })
+              )
+            }
           }
         }
       } catch (error) {
@@ -45,200 +68,392 @@ export default function ProfilePage() {
         setLoading(false)
       }
     }
+
+    const fetchStats = async () => {
+      try {
+        const res = await fetch("/api/dashboard/dynamic-data")
+        if (res.ok) {
+          const data = await res.json()
+          setStats({
+            products: data.counts?.publicaciones || 0,
+            purchases: data.counts?.compras || 0,
+            quotations: data.counts?.cotizaciones || 0,
+          })
+        }
+      } catch (error) {
+        console.error("Error fetching stats:", error)
+      }
+    }
+
     fetchProfile()
+    fetchStats()
   }, [])
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }))
+    setFormData((prev) => ({ ...prev, [name]: value }))
+    setSaveStatus(null)
   }
 
-  const handleSave = () => {
-    // TODO: Implementar lógica para guardar cambios
+  const handleCancel = () => {
+    if (originalData) {
+      setFormData(originalData)
+    }
     setIsEditing(false)
+    setSaveStatus(null)
+  }
+
+  const handleSave = async () => {
+    setSaving(true)
+    setSaveStatus(null)
+    try {
+      const res = await fetch("/api/user/update-profile", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(formData),
+      })
+      const data = await res.json()
+      if (res.ok && data.success) {
+        setSaveStatus({ type: "success", message: "¡Perfil actualizado correctamente!" })
+        setOriginalData({ ...formData })
+        setIsEditing(false)
+      } else {
+        setSaveStatus({ type: "error", message: data.details || data.error || "Error al guardar los cambios." })
+      }
+    } catch {
+      setSaveStatus({ type: "error", message: "Error de conexión. Intenta nuevamente." })
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const getInitials = (name: string) => {
+    return name
+      .split(" ")
+      .map((n) => n[0])
+      .join("")
+      .toUpperCase()
+      .slice(0, 2)
+  }
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <div className="flex flex-col items-center gap-3">
+          <Loader className="w-8 h-8 animate-spin text-primary" />
+          <p className="text-muted-foreground">Cargando perfil...</p>
+        </div>
+      </div>
+    )
   }
 
   return (
-    <div className="p-8">
-      <div className="max-w-4xl mx-auto">
-        {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold text-foreground mb-2">Mi Perfil</h1>
+    <div className="space-y-6 p-6">
+
+      {/* ── Page Header ───────────────────────────────────────── */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-bold">Mi Perfil</h1>
           <p className="text-muted-foreground">Gestiona tu información personal y profesional</p>
         </div>
-
-        {/* Profile Card */}
-        <Card className="p-8 mb-6">
-          <div className="flex items-start justify-between mb-8">
-            <div className="flex items-center gap-6">
-              <Avatar className="w-24 h-24">
-                <AvatarImage src="/placeholder-user.jpg" alt="Foto de perfil" />
-                <AvatarFallback>JP</AvatarFallback>
-              </Avatar>
-              <div>
-                <h2 className="text-3xl font-bold text-foreground">{formData.fullName}</h2>
-                <p className="text-muted-foreground">{formData.company}</p>
-                <div className="mt-2 flex gap-2">
-                  <span className="inline-block px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm font-medium">
-                    ✓ Verificado
-                  </span>
-                  <span className="inline-block px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm font-medium">
-                    Vendedor
-                  </span>
-                </div>
-              </div>
-            </div>
-            <Button
-              variant={isEditing ? "outline" : "default"}
-              onClick={() => {
-                if (isEditing) {
-                  handleSave()
-                } else {
-                  setIsEditing(true)
-                }
-              }}
-              className="gap-2"
-            >
-              {isEditing ? (
-                <>
-                  <Save className="w-4 h-4" /> Guardar
-                </>
-              ) : (
-                <>
-                  <Edit2 className="w-4 h-4" /> Editar
-                </>
-              )}
-            </Button>
-          </div>
-
-          {isEditing && (
-            <Button
-              variant="outline"
-              onClick={() => {
-                setIsEditing(false)
-                setFormData({
-                  fullName: "Juan Pérez",
-                  email: "juan@agrilpa.com",
-                  phone: "+503 6000-0000",
-                  company: "Agricultura Pérez SA",
-                  country: "El Salvador",
-                  address: "Calle Principal 123",
-                  bio: "Vendedor de frutas y verduras frescas con más de 10 años de experiencia",
-                })
-              }}
-              className="gap-2 mb-6"
-            >
-              <X className="w-4 h-4" /> Cancelar
+        <div className="flex gap-2">
+          {isEditing ? (
+            <>
+              <Button
+                variant="outline"
+                onClick={handleCancel}
+                disabled={saving}
+                className="gap-2"
+              >
+                <X className="w-4 h-4" /> Cancelar
+              </Button>
+              <Button
+                onClick={handleSave}
+                disabled={saving}
+                className="gap-2"
+              >
+                {saving ? (
+                  <><Loader className="w-4 h-4 animate-spin" /> Guardando...</>
+                ) : (
+                  <><Save className="w-4 h-4" /> Guardar Cambios</>
+                )}
+              </Button>
+            </>
+          ) : (
+            <Button onClick={() => setIsEditing(true)} className="gap-2">
+              <Edit2 className="w-4 h-4" /> Editar Perfil
             </Button>
           )}
+        </div>
+      </div>
 
-          {/* Form */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      {/* ── Status message ───────────────────────────────────── */}
+      {saveStatus && (
+        <div
+          className={`flex items-center gap-2 text-sm p-3 rounded-lg border ${saveStatus.type === "success"
+            ? "bg-green-50 border-green-200 text-green-800"
+            : "bg-red-50 border-red-200 text-red-800"
+            }`}
+        >
+          {saveStatus.type === "success" ? (
+            <CheckCircle2 className="w-4 h-4 shrink-0 text-green-600" />
+          ) : (
+            <AlertCircle className="w-4 h-4 shrink-0 text-red-600" />
+          )}
+          {saveStatus.message}
+        </div>
+      )}
+
+      {/* ── Profile Header Card ──────────────────────────────── */}
+      <Card>
+        <CardContent className="pt-6">
+          <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6">
+            <div className="relative">
+              <Avatar className="w-24 h-24 border-4 border-primary/20">
+                <AvatarImage src="/placeholder-user.jpg" alt="Foto de perfil" />
+                <AvatarFallback className="text-2xl font-bold bg-primary/10 text-primary">
+                  {getInitials(formData.fullName || "U")}
+                </AvatarFallback>
+              </Avatar>
+              <div className="absolute -bottom-1 -right-1 w-7 h-7 bg-green-500 border-2 border-background rounded-full flex items-center justify-center">
+                <CheckCircle2 className="w-4 h-4 text-white" />
+              </div>
+            </div>
+
+            <div className="flex-1 text-center sm:text-left">
+              <h2 className="text-2xl font-bold text-foreground">{formData.fullName || "Sin nombre"}</h2>
+              <p className="text-muted-foreground mt-0.5">{formData.company || "Sin empresa"}</p>
+
+              <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2 mt-3">
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-green-100 text-green-800 rounded-full text-xs font-medium">
+                  <CheckCircle2 className="w-3 h-3" /> Verificado
+                </span>
+                {formData.country && (
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-medium">
+                    <Globe className="w-3 h-3" /> {formData.country}
+                  </span>
+                )}
+                {memberSince && (
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-muted text-muted-foreground rounded-full text-xs font-medium">
+                    <Calendar className="w-3 h-3" /> Miembro desde {memberSince}
+                  </span>
+                )}
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* ── Quick Stats ──────────────────────────────────────── */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <Card>
+          <CardContent className="flex items-center gap-4 pt-6">
+            <div className="p-3 rounded-lg bg-primary/10">
+              <Package className="w-5 h-5 text-primary" />
+            </div>
             <div>
-              <label className="block text-sm font-medium text-foreground mb-2">Nombre Completo</label>
-              <input
-                type="text"
+              <p className="text-2xl font-bold text-foreground">{stats.products}</p>
+              <p className="text-sm text-muted-foreground">Publicaciones</p>
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="flex items-center gap-4 pt-6">
+            <div className="p-3 rounded-lg bg-blue-500/10">
+              <ShoppingCart className="w-5 h-5 text-blue-500" />
+            </div>
+            <div>
+              <p className="text-2xl font-bold text-foreground">{stats.purchases}</p>
+              <p className="text-sm text-muted-foreground">Compras</p>
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="flex items-center gap-4 pt-6">
+            <div className="p-3 rounded-lg bg-amber-500/10">
+              <TrendingUp className="w-5 h-5 text-amber-500" />
+            </div>
+            <div>
+              <p className="text-2xl font-bold text-foreground">{stats.quotations}</p>
+              <p className="text-sm text-muted-foreground">Cotizaciones</p>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* ── Personal Information Card ────────────────────────── */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <User className="w-5 h-5 text-primary" />
+            Información Personal
+          </CardTitle>
+          <CardDescription>
+            Tu nombre y datos de contacto principales
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-5">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+
+            <div className="space-y-2">
+              <Label htmlFor="fullName" className="flex items-center gap-1.5">
+                <User className="w-3.5 h-3.5 text-muted-foreground" />
+                Nombre Completo
+              </Label>
+              <Input
+                id="fullName"
                 name="fullName"
                 value={formData.fullName}
                 onChange={handleChange}
                 disabled={!isEditing}
-                className="w-full px-4 py-2 border border-border rounded-lg bg-background text-foreground disabled:opacity-50 disabled:cursor-not-allowed"
+                placeholder="Tu nombre completo"
               />
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-foreground mb-2">Correo Electrónico</label>
-              <input
-                type="email"
+            <div className="space-y-2">
+              <Label htmlFor="email" className="flex items-center gap-1.5">
+                <Mail className="w-3.5 h-3.5 text-muted-foreground" />
+                Correo Electrónico
+              </Label>
+              <Input
+                id="email"
                 name="email"
+                type="email"
                 value={formData.email}
-                onChange={handleChange}
-                disabled={!isEditing}
-                className="w-full px-4 py-2 border border-border rounded-lg bg-background text-foreground disabled:opacity-50 disabled:cursor-not-allowed"
+                disabled
+                className="opacity-60 cursor-not-allowed"
               />
+              <p className="text-xs text-muted-foreground">El correo no se puede cambiar desde aquí</p>
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-foreground mb-2">Teléfono</label>
-              <input
-                type="tel"
+            <div className="space-y-2">
+              <Label htmlFor="phone" className="flex items-center gap-1.5">
+                <Phone className="w-3.5 h-3.5 text-muted-foreground" />
+                Teléfono
+              </Label>
+              <Input
+                id="phone"
                 name="phone"
+                type="tel"
                 value={formData.phone}
                 onChange={handleChange}
                 disabled={!isEditing}
-                className="w-full px-4 py-2 border border-border rounded-lg bg-background text-foreground disabled:opacity-50 disabled:cursor-not-allowed"
+                placeholder="+503 0000 0000"
               />
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-foreground mb-2">Empresa</label>
-              <input
-                type="text"
-                name="company"
-                value={formData.company}
-                onChange={handleChange}
-                disabled={!isEditing}
-                className="w-full px-4 py-2 border border-border rounded-lg bg-background text-foreground disabled:opacity-50 disabled:cursor-not-allowed"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-foreground mb-2">País</label>
-              <input
-                type="text"
+            <div className="space-y-2">
+              <Label htmlFor="country" className="flex items-center gap-1.5">
+                <Globe className="w-3.5 h-3.5 text-muted-foreground" />
+                País
+              </Label>
+              <Input
+                id="country"
                 name="country"
                 value={formData.country}
                 onChange={handleChange}
                 disabled={!isEditing}
-                className="w-full px-4 py-2 border border-border rounded-lg bg-background text-foreground disabled:opacity-50 disabled:cursor-not-allowed"
+                placeholder="Tu país"
+              />
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* ── Business Information Card ────────────────────────── */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Building2 className="w-5 h-5 text-primary" />
+            Información Empresarial
+          </CardTitle>
+          <CardDescription>
+            Datos de tu empresa o negocio agrícola
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-5">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+
+            <div className="space-y-2">
+              <Label htmlFor="company" className="flex items-center gap-1.5">
+                <Building2 className="w-3.5 h-3.5 text-muted-foreground" />
+                Nombre de la Empresa
+              </Label>
+              <Input
+                id="company"
+                name="company"
+                value={formData.company}
+                onChange={handleChange}
+                disabled={!isEditing}
+                placeholder="Nombre de tu empresa"
               />
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-foreground mb-2">Dirección</label>
-              <input
-                type="text"
+            <div className="space-y-2">
+              <Label htmlFor="companyLink" className="flex items-center gap-1.5">
+                <LinkIcon className="w-3.5 h-3.5 text-muted-foreground" />
+                Sitio Web
+              </Label>
+              <Input
+                id="companyLink"
+                name="companyLink"
+                value={formData.companyLink}
+                onChange={handleChange}
+                disabled={!isEditing}
+                placeholder="www.tuempresa.com"
+              />
+            </div>
+
+            <div className="md:col-span-2 space-y-2">
+              <Label htmlFor="address" className="flex items-center gap-1.5">
+                <MapPin className="w-3.5 h-3.5 text-muted-foreground" />
+                Dirección
+              </Label>
+              <Input
+                id="address"
                 name="address"
                 value={formData.address}
                 onChange={handleChange}
                 disabled={!isEditing}
-                className="w-full px-4 py-2 border border-border rounded-lg bg-background text-foreground disabled:opacity-50 disabled:cursor-not-allowed"
-              />
-            </div>
-
-            <div className="md:col-span-2">
-              <label className="block text-sm font-medium text-foreground mb-2">Biografía</label>
-              <textarea
-                name="bio"
-                value={formData.bio}
-                onChange={handleChange}
-                disabled={!isEditing}
-                rows={4}
-                className="w-full px-4 py-2 border border-border rounded-lg bg-background text-foreground disabled:opacity-50 disabled:cursor-not-allowed"
+                placeholder="Dirección de tu empresa o finca"
               />
             </div>
           </div>
-        </Card>
+        </CardContent>
+      </Card>
 
-        {/* Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <Card className="p-6 text-center">
-            <p className="text-4xl font-bold text-primary mb-2">8</p>
-            <p className="text-muted-foreground">Productos Listados</p>
-          </Card>
-          <Card className="p-6 text-center">
-            <p className="text-4xl font-bold text-primary mb-2">24</p>
-            <p className="text-muted-foreground">Clientes Activos</p>
-          </Card>
-          <Card className="p-6 text-center">
-            <p className="text-4xl font-bold text-primary mb-2">4.8</p>
-            <p className="text-muted-foreground">Calificación Promedio</p>
-          </Card>
-        </div>
-      </div>
+      {/* ── Bio / About Card ─────────────────────────────────── */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <FileText className="w-5 h-5 text-primary" />
+            Acerca de Ti
+          </CardTitle>
+          <CardDescription>
+            Cuéntale a tus clientes y socios sobre ti y tu experiencia
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-2">
+            <Label htmlFor="bio">Biografía</Label>
+            <textarea
+              id="bio"
+              name="bio"
+              value={formData.bio}
+              onChange={handleChange}
+              disabled={!isEditing}
+              rows={4}
+              placeholder="Describe tu experiencia, los productos que ofreces y lo que te diferencia..."
+              className="w-full px-3 py-2 text-sm border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/40 resize-none bg-background disabled:opacity-60 disabled:cursor-not-allowed"
+            />
+            {isEditing && (
+              <p className="text-xs text-muted-foreground">
+                {formData.bio.length}/500 caracteres
+              </p>
+            )}
+          </div>
+        </CardContent>
+      </Card>
     </div>
   )
 }

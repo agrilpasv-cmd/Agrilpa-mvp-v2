@@ -16,7 +16,7 @@ import {
 } from "@/components/ui/dialog"
 import { ChatOverlay } from "@/components/chat-overlay"
 import { Star, MapPin, MessageCircle, Check, ChevronLeft, FileText, ShoppingCart, Copy, Calendar, Package, Loader } from "lucide-react"
-import { getProductBySlug, getProductsByCategory } from "@/lib/products-data"
+import { getProductBySlug, getProductsByCategory, allProducts } from "@/lib/products-data"
 import { createClient } from "@/lib/supabase/client"
 
 // Helper function to check if a string is a valid UUID or numeric ID
@@ -215,9 +215,21 @@ export default function ProductPage() {
     }
   }
 
-  const relatedProducts = getProductsByCategory(product?.category || "")
+  const sameCategoryProducts = getProductsByCategory(product?.category || "")
     .filter((p) => p.id !== product?.id)
     .slice(0, 3)
+
+  // Fallback: if no same-category products, show random products from other categories
+  const relatedProducts = sameCategoryProducts.length > 0
+    ? sameCategoryProducts
+    : allProducts
+      .filter((p) => p.id !== product?.id)
+      .sort(() => Math.random() - 0.5)
+      .slice(0, 3)
+
+  const relatedTitle = sameCategoryProducts.length > 0
+    ? "Productos relacionados"
+    : "Otros productos que te pueden interesar"
 
   const handleContactVendor = () => {
     console.log(`[v0] handleContactVendor called for: ${product.name}`)
@@ -381,6 +393,85 @@ export default function ProductPage() {
 
   if (!product) return null
 
+  const specificContactButton = (className: string) => {
+    const contactMethod = (product as any).contactMethod
+    const contactInfo = (product as any).contactInfo
+    const countryCode = (product as any).countryCode
+    const phoneNumber = (product as any).phoneNumber
+
+    if (contactMethod === "WhatsApp" && countryCode && phoneNumber) {
+      return (
+        <a
+          href={`https://api.whatsapp.com/send?phone=${countryCode}${phoneNumber}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className={`flex items-center justify-center gap-2 text-sm bg-[#25D366] hover:bg-[#128C7E] text-white font-semibold rounded-md transition-colors ${className}`}
+          onClick={() => trackContactClick("whatsapp")}
+        >
+          <MessageCircle className="w-5 h-5" />
+          Contactar Vendedor
+        </a>
+      )
+    } else if (contactMethod === "Email" && contactInfo) {
+      return (
+        <a
+          href={`mailto:${contactInfo}`}
+          className={`flex items-center justify-center gap-2 text-sm bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-md transition-colors ${className}`}
+          onClick={() => trackContactClick("email")}
+        >
+          <FileText className="w-5 h-5" />
+          Contactar Vendedor
+        </a>
+      )
+    } else if (contactMethod === "Telegram" && contactInfo) {
+      return (
+        <a
+          href={`https://t.me/${contactInfo}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className={`flex items-center justify-center gap-2 text-sm bg-[#0088cc] hover:bg-[#007dbd] text-white font-semibold rounded-md transition-colors ${className}`}
+          onClick={() => trackContactClick("telegram")}
+        >
+          <FileText className="w-5 h-5" />
+          Contactar Vendedor
+        </a>
+      )
+    }
+    return (
+      <Button
+        onClick={handleContactVendor}
+        className={`bg-primary hover:bg-primary/90 text-white flex items-center justify-center gap-2 ${className}`}
+      >
+        <MessageCircle className="w-5 h-5" />
+        Contactar Vendedor
+      </Button>
+    )
+  }
+
+  const genericContactButton = (className: string, variant: "primary" | "secondary" = "primary") => {
+    const baseClass = variant === "primary"
+      ? "bg-primary hover:bg-primary/90 text-white border-transparent"
+      : "bg-secondary hover:bg-secondary/90 text-foreground border border-border"
+
+    const contactMethod = (product as any).contactMethod
+    let buttonText = "Contactar Vendedor"
+    if (contactMethod === "WhatsApp" || contactMethod === "Telegram") {
+      buttonText = "Mandar mensaje"
+    } else if (contactMethod === "Email") {
+      buttonText = "Mandar correo"
+    }
+
+    return (
+      <Button
+        onClick={handleContactVendor}
+        className={`w-full flex items-center justify-center gap-2 ${baseClass} ${className}`}
+      >
+        <MessageCircle className="w-5 h-5" />
+        {buttonText}
+      </Button>
+    )
+  }
+
   return (
     <div className="min-h-screen bg-background">
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -442,56 +533,7 @@ export default function ProductPage() {
                   <p className="text-sm text-muted-foreground mb-1">Productor</p>
                   <p className="text-lg font-bold text-foreground">{product.producer}</p>
                 </div>
-                {(product as any).contactMethod === "WhatsApp" && (product as any).countryCode && (product as any).phoneNumber ? (
-                  <div>
-                    <p className="text-sm text-muted-foreground mb-2">Contactar por WhatsApp</p>
-                    <a
-                      href={`https://api.whatsapp.com/send?phone=${(product as any).countryCode}${(product as any).phoneNumber}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center gap-2 px-4 py-2 bg-[#25D366] hover:bg-[#128C7E] text-white font-semibold rounded-md transition-colors w-full justify-center"
-                      onClick={() => trackContactClick("whatsapp")}
-                    >
-                      <MessageCircle className="w-4 h-4" />
-                      Mandar mensaje
-                    </a>
-                  </div>
-                ) : (product as any).contactMethod === "Email" && (product as any).contactInfo ? (
-                  <div>
-                    <p className="text-sm text-muted-foreground mb-2">Contactar por Correo</p>
-                    <a
-                      href={`mailto:${(product as any).contactInfo}`}
-                      className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-md transition-colors w-full justify-center"
-                      onClick={() => trackContactClick("email")}
-                    >
-                      <FileText className="w-4 h-4" />
-                      Mandar correo
-                    </a>
-                  </div>
-                ) : (product as any).contactMethod === "Telegram" && (product as any).contactInfo ? (
-                  <div>
-                    <p className="text-sm text-muted-foreground mb-2">Contactar por Telegram</p>
-                    <a
-                      href={`https://t.me/${(product as any).contactInfo}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center gap-2 px-4 py-2 bg-[#0088cc] hover:bg-[#007dbd] text-white font-semibold rounded-md transition-colors w-full justify-center"
-                      onClick={() => trackContactClick("telegram")}
-                    >
-                      <FileText className="w-4 h-4" />
-                      Mandar mensaje
-                    </a>
-                  </div>
-                ) : (product as any).contactMethod && (product as any).contactInfo ? (
-                  <div>
-                    <p className="text-sm text-muted-foreground mb-1">
-                      Contacto ({(product as any).contactMethod})
-                    </p>
-                    <p className="text-lg font-bold text-foreground overflow-hidden text-ellipsis">
-                      {(product as any).contactInfo}
-                    </p>
-                  </div>
-                ) : null}
+
                 <div className="flex items-center gap-2 text-muted-foreground">
                   <MapPin className="w-4 h-4" />
                   <p className="text-sm">{product.location}</p>
@@ -547,38 +589,26 @@ export default function ProductPage() {
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       <Button
                         onClick={() => setIsQuotationDialogOpen(true)}
-                        className="w-full bg-primary hover:bg-primary/90 text-white py-6 flex items-center justify-center gap-2"
+                        className="w-full bg-primary hover:bg-primary/90 text-white h-14 flex items-center justify-center gap-2"
                       >
                         <FileText className="w-5 h-5" />
                         Solicitar Cotización
                       </Button>
-                      <Button
-                        onClick={handleContactVendor}
-                        className="w-full bg-secondary hover:bg-secondary/90 text-foreground py-6 flex items-center justify-center gap-2 border border-border"
-                      >
-                        <MessageCircle className="w-5 h-5" />
-                        Contactar Vendedor
-                      </Button>
+                      {specificContactButton("w-full h-14")}
                     </div>
                   ) : (
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                       <Button
                         onClick={handleBuy}
-                        className="w-full bg-green-600 hover:bg-green-700 text-white py-6 flex items-center justify-center gap-2"
+                        className="w-full bg-green-600 hover:bg-green-700 text-white h-14 flex items-center justify-center gap-2"
                       >
                         <ShoppingCart className="w-5 h-5" />
                         Comprar
                       </Button>
-                      <Button
-                        onClick={handleContactVendor}
-                        className="w-full bg-primary hover:bg-primary/90 text-white py-6 flex items-center justify-center gap-2"
-                      >
-                        <MessageCircle className="w-5 h-5" />
-                        Contactar Vendedor
-                      </Button>
+                      {specificContactButton("w-full h-14")}
                       <Button
                         onClick={() => setIsQuotationDialogOpen(true)}
-                        className="w-full bg-secondary hover:bg-secondary/90 text-foreground py-6 flex items-center justify-center gap-2 border border-border"
+                        className="w-full bg-secondary hover:bg-secondary/90 text-foreground h-14 flex items-center justify-center gap-2 border border-border"
                       >
                         <FileText className="w-5 h-5" />
                         Solicitar Cotización
@@ -659,7 +689,7 @@ export default function ProductPage() {
 
         {relatedProducts.length > 0 && (
           <div>
-            <h2 className="text-2xl font-bold text-foreground mb-6">Productos relacionados</h2>
+            <h2 className="text-2xl font-bold text-foreground mb-6">{relatedTitle}</h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {relatedProducts.map((relProduct) => (
                 <Link key={relProduct.id} href={`/producto/${relProduct.slug}`}>

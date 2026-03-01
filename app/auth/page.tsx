@@ -35,6 +35,7 @@ function AuthPageContent() {
     supplyCountry3: "",
     volumeRange: "",
     companyWebsite: "",
+    address: "",
   })
   const [submitted, setSubmitted] = useState(false)
   const [error, setError] = useState("")
@@ -117,14 +118,12 @@ function AuthPageContent() {
     if (!isLogin && registrationStep === 1) {
       // Validate step 1 fields
       if (
-        !formData.userType ||
         !formData.fullName ||
-        !formData.companyName ||
         !formData.email ||
         !formData.password ||
         !formData.confirmPassword
       ) {
-        setError("Por favor completa todos los campos")
+        setError("Por favor completa los datos de tu cuenta")
         return
       }
 
@@ -146,8 +145,15 @@ function AuthPageContent() {
 
     if (!isLogin && registrationStep === 2) {
       // Validate step 2 fields
-      if (!formData.country || !formData.countryCode || !formData.phoneNumber) {
-        setError("Por favor completa todos los campos requeridos")
+      if (
+        !formData.userType ||
+        !formData.companyName ||
+        !formData.country ||
+        !formData.address ||
+        !formData.countryCode ||
+        !formData.phoneNumber
+      ) {
+        setError("Por favor completa todos los campos requeridos de tu perfil comercial")
         return
       }
 
@@ -176,6 +182,7 @@ function AuthPageContent() {
             product3: formData.product3,
             volumeRange: formData.volumeRange,
             companyWebsite: formData.companyWebsite,
+            address: formData.address,
             supplyCountry1: formData.supplyCountry1,
             supplyCountry2: formData.supplyCountry2,
             supplyCountry3: formData.supplyCountry3,
@@ -371,20 +378,6 @@ function AuthPageContent() {
                   {!isLogin && registrationStep === 1 && (
                     <>
                       <div>
-                        <label className="block text-sm font-medium text-foreground mb-2">Tipo de Usuario</label>
-                        <select
-                          name="userType"
-                          value={formData.userType}
-                          onChange={handleInputChange}
-                          className="w-full px-4 py-3 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary transition"
-                        >
-                          <option value="vendedor">Vendedor Agrícola</option>
-                          <option value="comprador">Comprador/Distribuidor</option>
-                          <option value="empresa">Empresa Industrial</option>
-                        </select>
-                      </div>
-
-                      <div>
                         <label className="block text-sm font-medium text-foreground mb-2">Nombre Completo</label>
                         <div className="relative">
                           <User className="absolute left-3 top-3 text-muted-foreground w-5 h-5" />
@@ -396,37 +389,6 @@ function AuthPageContent() {
                             placeholder="Juan Pérez"
                             className="w-full pl-10 pr-4 py-3 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary transition"
                             required
-                          />
-                        </div>
-                      </div>
-
-                      <div>
-                        <label className="block text-sm font-medium text-foreground mb-2">Nombre de la Empresa</label>
-                        <div className="relative">
-                          <User className="absolute left-3 top-3 text-muted-foreground w-5 h-5" />
-                          <input
-                            type="text"
-                            name="companyName"
-                            value={formData.companyName}
-                            onChange={handleInputChange}
-                            placeholder="Agro Exportaciones S.A."
-                            className="w-full pl-10 pr-4 py-3 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary transition"
-                            required
-                          />
-                        </div>
-                      </div>
-
-                      <div>
-                        <label className="block text-sm font-medium text-foreground mb-2">Link de la página de su empresa (Opcional)</label>
-                        <div className="relative">
-                          <User className="absolute left-3 top-3 text-muted-foreground w-5 h-5" />
-                          <input
-                            type="text"
-                            name="companyWebsite"
-                            value={formData.companyWebsite}
-                            onChange={handleInputChange}
-                            placeholder="www.tuempresa.com"
-                            className="w-full pl-10 pr-4 py-3 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary transition"
                           />
                         </div>
                       </div>
@@ -505,6 +467,51 @@ function AuthPageContent() {
                   {!isLogin && registrationStep === 2 && (
                     <>
                       <div>
+                        <label className="block text-sm font-medium text-foreground mb-2">Tipo de Usuario</label>
+                        <select
+                          name="userType"
+                          value={formData.userType}
+                          onChange={handleInputChange}
+                          className="w-full px-4 py-3 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary transition"
+                        >
+                          <option value="vendedor">Vendedor Agrícola</option>
+                          <option value="comprador">Comprador/Distribuidor</option>
+                          <option value="empresa">Empresa Industrial</option>
+                        </select>
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-foreground mb-2">Nombre de la Empresa</label>
+                        <div className="relative">
+                          <User className="absolute left-3 top-3 text-muted-foreground w-5 h-5" />
+                          <input
+                            type="text"
+                            name="companyName"
+                            value={formData.companyName}
+                            onChange={handleInputChange}
+                            placeholder="Agro Exportaciones S.A."
+                            className="w-full pl-10 pr-4 py-3 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary transition"
+                            required
+                          />
+                        </div>
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-foreground mb-2">Link de la página de su empresa (Opcional)</label>
+                        <div className="relative">
+                          <User className="absolute left-3 top-3 text-muted-foreground w-5 h-5" />
+                          <input
+                            type="text"
+                            name="companyWebsite"
+                            value={formData.companyWebsite}
+                            onChange={handleInputChange}
+                            placeholder="www.tuempresa.com"
+                            className="w-full pl-10 pr-4 py-3 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary transition"
+                          />
+                        </div>
+                      </div>
+
+                      <div>
                         <label className="block text-sm font-medium text-foreground mb-2">País</label>
                         <CountryPicker
                           value={formData.country}
@@ -518,6 +525,22 @@ function AuthPageContent() {
                           }}
                           placeholder="Selecciona tu país"
                         />
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-foreground mb-2">Dirección de la Empresa</label>
+                        <div className="relative">
+                          <User className="absolute left-3 top-3 text-muted-foreground w-5 h-5" />
+                          <input
+                            type="text"
+                            name="address"
+                            value={formData.address}
+                            onChange={handleInputChange}
+                            placeholder="Calle Principal #123, Ciudad, País"
+                            className="w-full pl-10 pr-4 py-3 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary transition"
+                            required
+                          />
+                        </div>
                       </div>
 
                       <div>
@@ -682,6 +705,7 @@ function AuthPageContent() {
                           supplyCountry3: "",
                           volumeRange: "",
                           companyWebsite: "",
+                          address: "",
                         })
                       }}
                       className="text-primary hover:underline font-medium"
