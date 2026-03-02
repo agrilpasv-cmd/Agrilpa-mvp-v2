@@ -60,17 +60,38 @@ export default function EditarPublicacionPage({ params }: { params: Promise<{ id
             const parts = cleanDescription.split("---\nInformación del Vendedor:")
             cleanDescription = parts[0].trim()
 
-            // Extract company name from vendor info
+            // Extract company name — only capture up to the next labeled field or end of line
             const vendorInfo = parts[1] || ""
-            const companyMatch = vendorInfo.match(/Empresa:\s*(.+?)(\n|$)/)
-            if (companyMatch) {
-              extractedCompanyName = companyMatch[1].trim()
+            const companyMatch = vendorInfo.match(/Empresa:\s*([^\n]*?)(?:\s*\n|$)/)
+            const rawCompany = companyMatch ? companyMatch[1].trim() : ""
+            // Guard: reject the value if it accidentally captured contact info text
+            if (rawCompany && !rawCompany.toLowerCase().startsWith("contacto")) {
+              extractedCompanyName = rawCompany
             }
 
             // Extract incoterm from vendor info
             const incotermMatch = vendorInfo.match(/Incoterm:\s*(.+?)(\n|$)/)
             if (incotermMatch) {
               extractedIncoterm = incotermMatch[1].trim()
+            }
+          }
+
+          // Determine best company name: DB column > extracted from description > user profile
+          let finalCompanyName = ""
+          if (p.company_name && p.company_name !== "") {
+            finalCompanyName = p.company_name
+          } else if (extractedCompanyName) {
+            finalCompanyName = extractedCompanyName
+          } else {
+            // Fall back to user profile company name
+            try {
+              const profileRes = await fetch("/api/user/profile")
+              if (profileRes.ok) {
+                const profileData = await profileRes.json()
+                finalCompanyName = profileData.user?.company_name || ""
+              }
+            } catch (e) {
+              // silent — non-critical
             }
           }
 
@@ -86,7 +107,7 @@ export default function EditarPublicacionPage({ params }: { params: Promise<{ id
             image: p.image || "",
             packaging: p.packaging || "",
             packagingSize: p.packaging_size?.toString() || "",
-            companyName: p.company_name || extractedCompanyName || "",
+            companyName: finalCompanyName,
             contactMethod: p.contact_method || "",
             contactInfo: p.contact_info || "",
             countryCode: p.country_code || "",

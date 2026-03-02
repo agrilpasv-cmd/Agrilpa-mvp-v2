@@ -79,6 +79,25 @@ export default function NuevaPublicacionPage() {
   // Custom hook for sidebar updates
   const { refreshCounts } = useDashboard()
 
+  // Auto-fill company name from user profile
+  useEffect(() => {
+    const loadProfileCompany = async () => {
+      try {
+        const res = await fetch("/api/user/profile")
+        if (res.ok) {
+          const data = await res.json()
+          const company = data.user?.company_name || ""
+          if (company) {
+            setFormData(prev => ({ ...prev, companyName: company }))
+          }
+        }
+      } catch (e) {
+        // silent — non-critical
+      }
+    }
+    loadProfileCompany()
+  }, [])
+
   // Check auth on mount
   useEffect(() => {
     const checkAuth = async () => {

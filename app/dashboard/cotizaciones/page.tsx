@@ -283,132 +283,114 @@ export default function CotizacionesPage() {
               </p>
             </div>
           ) : (
-            <div className="space-y-4">
-              {filteredQuotations.map((quotation) => (
-                <div
-                  key={quotation.id}
-                  onClick={() => router.push(`/dashboard/cotizaciones/${quotation.id}`)}
-                  className="border rounded-xl p-6 bg-white shadow-sm hover:shadow-md hover:border-primary/50 transition-all cursor-pointer"
-                >
-                  <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-                    {/* Column 1: Product Info (4 cols) */}
-                    <div className="lg:col-span-4 flex gap-4 border-r border-border/50 pr-4">
-                      <div className="w-20 h-20 rounded-xl bg-gray-200 flex-shrink-0 overflow-hidden">
-                        {quotation.product_image && quotation.product_image !== "/placeholder.svg" ? (
-                          <img
-                            src={quotation.product_image}
-                            alt={quotation.product_title}
-                            className="w-full h-full object-cover"
-                          />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center bg-muted">
-                            <Package className="w-8 h-8 text-muted-foreground" />
-                          </div>
-                        )}
-                      </div>
-                      <div className="flex flex-col justify-between py-0.5">
-                        <div>
-                          <h3 className="font-bold text-lg text-foreground line-clamp-1">{quotation.product_title}</h3>
-                          <p className="text-sm text-muted-foreground mt-1">
-                            Cantidad: <span className="font-semibold text-green-600">{quotation.quantity} kg</span>
-                          </p>
-                        </div>
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation()
-                            router.push(`/dashboard/cotizaciones/${quotation.id}`)
-                          }}
-                          className="flex items-center text-sm font-medium text-green-600 hover:text-green-700 transition-colors bg-transparent border-0 p-0 h-auto w-fit"
-                        >
-                          <Eye className="w-4 h-4 mr-1.5" />
-                          Ver producto
-                        </button>
-                      </div>
-                    </div>
+            <div className="overflow-x-auto -mx-6">
+              {/* Table header */}
+              <div className="min-w-[700px]">
+                <div className="grid grid-cols-[2fr_1.5fr_1fr_1fr_auto] gap-0 px-6 pb-2 border-b border-border">
+                  <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-widest">Producto</span>
+                  <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-widest">Comprador</span>
+                  <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-widest">Destino / Fecha</span>
+                  <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-widest">Estado</span>
+                  <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-widest text-right pr-1">Acciones</span>
+                </div>
 
-                    {/* Column 2: Buyer Info (4 cols) */}
-                    <div className="lg:col-span-4 flex flex-col justify-between border-r border-border/50 px-4">
-                      <div>
-                        <h4 className="font-bold text-foreground">{quotation.buyer_name}</h4>
-                        <div className="flex items-center gap-2 text-sm text-muted-foreground mt-2">
-                          {quotation.contact_method === "WhatsApp" ? (
-                            <MessageCircle className="w-4 h-4" />
+                {/* Table rows */}
+                {filteredQuotations.map((quotation, idx) => {
+                  const statusMeta =
+                    quotation.status === "accepted"
+                      ? { label: "Aceptada", cls: "bg-emerald-100 text-emerald-800 border-emerald-300" }
+                      : quotation.status === "rejected"
+                        ? { label: "Rechazada", cls: "bg-red-100 text-red-800 border-red-300" }
+                        : { label: "Pendiente", cls: "bg-amber-100 text-amber-800 border-amber-300" }
+
+                  return (
+                    <div
+                      key={quotation.id}
+                      onClick={() => router.push(`/dashboard/cotizaciones/${quotation.id}`)}
+                      className={`group grid grid-cols-[2fr_1.5fr_1fr_1fr_auto] gap-0 items-center px-6 py-6 cursor-pointer transition-colors border-b border-border/50 hover:bg-primary/5 ${idx % 2 === 0 ? "bg-white" : "bg-muted/20"}`}
+                    >
+                      {/* Product column */}
+                      <div className="flex items-center gap-3 min-w-0 pr-4">
+                        <div className="w-[72px] h-[72px] rounded-xl overflow-hidden bg-muted border border-border flex-shrink-0">
+                          {quotation.product_image && quotation.product_image !== "/placeholder.svg" ? (
+                            <img src={quotation.product_image} alt={quotation.product_title} className="w-full h-full object-cover" />
                           ) : (
-                            <Mail className="w-4 h-4" />
+                            <div className="w-full h-full flex items-center justify-center">
+                              <Package className="w-7 h-7 text-muted-foreground/40" />
+                            </div>
                           )}
-                          <span>
-                            {quotation.contact_method === "WhatsApp"
-                              ? `+${quotation.country_code} ${quotation.phone_number}`
-                              : quotation.email}
-                          </span>
                         </div>
-                        <div className="flex items-center gap-2 text-sm text-muted-foreground mt-1">
-                          <MapPin className="w-4 h-4" />
-                          <span>{quotation.destination_country}</span>
+                        <div className="min-w-0">
+                          <p className="font-bold text-base text-foreground line-clamp-1 group-hover:text-primary transition-colors">{quotation.product_title}</p>
+                          <p className="text-sm text-muted-foreground mt-1">{quotation.quantity} kg</p>
                         </div>
-                        <div className="flex items-center gap-2 text-sm text-muted-foreground mt-1">
-                          <Calendar className="w-4 h-4" />
+                      </div>
+
+                      {/* Buyer column */}
+                      <div className="min-w-0 pr-4">
+                        <p className="text-base font-semibold text-foreground truncate">{quotation.buyer_name}</p>
+                        <div className="flex items-center gap-1.5 mt-1 text-sm text-muted-foreground">
+                          {quotation.contact_method === "WhatsApp"
+                            ? <><MessageCircle className="w-3 h-3 flex-shrink-0" /><span className="truncate">+{quotation.country_code} {quotation.phone_number}</span></>
+                            : <><Mail className="w-3 h-3 flex-shrink-0" /><span className="truncate">{quotation.email}</span></>
+                          }
+                        </div>
+                      </div>
+
+                      {/* Destination/date column */}
+                      <div className="pr-4">
+                        <div className="flex items-center gap-1.5 text-sm text-foreground">
+                          <MapPin className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />
+                          <span className="truncate">{quotation.destination_country}</span>
+                        </div>
+                        <div className="flex items-center gap-1.5 text-sm text-muted-foreground mt-1.5">
+                          <Calendar className="w-3.5 h-3.5 flex-shrink-0" />
                           <span>{formatDate(quotation.estimated_date)}</span>
                         </div>
                       </div>
-                    </div>
 
-                    {/* Column 3: Status & Actions (4 cols) */}
-                    <div className="lg:col-span-4 flex flex-col justify-between pl-4">
-                      <div className="flex justify-between items-start">
-                        {getStatusBadge(quotation.status)}
-                        <span className="text-xs text-muted-foreground font-medium">Recibido: {formatDate(quotation.created_at)}</span>
+                      {/* Status column */}
+                      <div>
+                        <span className={`inline-flex items-center px-3 py-1.5 rounded-full text-sm font-semibold border ${statusMeta.cls}`}>
+                          {statusMeta.label}
+                        </span>
                       </div>
 
-                      <div className="bg-muted/30 p-3 rounded-lg my-3">
-                        <span className="text-xs font-semibold text-muted-foreground block mb-1">Notas:</span>
-                        <p className="text-sm text-foreground/80 line-clamp-2">
-                          {quotation.notes || "Sin notas adicionales."}
-                        </p>
-                      </div>
-
-                      <div className="flex items-center gap-3 mt-auto">
+                      {/* Actions column */}
+                      <div className="flex items-center gap-2 justify-end" onClick={(e) => e.stopPropagation()}>
                         {quotation.contact_method === "WhatsApp" ? (
                           <Button
-                            className="flex-1 bg-green-600 hover:bg-green-700 text-white font-semibold"
-                            onClick={(e) => {
-                              e.stopPropagation()
-                              window.open(`https://api.whatsapp.com/send?phone=${quotation.country_code}${quotation.phone_number}&text=Hola ${quotation.buyer_name}, he recibido tu solicitud.`, '_blank')
-                            }}
+                            size="sm"
+                            className="bg-green-600 hover:bg-green-700 text-white h-10 w-10 p-0 rounded-xl"
+                            title="Abrir WhatsApp"
+                            onClick={() => window.open(`https://api.whatsapp.com/send?phone=${quotation.country_code}${quotation.phone_number}&text=Hola ${quotation.buyer_name}, he recibido tu solicitud.`, "_blank")}
                           >
-                            <MessageCircle className="w-4 h-4 mr-2" />
-                            WhatsApp
+                            <MessageCircle className="w-5 h-5" />
                           </Button>
                         ) : (
                           <Button
-                            className="flex-1 bg-green-600 hover:bg-green-700 text-white font-semibold"
-                            onClick={(e) => {
-                              e.stopPropagation()
-                              window.open(`mailto:${quotation.email}?subject=Respuesta a Cotización&body=Hola ${quotation.buyer_name}...`, '_blank')
-                            }}
+                            size="sm"
+                            className="bg-primary hover:bg-primary/90 text-white h-10 w-10 p-0 rounded-xl"
+                            title="Enviar correo"
+                            onClick={() => window.open(`mailto:${quotation.email}?subject=Respuesta a Cotización&body=Hola ${quotation.buyer_name}...`, "_blank")}
                           >
-                            <Mail className="w-4 h-4 mr-2" />
-                            Email
+                            <Mail className="w-5 h-5" />
                           </Button>
                         )}
-
                         <Button
-                          variant="ghost"
+                          variant="outline"
                           size="sm"
-                          className="text-foreground hover:bg-muted font-medium px-2"
-                          onClick={(e) => {
-                            // Redundant but good for explicit behavior
-                            e.stopPropagation()
-                            router.push(`/dashboard/cotizaciones/${quotation.id}`)
-                          }}
+                          className="h-10 w-10 p-0 rounded-xl"
+                          title="Ver detalles"
+                          onClick={() => router.push(`/dashboard/cotizaciones/${quotation.id}`)}
                         >
-                          Ver detalles <ChevronRight className="w-4 h-4 ml-1" />
+                          <ChevronRight className="w-5 h-5" />
                         </Button>
                       </div>
                     </div>
-                  </div>
-                </div>
-              ))}
+                  )
+                })}
+              </div>
             </div>
           )}
         </CardContent>
