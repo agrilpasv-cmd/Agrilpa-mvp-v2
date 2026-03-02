@@ -8,6 +8,7 @@ import { useRouter } from "next/navigation"
 import { useSearchParams } from "next/navigation"
 import { Mail, Lock, User, Phone, ArrowRight, ArrowLeft, Eye, EyeOff } from "lucide-react"
 import { CountryPicker, PhoneCodePicker } from "@/components/ui/country-picker"
+import { MapPin } from "lucide-react"
 import { createBrowserClient } from "@/lib/supabase/client"
 import { AuthStorage } from "@/lib/auth-storage"
 
@@ -27,6 +28,7 @@ function AuthPageContent() {
     countryCode: "",
     phoneNumber: "",
     country: "",
+    state: "",
     product1: "",
     product2: "",
     product3: "",
@@ -149,6 +151,7 @@ function AuthPageContent() {
         !formData.userType ||
         !formData.companyName ||
         !formData.country ||
+        !formData.state ||
         !formData.address ||
         !formData.countryCode ||
         !formData.phoneNumber
@@ -157,8 +160,21 @@ function AuthPageContent() {
         return
       }
 
-      if (!formData.product1 || !formData.product2 || !formData.product3 || !formData.volumeRange) {
-        setError("Por favor selecciona tus productos de interés y volumen de movimiento")
+      // Move to step 3
+      setRegistrationStep(3)
+      setError("")
+      return
+    }
+
+    if (!isLogin && registrationStep === 3) {
+      // Validate step 3 fields
+      if (!formData.product1 && !formData.product2 && !formData.product3) {
+        setError("Por favor ingresa al menos un producto de interés")
+        return
+      }
+
+      if (!formData.volumeRange) {
+        setError("Por favor selecciona tu volumen de movimiento")
         return
       }
 
@@ -176,6 +192,7 @@ function AuthPageContent() {
             companyName: formData.companyName,
             phone: `+${formData.countryCode} ${formData.phoneNumber}`,
             country: formData.country,
+            state: formData.state,
             userType: formData.userType,
             product1: formData.product1,
             product2: formData.product2,
@@ -314,11 +331,11 @@ function AuthPageContent() {
                     <div className="mb-6">
                       <div className="flex items-center justify-between">
                         <div
-                          className={`flex-1 h-1 rounded-full ${registrationStep >= 1 ? "bg-primary" : "bg-gray-300"}`}
-                        ></div>
-                        <div className="mx-2 text-sm font-medium text-foreground">{registrationStep}/2</div>
-                        <div
                           className={`flex-1 h-1 rounded-full ${registrationStep >= 2 ? "bg-primary" : "bg-gray-300"}`}
+                        ></div>
+                        <div className="mx-2 text-sm font-medium text-foreground">{registrationStep}/3</div>
+                        <div
+                          className={`flex-1 h-1 rounded-full ${registrationStep >= 3 ? "bg-primary" : "bg-gray-300"}`}
                         ></div>
                       </div>
                     </div>
@@ -467,6 +484,11 @@ function AuthPageContent() {
                   {!isLogin && registrationStep === 2 && (
                     <>
                       <div>
+                        <label className="block text-sm font-medium text-foreground mb-4">
+                          Paso 2 de 3: Información de la Empresa
+                        </label>
+                      </div>
+                      <div>
                         <label className="block text-sm font-medium text-foreground mb-2">Tipo de Usuario</label>
                         <select
                           name="userType"
@@ -528,6 +550,22 @@ function AuthPageContent() {
                       </div>
 
                       <div>
+                        <label className="block text-sm font-medium text-foreground mb-2">Estado / Provincia</label>
+                        <div className="relative">
+                          <MapPin className="absolute left-3 top-3 text-muted-foreground w-5 h-5" />
+                          <input
+                            type="text"
+                            name="state"
+                            value={formData.state}
+                            onChange={handleInputChange}
+                            placeholder="Ej. Antioquia, Texas, San Salvador"
+                            className="w-full pl-10 pr-4 py-3 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary transition"
+                            required
+                          />
+                        </div>
+                      </div>
+
+                      <div>
                         <label className="block text-sm font-medium text-foreground mb-2">Dirección de la Empresa</label>
                         <div className="relative">
                           <User className="absolute left-3 top-3 text-muted-foreground w-5 h-5" />
@@ -536,7 +574,7 @@ function AuthPageContent() {
                             name="address"
                             value={formData.address}
                             onChange={handleInputChange}
-                            placeholder="Calle Principal #123, Ciudad, País"
+                            placeholder="Calle Principal #123"
                             className="w-full pl-10 pr-4 py-3 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary transition"
                             required
                           />
@@ -572,7 +610,48 @@ function AuthPageContent() {
                           </div>
                         </div>
                       </div>
+                      <div className="flex gap-3 mt-6">
+                        <button
+                          type="button"
+                          onClick={() => setRegistrationStep(1)}
+                          className="flex-1 bg-gray-200 text-foreground font-semibold py-3 rounded-lg hover:bg-gray-300 transition flex items-center justify-center gap-2"
+                        >
+                          <ArrowLeft className="w-4 h-4" /> Volver
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (
+                              !formData.userType ||
+                              !formData.companyName ||
+                              !formData.country ||
+                              !formData.state ||
+                              !formData.address ||
+                              !formData.countryCode ||
+                              !formData.phoneNumber
+                            ) {
+                              setError("Por favor completa los campos requeridos antes de continuar")
+                              return
+                            }
+                            setError("")
+                            setRegistrationStep(3)
+                          }}
+                          className="flex-1 bg-primary text-primary-foreground font-semibold py-3 rounded-lg hover:bg-primary/90 transition flex items-center justify-center gap-2"
+                        >
+                          Siguiente <ArrowRight className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </>
+                  )}
 
+                  {!isLogin && registrationStep === 3 && (
+                    <>
+                      {/* Step 3: Interest & Volume */}
+                      <div>
+                        <label className="block text-sm font-medium text-foreground mb-4">
+                          Paso 3 de 3: Intereses y Volumen
+                        </label>
+                      </div>
                       <div>
                         <label className="block text-sm font-medium text-foreground mb-2">Productos de Interés</label>
                         <div className="grid grid-cols-3 gap-4">
@@ -635,7 +714,7 @@ function AuthPageContent() {
 
                       <div>
                         <label className="block text-sm font-medium text-foreground mb-2">
-                          Volumen de Movimiento Anual
+                          Volumen de Movimiento Anual <span className="text-muted-foreground font-normal">(USD $)</span>
                         </label>
                         <select
                           name="volumeRange"
@@ -656,7 +735,7 @@ function AuthPageContent() {
                       <div className="flex gap-3">
                         <button
                           type="button"
-                          onClick={() => setRegistrationStep(1)}
+                          onClick={() => setRegistrationStep(2)}
                           className="flex-1 bg-gray-200 text-foreground font-semibold py-3 rounded-lg hover:bg-gray-300 transition flex items-center justify-center gap-2"
                         >
                           <ArrowLeft className="w-4 h-4" /> Volver
@@ -664,9 +743,9 @@ function AuthPageContent() {
                         <button
                           type="submit"
                           disabled={loading}
-                          className="flex-1 bg-primary text-primary-foreground font-semibold py-3 rounded-lg hover:bg-primary/90 transition flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                          className="flex-[2] bg-primary text-primary-foreground font-semibold py-3 rounded-lg hover:bg-primary/90 transition flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                         >
-                          {loading ? "Creando..." : "Registrarse"} <ArrowRight className="w-4 h-4" />
+                          {loading ? "Creando cuenta..." : "Completar Registro"}
                         </button>
                       </div>
                     </>
@@ -697,6 +776,7 @@ function AuthPageContent() {
                           countryCode: "",
                           phoneNumber: "",
                           country: "",
+                          state: "",
                           product1: "",
                           product2: "",
                           product3: "",

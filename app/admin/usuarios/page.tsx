@@ -14,6 +14,7 @@ interface User {
   company_name: string
   phone: string
   country: string
+  state?: string
   user_type: string
   role: string
   created_at: string
@@ -145,6 +146,7 @@ export default function AdminUsersPage() {
                     <th className="text-left p-4 font-medium">Web/Link</th>
                     <th className="text-left p-4 font-medium">Teléfono</th>
                     <th className="text-left p-4 font-medium">País</th>
+                    <th className="text-left p-4 font-medium">Estado</th>
                     <th className="text-left p-4 font-medium">Productos de Interés</th>
                     <th className="text-left p-4 font-medium">Volumen Anual</th>
                     <th className="text-left p-4 font-medium">Tipo</th>
@@ -181,6 +183,7 @@ export default function AdminUsersPage() {
                         }
                       </td>
                       <td className="p-4">{user.country || "-"}</td>
+                      <td className="p-4">{user.state || "-"}</td>
                       <td className="p-4 max-w-xs">
                         {user.products_of_interest && user.products_of_interest.length > 0 ? (
                           <div className="flex flex-wrap gap-1">
