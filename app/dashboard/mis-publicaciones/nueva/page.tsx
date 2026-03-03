@@ -135,8 +135,6 @@ export default function NuevaPublicacionPage() {
       if (file.size > 5 * 1024 * 1024) { // 5MB limit
         setStatusMessage({ type: 'error', text: "La imagen es demasiado grande. Por favor usa una imagen menor a 5MB." })
         e.target.value = "" // Reset input
-        // Auto-hide after 5 seconds
-        setTimeout(() => setStatusMessage({ type: null, text: "" }), 5000)
         return
       }
 
@@ -354,10 +352,11 @@ export default function NuevaPublicacionPage() {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium mb-2">
+                <label htmlFor="title" className="block text-sm font-medium mb-2">
                   Título del Producto <span className="text-red-500">*</span>
                 </label>
                 <Input
+                  id="title"
                   type="text"
                   name="title"
                   value={formData.title}
@@ -368,10 +367,11 @@ export default function NuevaPublicacionPage() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium mb-2">
+                <label htmlFor="category" className="block text-sm font-medium mb-2">
                   Categoría <span className="text-red-500">*</span>
                 </label>
                 <select
+                  id="category"
                   name="category"
                   value={formData.category}
                   onChange={handleInputChange}
@@ -395,13 +395,14 @@ export default function NuevaPublicacionPage() {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium mb-2">
+                <label htmlFor="price" className="block text-sm font-medium mb-2">
                   Precio <span className="text-red-500">*</span>
                 </label>
 
                 <div className="flex bg-muted p-1 rounded-lg mb-3">
                   <button
                     type="button"
+                    aria-pressed={!isPriceOnRequest}
                     onClick={() => {
                       setIsPriceOnRequest(false)
                       setFormData(prev => ({ ...prev, price: "" }))
@@ -415,6 +416,7 @@ export default function NuevaPublicacionPage() {
                   </button>
                   <button
                     type="button"
+                    aria-pressed={isPriceOnRequest}
                     onClick={() => {
                       setIsPriceOnRequest(true)
                       setFormData(prev => ({ ...prev, price: "Por Cotizar" }))
@@ -432,6 +434,7 @@ export default function NuevaPublicacionPage() {
                   <div className="relative">
                     <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground font-semibold">$</span>
                     <Input
+                      id="price"
                       type="number"
                       name="price"
                       value={formData.price === "Por Cotizar" ? "" : formData.price}
@@ -452,10 +455,11 @@ export default function NuevaPublicacionPage() {
                 )}
               </div>
               <div>
-                <label className="block text-sm font-medium mb-2">
+                <label htmlFor="quantity" className="block text-sm font-medium mb-2">
                   Cantidad Disponible <span className="text-red-500">*</span>
                 </label>
                 <Input
+                  id="quantity"
                   type="text"
                   name="quantity"
                   value={formData.quantity}
@@ -469,10 +473,11 @@ export default function NuevaPublicacionPage() {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium mb-2">
+                <label htmlFor="country" className="block text-sm font-medium mb-2">
                   País de Origen <span className="text-red-500">*</span>
                 </label>
                 <select
+                  id="country"
                   name="country"
                   value={formData.country === "" || ["El Salvador", "Honduras", "Guatemala", "Nicaragua", "Costa Rica", "Panamá", "México", "Colombia", "Ecuador", "Perú", "Otro"].includes(formData.country) ? formData.country : "Otro"}
                   onChange={(e) => {
@@ -501,6 +506,7 @@ export default function NuevaPublicacionPage() {
                 </select>
                 {(formData.country === "Otro" || (formData.country !== "" && !["El Salvador", "Honduras", "Guatemala", "Nicaragua", "Costa Rica", "Panamá", "México", "Colombia", "Ecuador", "Perú"].includes(formData.country))) && (
                   <Input
+                    id="country-custom"
                     type="text"
                     name="country"
                     value={formData.country === "Otro" ? "" : formData.country}
@@ -513,10 +519,11 @@ export default function NuevaPublicacionPage() {
                 )}
               </div>
               <div>
-                <label className="block text-sm font-medium mb-2">
+                <label htmlFor="minOrder" className="block text-sm font-medium mb-2">
                   Pedido Mínimo <span className="text-red-500">*</span>
                 </label>
                 <Input
+                  id="minOrder"
                   type="text"
                   name="minOrder"
                   value={formData.minOrder}
@@ -530,10 +537,11 @@ export default function NuevaPublicacionPage() {
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
-                <label className="block text-sm font-medium mb-2">
+                <label htmlFor="maturity" className="block text-sm font-medium mb-2">
                   Tipo de Maduración <span className="text-xs text-muted-foreground">(Opcional)</span>
                 </label>
                 <select
+                  id="maturity"
                   name="maturity"
                   value={formData.maturity}
                   onChange={handleInputChange}
@@ -547,10 +555,11 @@ export default function NuevaPublicacionPage() {
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-medium mb-2">
+                <label htmlFor="packaging" className="block text-sm font-medium mb-2">
                   Tipo de Embalaje <span className="text-red-500">*</span>
                 </label>
                 <select
+                  id="packaging"
                   name="packaging"
                   value={formData.packaging}
                   onChange={handleInputChange}
@@ -570,11 +579,12 @@ export default function NuevaPublicacionPage() {
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-medium mb-2">
+                <label htmlFor="packagingSize" className="block text-sm font-medium mb-2">
                   Tamaño del Embalaje <span className="text-red-500">*</span>
                 </label>
                 <div className="flex gap-2">
                   <Input
+                    id="packagingSize"
                     type="number"
                     name="packagingSize"
                     value={formData.packagingSize}
@@ -594,10 +604,11 @@ export default function NuevaPublicacionPage() {
 
             {/* Incoterm Field */}
             <div>
-              <label className="block text-sm font-medium mb-2">
+              <label htmlFor="incoterm" className="block text-sm font-medium mb-2">
                 Incoterm <span className="text-xs text-muted-foreground">(Opcional)</span>
               </label>
               <select
+                id="incoterm"
                 name="incoterm"
                 value={formData.incoterm}
                 onChange={handleInputChange}
@@ -624,10 +635,11 @@ export default function NuevaPublicacionPage() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium mb-2">
+              <label htmlFor="description" className="block text-sm font-medium mb-2">
                 Descripción del Producto <span className="text-red-500">*</span>
               </label>
               <Textarea
+                id="description"
                 name="description"
                 value={formData.description}
                 onChange={handleInputChange}
@@ -640,12 +652,13 @@ export default function NuevaPublicacionPage() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium mb-3">
+              <label htmlFor="certifications" className="block text-sm font-medium mb-3">
                 Certificaciones <span className="text-xs text-muted-foreground">(Escribe y presiona Enter para agregar)</span>
               </label>
 
               <div className="flex gap-2 mb-3">
                 <Input
+                  id="certifications"
                   value={certInput}
                   onChange={(e) => setCertInput(e.target.value)}
                   onKeyDown={(e) => {
@@ -752,10 +765,11 @@ export default function NuevaPublicacionPage() {
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
-                <label className="block text-sm font-medium mb-2">
+                <label htmlFor="companyName" className="block text-sm font-medium mb-2">
                   Nombre de la Empresa <span className="text-red-500">*</span>
                 </label>
                 <Input
+                  id="companyName"
                   type="text"
                   name="companyName"
                   value={formData.companyName}
@@ -766,10 +780,11 @@ export default function NuevaPublicacionPage() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium mb-2">
+                <label htmlFor="contactMethod" className="block text-sm font-medium mb-2">
                   Medio de Contacto <span className="text-red-500">*</span>
                 </label>
                 <select
+                  id="contactMethod"
                   name="contactMethod"
                   value={formData.contactMethod}
                   onChange={handleInputChange}
@@ -783,7 +798,7 @@ export default function NuevaPublicacionPage() {
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-medium mb-2">
+                <label htmlFor={formData.contactMethod === "WhatsApp" ? "phoneNumber" : "contactInfo"} className="block text-sm font-medium mb-2">
                   {formData.contactMethod === "WhatsApp" ? (
                     <>Código y Teléfono <span className="text-red-500">*</span></>
                   ) : (
@@ -798,6 +813,7 @@ export default function NuevaPublicacionPage() {
                           +
                         </span>
                         <Input
+                          id="countryCode"
                           className="pl-6"
                           placeholder="503"
                           type="number"
@@ -809,6 +825,7 @@ export default function NuevaPublicacionPage() {
                     </div>
                     <div className="flex-1">
                       <Input
+                        id="phoneNumber"
                         placeholder="0000 0000"
                         type="number"
                         value={formData.phoneNumber}
@@ -821,6 +838,7 @@ export default function NuevaPublicacionPage() {
                   </div>
                 ) : (
                   <Input
+                    id="contactInfo"
                     type="text"
                     name="contactInfo"
                     value={formData.contactInfo}
@@ -843,10 +861,13 @@ export default function NuevaPublicacionPage() {
 
             <div className="flex flex-col gap-4 pt-6">
               {statusMessage.text && (
-                <div className={`p-3 rounded-md text-sm font-medium ${statusMessage.type === 'error' ? 'bg-red-100 text-red-700' :
-                  statusMessage.type === 'success' ? 'bg-green-100 text-green-700' :
-                    'bg-blue-50 text-blue-700'
-                  }`}>
+                <div
+                  role="alert"
+                  aria-live="polite"
+                  className={`p-3 rounded-md text-sm font-medium ${statusMessage.type === 'error' ? 'bg-red-100 text-red-700' :
+                    statusMessage.type === 'success' ? 'bg-green-100 text-green-700' :
+                      'bg-blue-50 text-blue-700'
+                    }`}>
                   {statusMessage.text}
                 </div>
               )}
