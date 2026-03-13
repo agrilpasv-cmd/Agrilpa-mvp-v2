@@ -400,9 +400,10 @@ export default function ProductPage() {
     const phoneNumber = (product as any).phoneNumber
 
     if (contactMethod === "WhatsApp" && countryCode && phoneNumber) {
+      const message = encodeURIComponent(`Hola vi tu producto "${product.name}" en la plataforma Agrilpa 🌱, y estoy interesado.`)
       return (
         <a
-          href={`https://api.whatsapp.com/send?phone=${countryCode}${phoneNumber}`}
+          href={`https://api.whatsapp.com/send?phone=${countryCode}${phoneNumber}&text=${message}`}
           target="_blank"
           rel="noopener noreferrer"
           className={`flex items-center justify-center gap-2 text-sm bg-[#25D366] hover:bg-[#128C7E] text-white font-semibold rounded-md transition-colors ${className}`}
@@ -763,7 +764,7 @@ export default function ProductPage() {
                   <Button
                     className="w-full bg-[#25D366] hover:bg-[#128C7E] text-white gap-2 h-12 text-lg font-semibold shadow-md transition-all hover:scale-[1.02]"
                     onClick={() => {
-                      const message = encodeURIComponent(`Hola, estoy interesado en su producto "${product.name}" publicado en Agrilpa.`)
+                      const message = encodeURIComponent(`Hola vi tu producto "${product.name}" en la plataforma Agrilpa 🌱, y estoy interesado.`)
                       window.open(`https://api.whatsapp.com/send?phone=${(product as any).countryCode}${(product as any).phoneNumber}&text=${message}`, '_blank')
                       trackContactClick("whatsapp")
                     }}

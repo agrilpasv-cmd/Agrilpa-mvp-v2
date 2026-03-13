@@ -454,7 +454,8 @@ export default function ProductosPage() {
                           if (contactMethod === "WhatsApp") {
                             // Extract numbers from contactInfo or use it directly
                             const phone = contactInfo.replace(/\D/g, "")
-                            window.open(`https://wa.me/${phone}`, '_blank')
+                            const message = encodeURIComponent(`Hola vi tu producto "${product.name}" en la plataforma Agrilpa 🌱, y estoy interesado.`)
+                            window.open(`https://wa.me/${phone}?text=${message}`, '_blank')
                             trackContactClick(product, "whatsapp")
                           } else if (contactMethod === "Email") {
                             window.open(`mailto:${contactInfo}`, '_blank')

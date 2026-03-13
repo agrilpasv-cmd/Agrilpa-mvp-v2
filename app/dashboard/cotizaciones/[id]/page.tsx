@@ -456,7 +456,10 @@ export default function QuotationDetailPage({ params }: { params: Promise<{ id: 
                                     <Button
                                         size="lg"
                                         className="w-full bg-green-600 hover:bg-green-700"
-                                        onClick={() => window.open(`https://api.whatsapp.com/send?phone=${quotation.country_code}${quotation.phone_number}&text=Hola ${quotation.buyer_name}, he recibido tu solicitud de cotización para ${quotation.product_title}.`, '_blank')}
+                                        onClick={() => {
+                                            const message = encodeURIComponent(`Hola ${quotation.buyer_name}, he recibido tu solicitud de cotización para "${quotation.product_title}" en Agrilpa 🌱.`)
+                                            window.open(`https://api.whatsapp.com/send?phone=${quotation.country_code}${quotation.phone_number}&text=${message}`, '_blank')
+                                        }}
                                     >
                                         <MessageCircle className="w-5 h-5 mr-2" />
                                         Abrir WhatsApp
