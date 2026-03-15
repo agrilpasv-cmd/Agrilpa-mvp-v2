@@ -3,8 +3,17 @@
 import { useEffect, useState, useCallback } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
+import { Input } from "@/components/ui/input"
 import { useToast } from "@/hooks/use-toast"
-import { Loader2, RefreshCw } from "lucide-react"
+import { Loader2, RefreshCw, Trash2, AlertTriangle } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
 interface User {
@@ -30,6 +39,12 @@ export default function AdminUsersPage() {
   const [loading, setLoading] = useState(true)
   const [lastUpdate, setLastUpdate] = useState<Date | null>(null)
   const { toast } = useToast()
+
+  // Delete dialog state
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+  const [userToDelete, setUserToDelete] = useState<User | null>(null)
+  const [deleteConfirmText, setDeleteConfirmText] = useState("")
+  const [isDeleting, setIsDeleting] = useState(false)
 
   const fetchUsers = useCallback(async (showLoading = false) => {
     if (showLoading) setLoading(true)
@@ -59,11 +74,10 @@ export default function AdminUsersPage() {
   }, [])
 
   useEffect(() => {
-    // Initial fetch with loading indicator
     fetchUsers(true)
 
     const intervalId = setInterval(() => {
-      fetchUsers(false) // Silent refresh without loading indicator
+      fetchUsers(false)
     }, 3000)
 
     return () => clearInterval(intervalId)
@@ -92,6 +106,48 @@ export default function AdminUsersPage() {
         description: "No se pudo actualizar el rol del usuario",
         variant: "destructive",
       })
+    }
+  }
+
+  const openDeleteDialog = (user: User) => {
+    setUserToDelete(user)
+    setDeleteConfirmText("")
+    setDeleteDialogOpen(true)
+  }
+
+  const handleDeleteUser = async () => {
+    if (!userToDelete || deleteConfirmText.toUpperCase() !== "ELIMINAR") return
+
+    setIsDeleting(true)
+    try {
+      const response = await fetch("/api/admin/delete-user", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId: userToDelete.id }),
+      })
+
+      const result = await response.json()
+
+      if (!response.ok) throw new Error(result.error || "Error al eliminar usuario")
+
+      toast({
+        title: "Usuario eliminado",
+        description: `El usuario ${userToDelete.full_name} fue eliminado correctamente.`,
+      })
+
+      setDeleteDialogOpen(false)
+      setUserToDelete(null)
+      setDeleteConfirmText("")
+      await fetchUsers(false)
+    } catch (error: any) {
+      console.error("Error deleting user:", error)
+      toast({
+        title: "Error",
+        description: error.message || "No se pudo eliminar el usuario",
+        variant: "destructive",
+      })
+    } finally {
+      setIsDeleting(false)
     }
   }
 
@@ -152,6 +208,7 @@ export default function AdminUsersPage() {
                     <th className="text-left p-4 font-medium">Tipo</th>
                     <th className="text-left p-4 font-medium">Rol</th>
                     <th className="text-left p-4 font-medium">Registro</th>
+                    <th className="text-left p-4 font-medium">Acción</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -225,6 +282,16 @@ export default function AdminUsersPage() {
                       <td className="p-4 text-sm text-muted-foreground">
                         {new Date(user.created_at).toLocaleDateString()}
                       </td>
+                      <td className="p-4">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => openDeleteDialog(user)}
+                          className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -233,6 +300,78 @@ export default function AdminUsersPage() {
           )}
         </CardContent>
       </Card>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={deleteDialogOpen} onOpenChange={(open) => {
+        if (!isDeleting) {
+          setDeleteDialogOpen(open)
+          if (!open) setDeleteConfirmText("")
+        }
+      }}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <div className="flex items-center gap-3 mb-2">
+              <div className="bg-destructive/10 p-3 rounded-full">
+                <AlertTriangle className="w-6 h-6 text-destructive" />
+              </div>
+              <DialogTitle className="text-xl text-destructive">Eliminar Usuario</DialogTitle>
+            </div>
+            <DialogDescription className="text-base space-y-2">
+              <p>Estás a punto de eliminar permanentemente la cuenta de:</p>
+              <div className="bg-muted rounded-lg p-3 mt-2">
+                <p className="font-bold text-foreground">{userToDelete?.full_name}</p>
+                <p className="text-sm text-muted-foreground">{userToDelete?.email}</p>
+              </div>
+              <p className="text-sm text-muted-foreground mt-2">
+                Esta acción <span className="font-semibold text-destructive">no se puede deshacer</span>. Se eliminará el acceso, perfil y todos los datos asociados.
+              </p>
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-3 py-2">
+            <p className="text-sm font-medium text-foreground">
+              Escribe <span className="font-bold text-destructive">ELIMINAR</span> para confirmar:
+            </p>
+            <Input
+              value={deleteConfirmText}
+              onChange={(e) => setDeleteConfirmText(e.target.value)}
+              placeholder="ELIMINAR"
+              className="border-destructive/30 focus-visible:ring-destructive"
+              disabled={isDeleting}
+            />
+          </div>
+
+          <DialogFooter className="gap-2">
+            <Button
+              variant="outline"
+              onClick={() => {
+                setDeleteDialogOpen(false)
+                setDeleteConfirmText("")
+              }}
+              disabled={isDeleting}
+            >
+              Cancelar
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleDeleteUser}
+              disabled={deleteConfirmText.toUpperCase() !== "ELIMINAR" || isDeleting}
+            >
+              {isDeleting ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Eliminando...
+                </>
+              ) : (
+                <>
+                  <Trash2 className="w-4 h-4 mr-2" />
+                  Eliminar Usuario
+                </>
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
