@@ -1,4 +1,4 @@
-import { Lightbulb, MessageSquare, FileCheck, Truck, FileText } from "lucide-react"
+import { Lightbulb, MessageSquare, FileCheck, Truck, FileText, Link2, Package, DollarSign } from "lucide-react"
 
 export function About() {
   return (
@@ -13,9 +13,9 @@ export function About() {
         </div>
 
         <div className="grid md:grid-cols-3 gap-8">
-          <div className="bg-card border border-border rounded-lg p-8 hover:shadow-lg transition-shadow">
-            <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mb-4">
-              <span className="text-2xl">🔗</span>
+          <div className="group bg-card border border-border rounded-lg p-8 hover:border-primary hover:shadow-lg transition-all duration-300">
+            <div className="w-12 h-12 bg-primary/10 group-hover:bg-primary rounded-xl flex items-center justify-center mb-4 transition-colors duration-300">
+              <Link2 className="w-6 h-6 text-primary group-hover:text-white transition-colors duration-300" />
             </div>
             <h3 className="text-xl font-bold text-foreground mb-3">Cadena de Suministro</h3>
             <p className="text-muted-foreground">
@@ -25,9 +25,9 @@ export function About() {
             </p>
           </div>
 
-          <div className="bg-card border border-border rounded-lg p-8 hover:shadow-lg transition-shadow">
-            <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mb-4">
-              <span className="text-2xl">📦</span>
+          <div className="group bg-card border border-border rounded-lg p-8 hover:border-primary hover:shadow-lg transition-all duration-300">
+            <div className="w-12 h-12 bg-primary/10 group-hover:bg-primary rounded-xl flex items-center justify-center mb-4 transition-colors duration-300">
+              <Package className="w-6 h-6 text-primary group-hover:text-white transition-colors duration-300" />
             </div>
             <h3 className="text-xl font-bold text-foreground mb-3">Logística</h3>
             <p className="text-muted-foreground">
@@ -37,9 +37,9 @@ export function About() {
             </p>
           </div>
 
-          <div className="bg-card border border-border rounded-lg p-8 hover:shadow-lg transition-shadow">
-            <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mb-4">
-              <span className="text-2xl">💰</span>
+          <div className="group bg-card border border-border rounded-lg p-8 hover:border-primary hover:shadow-lg transition-all duration-300">
+            <div className="w-12 h-12 bg-primary/10 group-hover:bg-primary rounded-xl flex items-center justify-center mb-4 transition-colors duration-300">
+              <DollarSign className="w-6 h-6 text-primary group-hover:text-white transition-colors duration-300" />
             </div>
             <h3 className="text-xl font-bold text-foreground mb-3">Financiamiento</h3>
             <p className="text-muted-foreground">

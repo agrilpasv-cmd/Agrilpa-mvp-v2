@@ -290,482 +290,177 @@ function AuthPageContent() {
   }
 
   return (
-    <div
-      className="min-h-screen bg-cover bg-center relative"
-      style={{
-        backgroundImage: 'url("/agricultural-fields-farmer-harvest-crops-farming-c.jpg")',
-      }}
-    >
-      <div className="absolute inset-0 bg-black/50"></div>
-
-      <div className="container mx-auto px-4 py-12 relative z-10">
-        <div className="flex items-center gap-2 mb-8">
-          <Link href="/" className="flex items-center gap-2 text-white hover:text-gray-200 transition">
-            <ArrowLeft className="w-5 h-5" />
-            <span className="text-lg font-medium">Inicio</span>
+    <div className="min-h-screen flex w-full">
+      {/* Columna Izquierda (Imagen e información) - Oculta en móviles */}
+      <div className="hidden lg:flex lg:w-1/2 relative flex-col justify-between overflow-hidden">
+        {/* Capa de fondo con imagen */}
+        <div 
+          className="absolute inset-0 bg-cover bg-center"
+          style={{ backgroundImage: 'url("/agricultural-fields-farmer-harvest-crops-farming-c.jpg")' }}
+        />
+        <div className="absolute inset-0 bg-black/50" />
+        
+        {/* Contenido superior de la columna izquierda */}
+        <div className="relative z-10 p-8 xl:p-12 flex flex-col h-full justify-end">
+          <Link href="/" className="absolute top-8 left-8 xl:top-12 xl:left-12 text-white hover:text-gray-200 transition">
+            <ArrowLeft className="w-7 h-7" />
           </Link>
-        </div>
+          {/* Contenido inferior de la columna izquierda */}
+          <div className="mt-auto pb-12">
+            <div className="flex gap-8 items-end">
+              {/* Texto a la izquierda */}
+              <div className="flex-1">
+                <h2 className="text-4xl xl:text-5xl font-bold text-white mb-6 leading-tight">
+                  {isLogin 
+                    ? "Cotiza, reserva y realiza el seguimiento de tus productos en línea." 
+                    : "Conecta y expande tu negocio en el mercado agrícola global."}
+                </h2>
+                <p className="text-lg text-gray-200 leading-relaxed">
+                  {isLogin
+                    ? "Gestiona todas tus necesidades comerciales en un solo lugar. Inicia sesión para disfrutar de las ventajas del comercio digital y realiza transacciones con facilidad."
+                    : "Regístrate como vendedor o comprador y comienza a expandir tu negocio agrícola en el mercado global. Es rápido, seguro y totalmente gratuito."}
+                </p>
+              </div>
 
-        <div className="max-w-4xl mx-auto">
-          <div className="text-center mb-12">
-            <Link href="/" className="inline-flex items-center gap-2 mb-8 hover:opacity-80 transition">
-              <Image src="/logo-blanco.svg" alt="Agrilpa Logo" width={100} height={100} />
-            </Link>
-            <h1 className="text-4xl font-bold text-white mb-2">{isLogin ? "Inicia Sesión" : "Únete a Agrilpa"}</h1>
-            <p className="text-gray-100 text-lg">
-              {isLogin
-                ? "Accede a tu cuenta en la plataforma de comercio agrícola global"
-                : "Comienza a conectar con compradores y vendedores del mundo"}
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
-            <div className="bg-white rounded-2xl shadow-xl p-8 border border-gray-200">
-              {!submitted ? (
-                <form onSubmit={handleSubmit} className="space-y-6">
-                  {error && (
-                    <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">{error}</div>
-                  )}
-
-                  {!isLogin && (
-                    <div className="mb-6">
-                      <div className="flex items-center justify-between">
-                        <div
-                          className={`flex-1 h-1 rounded-full ${registrationStep >= 2 ? "bg-primary" : "bg-gray-300"}`}
-                        ></div>
-                        <div className="mx-2 text-sm font-medium text-foreground">{registrationStep}/3</div>
-                        <div
-                          className={`flex-1 h-1 rounded-full ${registrationStep >= 3 ? "bg-primary" : "bg-gray-300"}`}
-                        ></div>
-                      </div>
-                    </div>
-                  )}
-
-                  {isLogin && (
-                    <>
-                      <div>
-                        <label className="block text-sm font-medium text-foreground mb-2">Correo Electrónico</label>
-                        <div className="relative">
-                          <Mail className="absolute left-3 top-3 text-muted-foreground w-5 h-5" />
-                          <input
-                            type="email"
-                            name="email"
-                            value={formData.email}
-                            onChange={handleInputChange}
-                            placeholder="tu@email.com"
-                            className="w-full pl-10 pr-4 py-3 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary transition"
-                            required
-                          />
-                        </div>
-                      </div>
-
-                      <div>
-                        <label className="block text-sm font-medium text-foreground mb-2">Contraseña</label>
-                        <div className="relative">
-                          <Lock className="absolute left-3 top-3 text-muted-foreground w-5 h-5" />
-                          <input
-                            type={showLoginPwd ? "text" : "password"}
-                            name="password"
-                            value={formData.password}
-                            onChange={handleInputChange}
-                            placeholder="••••••••"
-                            className="w-full pl-10 pr-10 py-3 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary transition"
-                            required
-                          />
-                          <button
-                            type="button"
-                            onClick={() => setShowLoginPwd(p => !p)}
-                            className="absolute right-3 top-3 text-muted-foreground hover:text-foreground transition-colors"
-                          >
-                            {showLoginPwd ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-                          </button>
-                        </div>
-                      </div>
-
-                      <button
-                        type="submit"
-                        disabled={loading}
-                        className="w-full bg-primary text-primary-foreground font-semibold py-3 rounded-lg hover:bg-primary/90 transition flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                      >
-                        {loading ? "Iniciando..." : "Iniciar Sesión"} <ArrowRight className="w-4 h-4" />
-                      </button>
-                    </>
-                  )}
-
-                  {!isLogin && registrationStep === 1 && (
-                    <>
-                      <div>
-                        <label className="block text-sm font-medium text-foreground mb-2">Nombre Completo</label>
-                        <div className="relative">
-                          <User className="absolute left-3 top-3 text-muted-foreground w-5 h-5" />
-                          <input
-                            type="text"
-                            name="fullName"
-                            value={formData.fullName}
-                            onChange={handleInputChange}
-                            placeholder="Juan Pérez"
-                            className="w-full pl-10 pr-4 py-3 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary transition"
-                            required
-                          />
-                        </div>
-                      </div>
-
-                      <div>
-                        <label className="block text-sm font-medium text-foreground mb-2">Correo Electrónico</label>
-                        <div className="relative">
-                          <Mail className="absolute left-3 top-3 text-muted-foreground w-5 h-5" />
-                          <input
-                            type="email"
-                            name="email"
-                            value={formData.email}
-                            onChange={handleInputChange}
-                            placeholder="tu@email.com"
-                            className="w-full pl-10 pr-4 py-3 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary transition"
-                            required
-                          />
-                        </div>
-                      </div>
-
-                      <div>
-                        <label className="block text-sm font-medium text-foreground mb-2">Contraseña</label>
-                        <div className="relative">
-                          <Lock className="absolute left-3 top-3 text-muted-foreground w-5 h-5" />
-                          <input
-                            type={showRegPwd ? "text" : "password"}
-                            name="password"
-                            value={formData.password}
-                            onChange={handleInputChange}
-                            placeholder="••••••••"
-                            className="w-full pl-10 pr-10 py-3 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary transition"
-                            required
-                          />
-                          <button
-                            type="button"
-                            onClick={() => setShowRegPwd(p => !p)}
-                            className="absolute right-3 top-3 text-muted-foreground hover:text-foreground transition-colors"
-                          >
-                            {showRegPwd ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-                          </button>
-                        </div>
-                      </div>
-
-                      <div>
-                        <label className="block text-sm font-medium text-foreground mb-2">Confirmar Contraseña</label>
-                        <div className="relative">
-                          <Lock className="absolute left-3 top-3 text-muted-foreground w-5 h-5" />
-                          <input
-                            type={showRegConfirmPwd ? "text" : "password"}
-                            name="confirmPassword"
-                            value={formData.confirmPassword}
-                            onChange={handleInputChange}
-                            placeholder="••••••••"
-                            className="w-full pl-10 pr-10 py-3 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary transition"
-                            required
-                          />
-                          <button
-                            type="button"
-                            onClick={() => setShowRegConfirmPwd(p => !p)}
-                            className="absolute right-3 top-3 text-muted-foreground hover:text-foreground transition-colors"
-                          >
-                            {showRegConfirmPwd ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-                          </button>
-                        </div>
-                      </div>
-
-                      <button
-                        type="submit"
-                        className="w-full bg-primary text-primary-foreground font-semibold py-3 rounded-lg hover:bg-primary/90 transition flex items-center justify-center gap-2"
-                      >
-                        Continuar <ArrowRight className="w-4 h-4" />
-                      </button>
-                    </>
-                  )}
-
-                  {!isLogin && registrationStep === 2 && (
-                    <>
-                      <div>
-                        <label className="block text-sm font-medium text-foreground mb-4">
-                          Paso 2 de 3: Información de la Empresa
-                        </label>
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-foreground mb-2">Tipo de Usuario</label>
-                        <select
-                          name="userType"
-                          value={formData.userType}
-                          onChange={handleInputChange}
-                          className="w-full px-4 py-3 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary transition"
-                        >
-                          <option value="vendedor">Vendedor Agrícola</option>
-                          <option value="comprador">Comprador/Distribuidor</option>
-                          <option value="empresa">Empresa Industrial</option>
-                        </select>
-                      </div>
-
-                      <div>
-                        <label className="block text-sm font-medium text-foreground mb-2">Nombre de la Empresa</label>
-                        <div className="relative">
-                          <User className="absolute left-3 top-3 text-muted-foreground w-5 h-5" />
-                          <input
-                            type="text"
-                            name="companyName"
-                            value={formData.companyName}
-                            onChange={handleInputChange}
-                            placeholder="Agro Exportaciones S.A."
-                            className="w-full pl-10 pr-4 py-3 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary transition"
-                            required
-                          />
-                        </div>
-                      </div>
-
-                      <div>
-                        <label className="block text-sm font-medium text-foreground mb-2">Link de la página de su empresa (Opcional)</label>
-                        <div className="relative">
-                          <User className="absolute left-3 top-3 text-muted-foreground w-5 h-5" />
-                          <input
-                            type="text"
-                            name="companyWebsite"
-                            value={formData.companyWebsite}
-                            onChange={handleInputChange}
-                            placeholder="www.tuempresa.com"
-                            className="w-full pl-10 pr-4 py-3 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary transition"
-                          />
-                        </div>
-                      </div>
-
-                      <div>
-                        <label className="block text-sm font-medium text-foreground mb-2">País</label>
-                        <CountryPicker
-                          value={formData.country}
-                          syncPhoneCode
-                          onChange={(countryName, phoneCode) => {
-                            setFormData(prev => ({
-                              ...prev,
-                              country: countryName,
-                              ...(phoneCode ? { countryCode: phoneCode } : {}),
-                            }))
-                          }}
-                          placeholder="Selecciona tu país"
-                        />
-                      </div>
-
-                      <div>
-                        <label className="block text-sm font-medium text-foreground mb-2">Estado / Provincia</label>
-                        <div className="relative">
-                          <MapPin className="absolute left-3 top-3 text-muted-foreground w-5 h-5" />
-                          <input
-                            type="text"
-                            name="state"
-                            value={formData.state}
-                            onChange={handleInputChange}
-                            placeholder="Ej. Antioquia, Texas, San Salvador"
-                            className="w-full pl-10 pr-4 py-3 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary transition"
-                            required
-                          />
-                        </div>
-                      </div>
-
-                      <div>
-                        <label className="block text-sm font-medium text-foreground mb-2">Dirección de la Empresa</label>
-                        <div className="relative">
-                          <User className="absolute left-3 top-3 text-muted-foreground w-5 h-5" />
-                          <input
-                            type="text"
-                            name="address"
-                            value={formData.address}
-                            onChange={handleInputChange}
-                            placeholder="Calle Principal #123"
-                            className="w-full pl-10 pr-4 py-3 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary transition"
-                            required
-                          />
-                        </div>
-                      </div>
-
-                      <div>
-                        <label className="block text-sm font-medium text-foreground mb-2">Teléfono</label>
-                        <div className="flex gap-3">
-                          {/* Phone code picker — flag + dial code dropdown */}
-                          <PhoneCodePicker
-                            value={formData.countryCode}
-                            onChange={(phoneCode) =>
-                              setFormData(prev => ({ ...prev, countryCode: phoneCode }))
-                            }
-                            className="w-36 shrink-0"
-                          />
-
-                          <div className="flex-1">
-                            <div className="relative">
-                              <Phone className="absolute left-3 top-3 text-muted-foreground w-5 h-5" />
-                              <input
-                                type="text"
-                                name="phoneNumber"
-                                value={formData.phoneNumber}
-                                onChange={handlePhoneInput}
-                                inputMode="numeric"
-                                placeholder="00000000"
-                                className="w-full pl-10 pr-4 py-3 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary transition"
-                                required
-                              />
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                      <div className="flex gap-3 mt-6">
-                        <button
-                          type="button"
-                          onClick={() => setRegistrationStep(1)}
-                          className="flex-1 bg-gray-200 text-foreground font-semibold py-3 rounded-lg hover:bg-gray-300 transition flex items-center justify-center gap-2"
-                        >
-                          <ArrowLeft className="w-4 h-4" /> Volver
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            if (
-                              !formData.userType ||
-                              !formData.companyName ||
-                              !formData.country ||
-                              !formData.state ||
-                              !formData.address ||
-                              !formData.countryCode ||
-                              !formData.phoneNumber
-                            ) {
-                              setError("Por favor completa los campos requeridos antes de continuar")
-                              return
-                            }
-                            setError("")
-                            setRegistrationStep(3)
-                          }}
-                          className="flex-1 bg-primary text-primary-foreground font-semibold py-3 rounded-lg hover:bg-primary/90 transition flex items-center justify-center gap-2"
-                        >
-                          Siguiente <ArrowRight className="w-4 h-4" />
-                        </button>
-                      </div>
-                    </>
-                  )}
-
-                  {!isLogin && registrationStep === 3 && (
-                    <>
-                      {/* Step 3: Interest & Volume */}
-                      <div>
-                        <label className="block text-sm font-medium text-foreground mb-4">
-                          Paso 3 de 3: Intereses y Volumen
-                        </label>
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-foreground mb-2">Productos de Interés</label>
-                        <div className="grid grid-cols-3 gap-4">
-                          <input
-                            type="text"
-                            name="product1"
-                            value={formData.product1}
-                            onChange={handleInputChange}
-                            placeholder="ej. Algodón"
-                            className="w-full px-4 py-3 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary transition"
-                          />
-                          <input
-                            type="text"
-                            name="product2"
-                            value={formData.product2}
-                            onChange={handleInputChange}
-                            placeholder="ej. Mangos"
-                            className="w-full px-4 py-3 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary transition"
-                          />
-                          <input
-                            type="text"
-                            name="product3"
-                            value={formData.product3}
-                            onChange={handleInputChange}
-                            placeholder="ej. Fertilizantes"
-                            className="w-full px-4 py-3 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary transition"
-                          />
-                        </div>
-                      </div>
-
-                      <div>
-                        <label className="block text-sm font-medium text-foreground mb-2">Países a los que abastece o se abastece</label>
-                        <div className="grid grid-cols-3 gap-4">
-                          <input
-                            type="text"
-                            name="supplyCountry1"
-                            value={formData.supplyCountry1}
-                            onChange={handleInputChange}
-                            placeholder="ej. México"
-                            className="w-full px-4 py-3 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary transition"
-                          />
-                          <input
-                            type="text"
-                            name="supplyCountry2"
-                            value={formData.supplyCountry2}
-                            onChange={handleInputChange}
-                            placeholder="ej. Colombia"
-                            className="w-full px-4 py-3 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary transition"
-                          />
-                          <input
-                            type="text"
-                            name="supplyCountry3"
-                            value={formData.supplyCountry3}
-                            onChange={handleInputChange}
-                            placeholder="ej. Guatemala"
-                            className="w-full px-4 py-3 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary transition"
-                          />
-                        </div>
-                      </div>
-
-                      <div>
-                        <label className="block text-sm font-medium text-foreground mb-2">
-                          Volumen de Movimiento Anual <span className="text-muted-foreground font-normal">(USD $)</span>
-                        </label>
-                        <select
-                          name="volumeRange"
-                          value={formData.volumeRange}
-                          onChange={handleInputChange}
-                          className="w-full px-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary bg-background text-foreground"
-                        >
-                          <option value="">Selecciona un rango</option>
-                          <option value="0-5000">De $0 a $5,000</option>
-                          <option value="5001-50000">De $5,001 a $50,000</option>
-                          <option value="50001-250000">De $50,001 a $250,000</option>
-                          <option value="250001-500000">De $250,001 a $500,000</option>
-                          <option value="500001-1000000">De $500,001 a $1,000,000</option>
-                          <option value="1000000plus">Más de $1,000,000</option>
-                        </select>
-                      </div>
-
-                      <div className="flex gap-3">
-                        <button
-                          type="button"
-                          onClick={() => setRegistrationStep(2)}
-                          className="flex-1 bg-gray-200 text-foreground font-semibold py-3 rounded-lg hover:bg-gray-300 transition flex items-center justify-center gap-2"
-                        >
-                          <ArrowLeft className="w-4 h-4" /> Volver
-                        </button>
-                        <button
-                          type="submit"
-                          disabled={loading}
-                          className="flex-[2] bg-primary text-primary-foreground font-semibold py-3 rounded-lg hover:bg-primary/90 transition flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                          {loading ? "Creando cuenta..." : "Completar Registro"}
-                        </button>
-                      </div>
-                    </>
-                  )}
-
-                  <div className="relative">
-                    <div className="absolute inset-0 flex items-center">
-                      <div className="w-full border-t border-border"></div>
-                    </div>
-                    <div className="relative flex justify-center text-sm">
-                      <span className="px-2 bg-card text-muted-foreground">O</span>
+              {/* Caja con emojis a la derecha */}
+              <div className="bg-white/10 backdrop-blur-md rounded-2xl p-5 xl:p-6 border border-white/20 shrink-0 w-72">
+                <div className="space-y-5">
+                {[
+                  { icon: "🌍", title: "Mercado Global", description: "Acceso a compradores internacionales" },
+                  { icon: "✓", title: "Verificado", description: "Perfiles y transacciones 100% confiables" },
+                  { icon: "💰", title: "Mejores Precios", description: "Sin intermediarios, márgenes optimizados" },
+                  { icon: "📱", title: "Plataforma Digital", description: "Negocio desde cualquier dispositivo" },
+                ].map((item, index) => (
+                  <div key={index} className="flex gap-3 items-center">
+                    <div className="text-xl xl:text-2xl flex-shrink-0 w-7 text-center">{item.icon}</div>
+                    <div className="flex-1">
+                      <h4 className="font-semibold text-white text-sm">{item.title}</h4>
+                      <p className="text-xs text-gray-200">{item.description}</p>
                     </div>
                   </div>
+                ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
 
-                  <div className="text-center">
+      {/* Columna Derecha (Formulario) */}
+      <div className="w-full lg:w-1/2 flex flex-col overflow-y-auto bg-white">
+        <div className="flex-1 flex flex-col justify-center px-4 py-8 sm:px-6 lg:px-12 xl:px-24 max-w-2xl mx-auto w-full">
+          
+          {/* Logo de Agrilpa */}
+          <div className="flex justify-center mb-10">
+            <Link href="/" className="inline-block hover:opacity-80 transition">
+              <Image src="/agrilpa-logo.svg" alt="Agrilpa Logo" width={170} height={50} />
+            </Link>
+          </div>
+
+          <div className="flex items-center gap-2 mb-8 lg:hidden">
+            <Link href="/" className="flex items-center gap-2 text-foreground/70 hover:text-foreground transition">
+              <ArrowLeft className="w-5 h-5" />
+              <span className="text-sm font-medium">Volver a Inicio</span>
+            </Link>
+          </div>
+
+          <div className="mb-8">
+            <h1 className="text-3xl font-bold text-foreground">
+              {isLogin ? "Iniciar Sesión" : "Únete a Agrilpa"}
+            </h1>
+            {!isLogin && (
+              <p className="text-muted-foreground text-sm mt-2">
+                ¿Ya tienes una cuenta?{" "}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsLogin(true)
+                    setRegistrationStep(1)
+                    setError("")
+                  }}
+                  className="text-primary hover:underline font-semibold"
+                >
+                  Inicia sesión
+                </button>
+              </p>
+            )}
+          </div>
+
+          <div className="w-full">
+            {!submitted ? (
+              <form onSubmit={handleSubmit} className="space-y-5">
+                {error && (
+                  <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">{error}</div>
+                )}
+
+                {!isLogin && (
+                  <div className="mb-6">
+                    <div className="flex items-center justify-between">
+                      <div className={`flex-1 h-1 rounded-full ${registrationStep >= 2 ? "bg-primary" : "bg-gray-200"}`}></div>
+                      <div className="mx-3 text-xs font-semibold text-foreground bg-gray-100 px-2 py-1 rounded-full">{registrationStep}/3</div>
+                      <div className={`flex-1 h-1 rounded-full ${registrationStep >= 3 ? "bg-primary" : "bg-gray-200"}`}></div>
+                    </div>
+                  </div>
+                )}
+
+                {isLogin && (
+                  <>
+                    <div>
+                      <label className="block text-sm font-medium text-foreground mb-2">Correo electrónico *</label>
+                      <div className="relative">
+                        <input
+                          type="email"
+                          name="email"
+                          value={formData.email}
+                          onChange={handleInputChange}
+                          placeholder="tu@email.com"
+                          className="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition"
+                          required
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-foreground mb-2">Contraseña *</label>
+                      <div className="relative">
+                        <input
+                          type={showLoginPwd ? "text" : "password"}
+                          name="password"
+                          value={formData.password}
+                          onChange={handleInputChange}
+                          placeholder="••••••••"
+                          className="w-full pl-4 pr-10 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition"
+                          required
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowLoginPwd(p => !p)}
+                          className="absolute right-3 top-3.5 text-muted-foreground hover:text-foreground transition-colors"
+                        >
+                          {showLoginPwd ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-2 mt-2">
+                       <input type="checkbox" id="remember" className="rounded border-gray-300 text-primary focus:ring-primary w-4 h-4 cursor-pointer" />
+                       <label htmlFor="remember" className="text-sm text-foreground cursor-pointer">Acuérdate de mí</label>
+                    </div>
+
+                    <button
+                      type="submit"
+                      disabled={loading}
+                      className="w-full bg-primary text-white font-semibold py-3.5 rounded-md hover:bg-primary/90 transition flex items-center justify-center gap-2 mt-4 disabled:opacity-50 disabled:cursor-not-allowed uppercase"
+                    >
+                      {loading ? "Iniciando..." : "Iniciar Sesión"} <ArrowRight className="w-5 h-5 ml-1" />
+                    </button>
+
                     <button
                       type="button"
                       onClick={() => {
-                        setIsLogin(!isLogin)
+                        setIsLogin(false)
                         setRegistrationStep(1)
+                        setError("")
                         setFormData({
                           email: "",
                           password: "",
@@ -788,68 +483,384 @@ function AuthPageContent() {
                           address: "",
                         })
                       }}
-                      className="text-primary hover:underline font-medium"
+                      className="w-full border-2 border-primary text-primary font-semibold py-3.5 rounded-md hover:bg-primary/5 transition flex items-center justify-center gap-2 mt-3"
                     >
-                      {isLogin ? "¿No tienes cuenta? Regístrate aquí" : "¿Ya tienes cuenta? Inicia sesión aquí"}
+                      Crear Cuenta
                     </button>
-                  </div>
-                </form>
-              ) : (
-                <div className="flex flex-col items-center justify-center py-12 text-center">
-                  <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mb-4">
-                    <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center">
-                      <span className="text-primary-foreground text-2xl">✓</span>
-                    </div>
-                  </div>
-                  <h3 className="text-2xl font-bold text-foreground mb-2">
-                    {isLogin ? "¡Bienvenido!" : "¡Registro Exitoso!"}
-                  </h3>
-                  <p className="text-muted-foreground mb-6">
-                    {isLogin
-                      ? "Sesión iniciada correctamente. Redirigiendo..."
-                      : "Tu cuenta ha sido creada. Puedes iniciar sesión ahora."}
-                  </p>
-                  <div className="w-full bg-gray-200 rounded-full h-1">
-                    <div
-                      className="bg-primary h-1 rounded-full animate-pulse"
-                      style={{ animation: "pulse 1s ease-in-out infinite" }}
-                    ></div>
-                  </div>
-                </div>
-              )}
-            </div>
+                  </>
+                )}
 
-            <div className="hidden lg:block">
-              <div className="space-y-8 bg-white/10 backdrop-blur-md rounded-2xl p-8 border border-white/20">
-                <div>
-                  <h2 className="text-3xl font-bold text-white mb-4">
-                    {isLogin ? "Acceso Rápido y Seguro" : "Únete a Agrilpa"}
-                  </h2>
-                  <p className="text-gray-100 text-lg leading-relaxed">
-                    {isLogin
-                      ? "Ingresa a tu cuenta para explorar oportunidades de negocio, gestionar tus productos y conectar con compradores de todo el mundo."
-                      : "Regístrate como vendedor o comprador y comienza a expandir tu negocio agrícola en el mercado global. Es rápido, seguro y totalmente gratuito."}
-                  </p>
-                </div>
-
-                <div className="space-y-4">
-                  {[
-                    { icon: "🌍", title: "Mercado Global", description: "Acceso a compradores internacionales" },
-                    { icon: "✓", title: "Verificado", description: "Perfiles y transacciones 100% confiables" },
-                    { icon: "💰", title: "Mejores Precios", description: "Sin intermediarios, márgenes optimizados" },
-                    { icon: "📱", title: "Plataforma Digital", description: "Negocio desde cualquier dispositivo" },
-                  ].map((item, index) => (
-                    <div key={index} className="flex gap-4 items-center">
-                      <div className="text-3xl flex-shrink-0 w-8">{item.icon}</div>
-                      <div className="flex-1">
-                        <h4 className="font-semibold text-white">{item.title}</h4>
-                        <p className="text-sm text-gray-200">{item.description}</p>
+                {!isLogin && registrationStep === 1 && (
+                  <>
+                    <div>
+                      <label className="block text-sm font-medium text-foreground mb-2">Nombre Completo *</label>
+                      <div className="relative">
+                        <input
+                          type="text"
+                          name="fullName"
+                          value={formData.fullName}
+                          onChange={handleInputChange}
+                          placeholder="Juan Pérez"
+                          className="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition"
+                          required
+                        />
                       </div>
                     </div>
-                  ))}
+
+                    <div>
+                      <label className="block text-sm font-medium text-foreground mb-2">Correo Electrónico *</label>
+                      <div className="relative">
+                        <input
+                          type="email"
+                          name="email"
+                          value={formData.email}
+                          onChange={handleInputChange}
+                          placeholder="tu@email.com"
+                          className="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition"
+                          required
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-foreground mb-2">Contraseña *</label>
+                      <div className="relative">
+                        <input
+                          type={showRegPwd ? "text" : "password"}
+                          name="password"
+                          value={formData.password}
+                          onChange={handleInputChange}
+                          placeholder="••••••••"
+                          className="w-full pl-4 pr-10 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition"
+                          required
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowRegPwd(p => !p)}
+                          className="absolute right-3 top-3.5 text-muted-foreground hover:text-foreground transition-colors"
+                        >
+                          {showRegPwd ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                        </button>
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-foreground mb-2">Confirmar Contraseña *</label>
+                      <div className="relative">
+                        <input
+                          type={showRegConfirmPwd ? "text" : "password"}
+                          name="confirmPassword"
+                          value={formData.confirmPassword}
+                          onChange={handleInputChange}
+                          placeholder="••••••••"
+                          className="w-full pl-4 pr-10 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition"
+                          required
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowRegConfirmPwd(p => !p)}
+                          className="absolute right-3 top-3.5 text-muted-foreground hover:text-foreground transition-colors"
+                        >
+                          {showRegConfirmPwd ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                        </button>
+                      </div>
+                    </div>
+
+                    <button
+                      type="submit"
+                      className="w-full bg-primary text-white font-semibold py-3.5 mt-4 rounded-md hover:bg-primary/90 transition flex items-center justify-center gap-2 uppercase"
+                    >
+                      CONTINUAR <ArrowRight className="w-5 h-5 ml-2" />
+                    </button>
+                  </>
+                )}
+
+                {!isLogin && registrationStep === 2 && (
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-sm font-medium text-foreground mb-4">
+                        Paso 2 de 3: Información de la Empresa
+                      </label>
+                    </div>
+                    <div>
+                        <label className="block text-sm font-medium text-foreground mb-2">Tipo de Usuario *</label>
+                        <select
+                          name="userType"
+                          value={formData.userType}
+                          onChange={handleInputChange}
+                          className="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary transition bg-white"
+                        >
+                          <option value="vendedor">Vendedor Agrícola</option>
+                          <option value="comprador">Comprador/Distribuidor</option>
+                          <option value="empresa">Empresa Industrial</option>
+                        </select>
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-foreground mb-2">Nombre de la Empresa *</label>
+                        <div className="relative">
+                          <input
+                            type="text"
+                            name="companyName"
+                            value={formData.companyName}
+                            onChange={handleInputChange}
+                            placeholder="Agro Exportaciones S.A."
+                            className="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary transition"
+                            required
+                          />
+                        </div>
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-foreground mb-2">Página web (Opcional)</label>
+                        <div className="relative">
+                          <input
+                            type="text"
+                            name="companyWebsite"
+                            value={formData.companyWebsite}
+                            onChange={handleInputChange}
+                            placeholder="www.tuempresa.com"
+                            className="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary transition"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="w-full react-select-container">
+                        <label className="block text-sm font-medium text-foreground mb-2">País *</label>
+                        <CountryPicker
+                          value={formData.country}
+                          syncPhoneCode
+                          onChange={(countryName, phoneCode) => {
+                            setFormData(prev => ({
+                              ...prev,
+                              country: countryName,
+                              ...(phoneCode ? { countryCode: phoneCode } : {}),
+                            }))
+                          }}
+                          placeholder="Selecciona tu país"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-foreground mb-2">Estado / Provincia *</label>
+                        <div className="relative">
+                          <input
+                            type="text"
+                            name="state"
+                            value={formData.state}
+                            onChange={handleInputChange}
+                            placeholder="Ej. Antioquia, Texas, San Salvador"
+                            className="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary transition"
+                            required
+                          />
+                        </div>
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-foreground mb-2">Dirección de la Empresa *</label>
+                        <div className="relative">
+                          <input
+                            type="text"
+                            name="address"
+                            value={formData.address}
+                            onChange={handleInputChange}
+                            placeholder="Calle Principal #123"
+                            className="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary transition"
+                            required
+                          />
+                        </div>
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-foreground mb-2">Teléfono *</label>
+                        <div className="flex gap-3">
+                          <PhoneCodePicker
+                            value={formData.countryCode}
+                            onChange={(phoneCode) =>
+                              setFormData(prev => ({ ...prev, countryCode: phoneCode }))
+                            }
+                            className="w-36 shrink-0"
+                          />
+                          <div className="flex-1">
+                            <div className="relative">
+                              <input
+                                type="text"
+                                name="phoneNumber"
+                                value={formData.phoneNumber}
+                                onChange={handlePhoneInput}
+                                inputMode="numeric"
+                                placeholder="00000000"
+                                className="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary transition"
+                                required
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                    <div className="flex gap-3 pt-4">
+                      <button
+                        type="button"
+                        onClick={() => setRegistrationStep(1)}
+                        className="flex-1 bg-white border border-gray-300 text-foreground font-semibold py-3.5 rounded-md hover:bg-gray-50 flex items-center justify-center gap-2 transition"
+                      >
+                        <ArrowLeft className="w-5 h-5 mr-1" /> ATRÁS
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (
+                            !formData.userType ||
+                            !formData.companyName ||
+                            !formData.country ||
+                            !formData.state ||
+                            !formData.address ||
+                            !formData.countryCode ||
+                            !formData.phoneNumber
+                          ) {
+                            setError("Por favor completa los campos requeridos antes de continuar")
+                            return
+                          }
+                          setError("")
+                          setRegistrationStep(3)
+                        }}
+                        className="flex-[2] bg-primary text-white font-semibold py-3.5 rounded-md flex items-center justify-center gap-2 hover:bg-primary/90 transition uppercase"
+                      >
+                        SIGUIENTE<span className="hidden sm:inline"> PASO</span> <ArrowRight className="w-5 h-5 ml-1" />
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {!isLogin && registrationStep === 3 && (
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-sm font-medium text-foreground mb-4">
+                        Paso 3 de 3: Intereses y Volumen
+                      </label>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-foreground mb-2">Productos de Interés * <span className="text-muted-foreground font-normal">(Ingresa al menos 1)</span></label>
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                        <input
+                          type="text"
+                          name="product1"
+                          value={formData.product1}
+                          onChange={handleInputChange}
+                          placeholder="ej. Algodón"
+                          className="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary transition"
+                        />
+                        <input
+                          type="text"
+                          name="product2"
+                          value={formData.product2}
+                          onChange={handleInputChange}
+                          placeholder="ej. Mangos"
+                          className="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary transition"
+                        />
+                        <input
+                          type="text"
+                          name="product3"
+                          value={formData.product3}
+                          onChange={handleInputChange}
+                          placeholder="ej. Fertilizantes"
+                          className="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary transition"
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-foreground mb-2">Países de interés comercial (Opcional)</label>
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                        <input
+                          type="text"
+                          name="supplyCountry1"
+                          value={formData.supplyCountry1}
+                          onChange={handleInputChange}
+                          placeholder="ej. México"
+                          className="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary transition"
+                        />
+                        <input
+                          type="text"
+                          name="supplyCountry2"
+                          value={formData.supplyCountry2}
+                          onChange={handleInputChange}
+                          placeholder="ej. Colombia"
+                          className="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary transition"
+                        />
+                        <input
+                          type="text"
+                          name="supplyCountry3"
+                          value={formData.supplyCountry3}
+                          onChange={handleInputChange}
+                          placeholder="ej. Guatemala"
+                          className="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary transition"
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-foreground mb-2">
+                        Volumen de Movimiento Anual * <span className="text-muted-foreground font-normal">(USD $)</span>
+                      </label>
+                      <select
+                        name="volumeRange"
+                        value={formData.volumeRange}
+                        onChange={handleInputChange}
+                        className="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary bg-white transition"
+                      >
+                        <option value="">Selecciona un rango</option>
+                        <option value="0-5000">De $0 a $5,000</option>
+                        <option value="5001-50000">De $5,001 a $50,000</option>
+                        <option value="50001-250000">De $50,001 a $250,000</option>
+                        <option value="250001-500000">De $250,001 a $500,000</option>
+                        <option value="500001-1000000">De $500,001 a $1,000,000</option>
+                        <option value="1000000plus">Más de $1,000,000</option>
+                      </select>
+                    </div>
+
+                    <div className="flex gap-3 pt-4">
+                      <button
+                        type="button"
+                        onClick={() => setRegistrationStep(2)}
+                        className="flex-1 bg-white border border-gray-300 text-foreground font-semibold py-3.5 rounded-md hover:bg-gray-50 flex items-center justify-center gap-2 transition"
+                      >
+                        <ArrowLeft className="w-5 h-5 mr-1" /> ATRÁS
+                      </button>
+                      <button
+                        type="submit"
+                        disabled={loading}
+                        className="flex-[2] bg-primary text-white font-semibold py-3.5 flex items-center justify-center gap-2 rounded-md hover:bg-primary/90 transition disabled:opacity-50 disabled:cursor-not-allowed uppercase"
+                      >
+                        {loading ? "CREANDO..." : "REGISTRARSE"} <ArrowRight className="w-5 h-5 ml-1" />
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </form>
+            ) : (
+              <div className="flex flex-col items-center justify-center py-16 text-center">
+                <div className="w-16 h-16 bg-blue-50 rounded-full flex items-center justify-center mb-4">
+                  <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center">
+                    <span className="text-white text-xl font-bold">✓</span>
+                  </div>
+                </div>
+                <h3 className="text-2xl font-bold text-foreground mb-2">
+                  {isLogin ? "¡Bienvenido!" : "¡Registro Exitoso!"}
+                </h3>
+                <p className="text-muted-foreground mb-6">
+                  {isLogin
+                    ? "Sesión iniciada correctamente. Redirigiendo..."
+                    : "Tu cuenta ha sido creada. Redirigiendo a inicio de sesión..."}
+                </p>
+                <div className="w-full bg-gray-200 rounded-full h-1 max-w-xs mx-auto overflow-hidden">
+                  <div
+                    className="bg-primary h-1 rounded-full animate-pulse"
+                    style={{ animation: "pulse 1.5s ease-in-out infinite", width: "100%" }}
+                  ></div>
                 </div>
               </div>
-            </div>
+            )}
           </div>
         </div>
       </div>
