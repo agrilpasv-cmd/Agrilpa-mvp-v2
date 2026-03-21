@@ -295,10 +295,10 @@ function AuthPageContent() {
       <div className="hidden lg:flex lg:w-1/2 relative flex-col justify-between overflow-hidden">
         {/* Capa de fondo con imagen */}
         <div 
-          className="absolute inset-0 bg-cover bg-center"
-          style={{ backgroundImage: 'url("/agricultural-fields-farmer-harvest-crops-farming-c.jpg")' }}
+          className="absolute inset-0 bg-no-repeat bg-center"
+          style={{ backgroundImage: 'url("/auth-bg-cornfield.jpg")', backgroundSize: '100% 100%' }}
         />
-        <div className="absolute inset-0 bg-black/50" />
+
         
         {/* Contenido superior de la columna izquierda */}
         <div className="relative z-10 p-8 xl:p-12 flex flex-col h-full justify-end">
@@ -320,26 +320,6 @@ function AuthPageContent() {
                     ? "Gestiona todas tus necesidades comerciales en un solo lugar. Inicia sesión para disfrutar de las ventajas del comercio digital y realiza transacciones con facilidad."
                     : "Regístrate como vendedor o comprador y comienza a expandir tu negocio agrícola en el mercado global. Es rápido, seguro y totalmente gratuito."}
                 </p>
-              </div>
-
-              {/* Caja con emojis a la derecha */}
-              <div className="bg-white/10 backdrop-blur-md rounded-2xl p-5 xl:p-6 border border-white/20 shrink-0 w-72">
-                <div className="space-y-5">
-                {[
-                  { icon: "🌍", title: "Mercado Global", description: "Acceso a compradores internacionales" },
-                  { icon: "✓", title: "Verificado", description: "Perfiles y transacciones 100% confiables" },
-                  { icon: "💰", title: "Mejores Precios", description: "Sin intermediarios, márgenes optimizados" },
-                  { icon: "📱", title: "Plataforma Digital", description: "Negocio desde cualquier dispositivo" },
-                ].map((item, index) => (
-                  <div key={index} className="flex gap-3 items-center">
-                    <div className="text-xl xl:text-2xl flex-shrink-0 w-7 text-center">{item.icon}</div>
-                    <div className="flex-1">
-                      <h4 className="font-semibold text-white text-sm">{item.title}</h4>
-                      <p className="text-xs text-gray-200">{item.description}</p>
-                    </div>
-                  </div>
-                ))}
-                </div>
               </div>
             </div>
           </div>

@@ -19,11 +19,6 @@ export function ForProducers() {
       title: "Crecimiento escalable",
       description: "Crece a tu ritmo con acceso a compradores de múltiples sectores.",
     },
-    {
-      icon: Banknote,
-      title: "Financiamiento",
-      description: "Accede a opciones de financiamiento flexibles para impulsar tu producción y expandir tu negocio.",
-    },
   ]
 
   return (
@@ -76,8 +71,8 @@ export function ForProducers() {
             <div className="absolute -inset-4 bg-gradient-to-bl from-primary/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700 rounded-[2rem] blur-xl" />
             <div className="relative rounded-[2rem] overflow-hidden shadow-2xl border border-border/50 bg-background/50 rotate-1 group-hover:rotate-0 transition-transform duration-500">
               <img
-                src="/exportaci-n-de-productos-agr-colas-en-contenedores.jpg"
-                alt="Exportación agrícola"
+                src="/para-compradores-manzanas.jpg"
+                alt="Cosecha de manzanas para vendedores"
                 className="w-full h-auto object-cover transform group-hover:scale-105 transition-transform duration-700"
               />
               <div className="absolute inset-0 ring-1 ring-inset ring-black/10 rounded-[2rem]" />

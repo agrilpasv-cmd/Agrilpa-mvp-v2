@@ -11,6 +11,7 @@ import { useRouter } from "next/navigation"
 import { AuthStorage } from "@/lib/auth-storage"
 import { Hero } from "@/components/hero"
 import { About } from "@/components/about"
+import { ProductPreview } from "@/components/product-preview"
 import { ForBuyers } from "@/components/for-buyers"
 import { ForProducers } from "@/components/for-producers"
 import { Products } from "@/components/products"
@@ -131,6 +132,7 @@ export default function ComingSoon() {
         <Navbar />
         <main>
           <Hero />
+          <ProductPreview />
           <About />
           <ForBuyers />
           <ForProducers />

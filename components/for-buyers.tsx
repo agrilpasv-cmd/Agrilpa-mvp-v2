@@ -35,8 +35,8 @@ export function ForBuyers() {
             <div className="absolute -inset-4 bg-gradient-to-tr from-primary/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700 rounded-[2rem] blur-xl" />
             <div className="relative rounded-[2rem] overflow-hidden shadow-2xl border border-border/50 bg-background/50 -rotate-1 group-hover:rotate-0 transition-transform duration-500">
               <img
-                src="/compradores-mayoristas-negociando-en-mercado-agr-c.jpg"
-                alt="Compradores mayoristas"
+                src="/para-vendedores-camion.jpg"
+                alt="Camión cargado con productos agrícolas"
                 className="w-full h-auto object-cover transform group-hover:scale-105 transition-transform duration-700"
               />
               <div className="absolute inset-0 ring-1 ring-inset ring-black/10 rounded-[2rem]" />
@@ -48,8 +48,8 @@ export function ForBuyers() {
             <div className="inline-flex items-center rounded-full border px-3 py-1 text-sm font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 border-transparent bg-primary/10 text-primary hover:bg-primary/20 mb-6">
               Para Compradores
             </div>
-            <h2 className="text-3xl md:text-5xl font-extrabold text-foreground mb-6 tracking-tight leading-tight">
-              Para compradores
+            <h2 className="text-3xl md:text-4xl font-extrabold text-foreground mb-6 tracking-tight leading-tight">
+              Abastecimiento inteligente sin intermediarios
             </h2>
             <p className="text-lg md:text-xl text-muted-foreground mb-10 leading-relaxed">
               Sourcing directo de productos agrícolas de calidad. Conecta con vendedores verificados y accede a mejores
