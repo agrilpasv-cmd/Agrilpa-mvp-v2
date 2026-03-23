@@ -1,6 +1,9 @@
+"use client"
+
 import { Button } from "@/components/ui/button"
 import { Search, Zap, Lock, ArrowRight } from 'lucide-react'
 import Link from "next/link"
+import { motion } from "framer-motion"
 
 export function ForBuyers() {
   const benefits = [
@@ -31,7 +34,13 @@ export function ForBuyers() {
         <div className="grid md:grid-cols-2 gap-12 lg:gap-20 items-center">
 
           {/* Image Column */}
-          <div className="relative group order-2 md:order-1">
+          <motion.div 
+            initial={{ opacity: 0, x: -50 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true, margin: "-50px" }}
+            transition={{ duration: 0.7, ease: "easeOut" }}
+            className="relative group order-2 md:order-1"
+          >
             <div className="absolute -inset-4 bg-gradient-to-tr from-primary/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700 rounded-[2rem] blur-xl" />
             <div className="relative rounded-[2rem] overflow-hidden shadow-2xl border border-border/50 bg-background/50 -rotate-1 group-hover:rotate-0 transition-transform duration-500">
               <img
@@ -41,10 +50,16 @@ export function ForBuyers() {
               />
               <div className="absolute inset-0 ring-1 ring-inset ring-black/10 rounded-[2rem]" />
             </div>
-          </div>
+          </motion.div>
 
           {/* Content Column */}
-          <div className="order-1 md:order-2 flex flex-col items-start">
+          <motion.div 
+            initial={{ opacity: 0, x: 50 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true, margin: "-50px" }}
+            transition={{ duration: 0.7, ease: "easeOut" }}
+            className="order-1 md:order-2 flex flex-col items-start"
+          >
             <div className="inline-flex items-center rounded-full border px-3 py-1 text-sm font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 border-transparent bg-primary/10 text-primary hover:bg-primary/20 mb-6">
               Para Compradores
             </div>
@@ -77,7 +92,7 @@ export function ForBuyers() {
                 <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
               </Button>
             </Link>
-          </div>
+          </motion.div>
         </div>
       </div>
     </section>

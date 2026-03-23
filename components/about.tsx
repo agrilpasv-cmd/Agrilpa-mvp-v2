@@ -1,19 +1,34 @@
+"use client"
+
 import { Lightbulb, MessageSquare, FileCheck, Truck, FileText, Link2, Package, DollarSign } from "lucide-react"
+import { motion } from "framer-motion"
 
 export function About() {
   return (
     <section id="sobre" className="py-20 md:py-28 bg-background">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center mb-16">
+        <motion.div 
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-50px" }}
+          transition={{ duration: 0.6 }}
+          className="text-center mb-16"
+        >
           <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">Sobre Agrilpa</h2>
           <p className="text-lg text-muted-foreground max-w-3xl mx-auto">
             Somos la plataforma digital que revoluciona el comercio agrícola global eliminando intermediarios
             innecesarios y creando conexiones directas entre vendedores y compradores.
           </p>
-        </div>
+        </motion.div>
 
         <div className="grid md:grid-cols-3 gap-8">
-          <div className="group bg-card border border-border rounded-lg p-8 hover:border-primary hover:shadow-lg transition-all duration-300">
+          <motion.div 
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5, delay: 0.1 }}
+            className="group bg-card border border-border rounded-lg p-8 hover:border-primary hover:shadow-lg transition-all duration-300"
+          >
             <div className="w-12 h-12 bg-primary/10 group-hover:bg-primary rounded-xl flex items-center justify-center mb-4 transition-colors duration-300">
               <Link2 className="w-6 h-6 text-primary group-hover:text-white transition-colors duration-300" />
             </div>
@@ -23,9 +38,15 @@ export function About() {
               productores, distribuidores y compradores en un ecosistema conectado que garantiza trazabilidad, calidad y
               eficiencia en todo el proceso comercial.
             </p>
-          </div>
+          </motion.div>
 
-          <div className="group bg-card border border-border rounded-lg p-8 hover:border-primary hover:shadow-lg transition-all duration-300">
+          <motion.div 
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5, delay: 0.2 }}
+            className="group bg-card border border-border rounded-lg p-8 hover:border-primary hover:shadow-lg transition-all duration-300"
+          >
             <div className="w-12 h-12 bg-primary/10 group-hover:bg-primary rounded-xl flex items-center justify-center mb-4 transition-colors duration-300">
               <Package className="w-6 h-6 text-primary group-hover:text-white transition-colors duration-300" />
             </div>
@@ -35,9 +56,15 @@ export function About() {
               certificados fitosanitarios, tiempos de envío y opciones de empaque desde una plataforma centralizada que
               te brinda control completo y visibilidad en tiempo real.
             </p>
-          </div>
+          </motion.div>
 
-          <div className="group bg-card border border-border rounded-lg p-8 hover:border-primary hover:shadow-lg transition-all duration-300">
+          <motion.div 
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5, delay: 0.3 }}
+            className="group bg-card border border-border rounded-lg p-8 hover:border-primary hover:shadow-lg transition-all duration-300"
+          >
             <div className="w-12 h-12 bg-primary/10 group-hover:bg-primary rounded-xl flex items-center justify-center mb-4 transition-colors duration-300">
               <DollarSign className="w-6 h-6 text-primary group-hover:text-white transition-colors duration-300" />
             </div>
@@ -47,7 +74,7 @@ export function About() {
               mercado para decisiones estratégicas. Trabaja con nosotros para mejorar tu proceso de abastecimiento y
               mantener ventaja competitiva con análisis de precios y tendencias.
             </p>
-          </div>
+          </motion.div>
         </div>
 
         <div className="mt-16 relative overflow-hidden rounded-2xl border border-primary/20 bg-gradient-to-br from-[#e8f0d8] via-[#edf3e0] to-[#e2eed4]">
@@ -63,7 +90,13 @@ export function About() {
           {/* Brand-color glow top-right */}
           <div className="absolute -top-20 -right-20 w-64 h-64 bg-primary/10 rounded-full blur-3xl pointer-events-none" />
 
-          <div className="relative grid md:grid-cols-2 gap-10 items-center p-8 md:p-14">
+          <motion.div 
+            initial={{ opacity: 0, y: 40 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-50px" }}
+            transition={{ duration: 0.7 }}
+            className="relative grid md:grid-cols-2 gap-10 items-center p-8 md:p-14"
+          >
             {/* ── LEFT: text column ── */}
             <div>
               {/* Badge */}
@@ -141,7 +174,7 @@ export function About() {
                 />
               </div>
             </div>
-          </div>
+          </motion.div>
         </div>
       </div>
     </section>

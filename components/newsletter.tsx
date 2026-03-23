@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { CheckCircle2, Leaf } from "lucide-react"
 import { useState, useEffect } from "react"
+import { motion } from "framer-motion"
 
 export function Newsletter() {
   const [email, setEmail] = useState("")
@@ -101,7 +102,13 @@ export function Newsletter() {
       <div className="absolute top-0 right-0 w-96 h-96 bg-primary/5 rounded-full blur-3xl -z-10" />
       <div className="absolute bottom-0 left-0 w-96 h-96 bg-emerald-500/5 rounded-full blur-3xl -z-10" />
 
-      <div className="container max-w-2xl mx-auto relative z-10">
+      <motion.div 
+        initial={{ opacity: 0, y: 40 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, margin: "-50px" }}
+        transition={{ duration: 0.7 }}
+        className="container max-w-2xl mx-auto relative z-10"
+      >
         {isSubscribed ? (
           <div className="flex items-center justify-center gap-3 animate-in fade-in slide-in-from-bottom-2 duration-300">
             <CheckCircle2 className="w-7 h-7 text-emerald-600" />
@@ -154,7 +161,7 @@ export function Newsletter() {
             </p>
           </div>
         )}
-      </div>
+      </motion.div>
     </section>
   )
 }

@@ -4,6 +4,7 @@ import type React from "react"
 
 import { Card } from "@/components/ui/card"
 import { useRef, useState } from "react"
+import { motion } from "framer-motion"
 
 export function SuccessStories() {
   const testimonials = [
@@ -166,12 +167,18 @@ export function SuccessStories() {
     <section className="py-16 md:py-24 bg-muted/30 overflow-hidden">
       {/* Header */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-12">
-        <div className="text-center">
+        <motion.div 
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-50px" }}
+          transition={{ duration: 0.6 }}
+          className="text-center"
+        >
           <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">Lo que Dicen Nuestros Clientes</h2>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
             Testimonios reales de granjas, industrias y empresas que han alcanzado nuevos mercados con Agrilpa
           </p>
-        </div>
+        </motion.div>
       </div>
 
       {/* Full width slider */}
