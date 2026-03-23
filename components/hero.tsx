@@ -57,14 +57,13 @@ export function Hero() {
       {/* Video Background */}
       <video
         ref={videoRef}
+        src="https://res.cloudinary.com/dvdz0yhuh/video/upload/v1774293524/184808-874264370_medium_p3dznv.mp4"
         autoPlay
         loop
         muted
         playsInline
         className="absolute inset-0 w-full h-full object-cover"
-      >
-        <source src={process.env.NEXT_PUBLIC_CLOUDINARY_URL || "/hero-video.mp4"} type="video/mp4" />
-      </video>
+      />
 
       {/* Video Overlay: 25% oscuro izquierda → 0% difuminado derecha */}
       <div className="absolute inset-0 bg-gradient-to-r from-black/25 via-black/10 to-transparent pointer-events-none" />
