@@ -41,7 +41,7 @@ export function Products() {
               transition={{ duration: 0.4, delay: i * 0.1 }}
             >
               <Card
-                className="bg-card/80 backdrop-blur-sm border border-border/50 rounded-3xl p-8 hover:border-primary/50 hover:shadow-[0_24px_48px_rgba(0,0,0,0.06)] hover:-translate-y-2 transition-all duration-500 cursor-pointer text-center h-full flex flex-col justify-center"
+                className="bg-white dark:bg-card border-0 shadow-[0_4px_24px_rgba(0,0,0,0.07)] rounded-3xl p-8 hover:shadow-[0_12px_40px_rgba(0,0,0,0.12)] hover:-translate-y-2 transition-all duration-500 cursor-pointer text-center h-full flex flex-col justify-center"
               >
                 <p className="text-5xl mb-4">{product.icon}</p>
                 <h3 className="text-lg font-bold text-foreground mb-2">{product.name}</h3>

@@ -89,10 +89,10 @@ export function Navbar() {
 
   return (
     <nav className="sticky top-0 z-50 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-16">
+      <div className="px-6 lg:px-10">
+        <div className="flex justify-between items-center h-20">
           <Link href="/" className="flex items-center space-x-2">
-            <Image src="/agrilpa-logo.svg" alt="Agrilpa Logo" width={100} height={100} priority />
+            <Image src="/agrilpa-logo.svg" alt="Agrilpa Logo" width={130} height={130} priority />
           </Link>
 
           {/* Desktop Menu */}
@@ -101,7 +101,7 @@ export function Navbar() {
               <Link
                 key={link.href}
                 href={link.href}
-                className="px-3 py-2 text-sm font-medium text-foreground hover:text-primary transition-colors"
+                className="px-4 py-2 text-base font-medium text-foreground hover:text-primary transition-colors"
               >
                 {link.label}
               </Link>
@@ -136,7 +136,7 @@ export function Navbar() {
             ) : (
               <>
                 <Link href="/auth">
-                  <Button variant="outline" size="sm">
+                  <Button variant="outline" size="default">
                     Iniciar sesión
                   </Button>
                 </Link>
@@ -151,7 +151,7 @@ export function Navbar() {
                       </div>
                     </div>
                   )}
-                  <Button size="sm" className="bg-primary hover:bg-primary/90 shadow-lg shadow-primary/20">
+                  <Button size="default" className="bg-primary hover:bg-primary/90 shadow-lg shadow-primary/20">
                     Crear Cuenta
                   </Button>
                 </Link>

@@ -1,26 +1,26 @@
 "use client"
 
 import { Button } from "@/components/ui/button"
-import { TrendingUp, DollarSign, Globe, Banknote, ArrowRight } from "lucide-react"
+import { TrendingUp, Globe, Megaphone, ArrowRight } from "lucide-react"
 import Link from "next/link"
 import { motion } from "framer-motion"
 
 export function ForProducers() {
   const benefits = [
     {
-      icon: DollarSign,
-      title: "Mejores precios",
-      description: "Elimina intermediarios y accede a precios justos directamente de compradores mayoristas.",
+      icon: Megaphone,
+      title: "Exposición Directa",
+      description: "Haz que tu inventario sea visto por industrias mayoristas sin necesidad de intermediarios.",
     },
     {
       icon: Globe,
       title: "Mercados globales",
-      description: "Expande tu negocio a más de 50 países sin necesidad de importadores.",
+      description: "Expande tu negocio a compradores internacionales sin necesidad de importadores.",
     },
     {
       icon: TrendingUp,
       title: "Crecimiento escalable",
-      description: "Crece a tu ritmo con acceso a compradores de múltiples sectores.",
+      description: "Crece a tu ritmo con acceso a compradores de múltiples sectores e industrias.",
     },
   ]
 

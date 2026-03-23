@@ -1,6 +1,6 @@
 "use client"
 
-import { Lightbulb, MessageSquare, FileCheck, Truck, FileText, Link2, Package, DollarSign } from "lucide-react"
+import { Globe, MessageSquare, ShieldCheck, Lightbulb, FileCheck, Truck, FileText } from "lucide-react"
 import { motion } from "framer-motion"
 
 export function About() {
@@ -30,13 +30,11 @@ export function About() {
             className="group bg-card/80 backdrop-blur-sm border border-border/50 rounded-3xl p-10 hover:border-primary/50 hover:shadow-[0_24px_48px_rgba(0,0,0,0.06)] hover:-translate-y-2 transition-all duration-500"
           >
             <div className="w-12 h-12 bg-primary/10 group-hover:bg-primary rounded-xl flex items-center justify-center mb-4 transition-colors duration-300">
-              <Link2 className="w-6 h-6 text-primary group-hover:text-white transition-colors duration-300" />
+              <Globe className="w-6 h-6 text-primary group-hover:text-white transition-colors duration-300" />
             </div>
-            <h3 className="text-xl font-bold text-foreground mb-3">Cadena de Suministro</h3>
+            <h3 className="text-xl font-bold text-foreground mb-3">Visibilidad Global</h3>
             <p className="text-muted-foreground">
-              Optimizamos cada eslabón de la cadena desde el origen hasta el destino final. Nuestra plataforma integra
-              productores, distribuidores y compradores en un ecosistema conectado que garantiza trazabilidad, calidad y
-              eficiencia en todo el proceso comercial.
+              Publica tus productos y llega a una red de compradores verificados de todo el mundo sin salir de la plataforma.
             </p>
           </motion.div>
 
@@ -48,13 +46,11 @@ export function About() {
             className="group bg-card/80 backdrop-blur-sm border border-border/50 rounded-3xl p-10 hover:border-primary/50 hover:shadow-[0_24px_48px_rgba(0,0,0,0.06)] hover:-translate-y-2 transition-all duration-500"
           >
             <div className="w-12 h-12 bg-primary/10 group-hover:bg-primary rounded-xl flex items-center justify-center mb-4 transition-colors duration-300">
-              <Package className="w-6 h-6 text-primary group-hover:text-white transition-colors duration-300" />
+              <MessageSquare className="w-6 h-6 text-primary group-hover:text-white transition-colors duration-300" />
             </div>
-            <h3 className="text-xl font-bold text-foreground mb-3">Logística</h3>
+            <h3 className="text-xl font-bold text-foreground mb-3">Negociación Directa</h3>
             <p className="text-muted-foreground">
-              Coordinamos el transporte, empaque y toda la documentación necesaria con máxima eficiencia. Consulta
-              certificados fitosanitarios, tiempos de envío y opciones de empaque desde una plataforma centralizada que
-              te brinda control completo y visibilidad en tiempo real.
+              Gestiona tus tratos, envía y recibe cotizaciones sin salir de la plataforma. Directo entre vendedor y comprador.
             </p>
           </motion.div>
 
@@ -66,13 +62,11 @@ export function About() {
             className="group bg-card/80 backdrop-blur-sm border border-border/50 rounded-3xl p-10 hover:border-primary/50 hover:shadow-[0_24px_48px_rgba(0,0,0,0.06)] hover:-translate-y-2 transition-all duration-500"
           >
             <div className="w-12 h-12 bg-primary/10 group-hover:bg-primary rounded-xl flex items-center justify-center mb-4 transition-colors duration-300">
-              <DollarSign className="w-6 h-6 text-primary group-hover:text-white transition-colors duration-300" />
+              <ShieldCheck className="w-6 h-6 text-primary group-hover:text-white transition-colors duration-300" />
             </div>
-            <h3 className="text-xl font-bold text-foreground mb-3">Financiamiento</h3>
+            <h3 className="text-xl font-bold text-foreground mb-3">Seguridad en Identidad</h3>
             <p className="text-muted-foreground">
-              Accede a soluciones de financiamiento adaptadas a tus necesidades y obtén información actualizada del
-              mercado para decisiones estratégicas. Trabaja con nosotros para mejorar tu proceso de abastecimiento y
-              mantener ventaja competitiva con análisis de precios y tendencias.
+              Validamos los perfiles de empresas para que puedas negociar con confianza en cada transacción.
             </p>
           </motion.div>
         </div>
@@ -106,15 +100,13 @@ export function About() {
               </span>
 
               <h3 className="text-2xl md:text-4xl font-extrabold text-foreground leading-tight mb-5">
-                Agrilpa la plataforma B2B que impulsa el{" "}
-                <span className="text-primary">comercio agrícola global</span>
+                Tu centro de control{" "}
+                <span className="text-primary">agrícola.</span>
               </h3>
 
               <p className="text-muted-foreground text-base md:text-lg leading-relaxed mb-8">
-                Conectamos a vendedores, distribuidores y compradores internacionales en un ecosistema digital confiable
-                y eficiente. En Agrilpa, facilitamos transacciones seguras, transparentes y sostenibles, eliminando las
-                barreras tradicionales del comercio agrícola y optimizando la cadena de suministro, promoviendo el
-                crecimiento del sector a nivel mundial.
+                Administra tus operaciones comerciales en un solo lugar: publicaciones, cotizaciones y contactos, todo
+                integrado para que puedas enfocarte en crecer.
               </p>
 
               <p className="text-foreground font-semibold text-sm uppercase tracking-widest mb-4 opacity-50">
@@ -125,28 +117,28 @@ export function About() {
                 {[
                   {
                     Icon: Lightbulb,
-                    title: "Descubre oportunidades",
-                    desc: "Explora una amplia oferta de productos agrícolas listos para la venta local o exportación.",
+                    title: "Administra tus publicaciones",
+                    desc: "Crea, edita y gestiona tu catálogo de productos de forma sencilla desde el dashboard.",
                   },
                   {
                     Icon: MessageSquare,
-                    title: "Negocia directamente",
-                    desc: "Envía cotizaciones, compara precios y contacta con vendedores o compradores en pocos clics.",
+                    title: "Cotizaciones en tiempo real",
+                    desc: "Recibe alertas de nuevas cotizaciones y responde a compradores directamente desde la plataforma.",
                   },
                   {
                     Icon: FileCheck,
-                    title: "Asegura tus acuerdos",
-                    desc: "Gestiona contratos de forma digital con soporte y verificación en cada paso.",
-                  },
-                  {
-                    Icon: Truck,
-                    title: "Optimiza la logística",
-                    desc: "Visualiza opciones de transporte, costos y tiempos de entrega sin complicaciones.",
+                    title: "Contacto directo garantizado",
+                    desc: "Contacta directamente a compradores y vendedores interesados sin intermediarios.",
                   },
                   {
                     Icon: FileText,
-                    title: "Centraliza tu documentación",
-                    desc: "Toda la información comercial y de exportación en un solo espacio accesible y confiable.",
+                    title: "Perfil de empresa verificado",
+                    desc: "Completa y gestiona tu perfil empresarial para generar confianza ante compradores y vendedores.",
+                  },
+                  {
+                    Icon: Truck,
+                    title: "Directorio de proveedores",
+                    desc: "Explora y filtra empresas agrícolas por categoría, región o producto para encontrar al aliado ideal.",
                   },
                 ].map(({ Icon, title, desc }, i) => (
                   <li

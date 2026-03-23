@@ -64,11 +64,11 @@ export function ForBuyers() {
               Para Compradores
             </div>
             <h2 className="text-3xl md:text-4xl font-extrabold text-foreground mb-6 tracking-tight leading-tight">
-              Abastecimiento inteligente sin intermediarios
+              Sourcing inteligente y directo
             </h2>
             <p className="text-lg md:text-xl text-muted-foreground mb-10 leading-relaxed">
-              Sourcing directo de productos agrícolas de calidad. Conecta con vendedores verificados y accede a mejores
-              precios y volúmenes.
+              Encuentra proveedores agrícolas de confianza, solicita cotizaciones y cierra acuerdos directamente
+              desde la fuente.
             </p>
 
             <div className="grid sm:grid-cols-2 gap-4 mb-10 w-full">

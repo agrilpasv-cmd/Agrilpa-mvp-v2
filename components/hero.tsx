@@ -86,8 +86,8 @@ export function Hero() {
 
           {/* Description */}
           <motion.p variants={itemVariants} className="text-base sm:text-lg text-white/90 leading-relaxed max-w-xl">
-            Agrilpa elimina intermediarios y conecta directamente a vendedores agrícolas con compradores mayoristas e
-            industrias de todo el mundo, optimizando la cadena de suministro global.
+            La plataforma B2B para promocionar tus productos agrícolas y negociar directamente con compradores
+            internacionales. Sin intermediarios, sin complicaciones.
           </motion.p>
 
           {/* Buttons */}
@@ -95,39 +95,32 @@ export function Hero() {
             <Button
               size="lg"
               onClick={handleVenderClick}
-              className="bg-primary hover:bg-primary/90 text-white font-semibold px-8 h-14 rounded-2xl shadow-lg hover:shadow-primary/25 hover:-translate-y-1 transition-all duration-300 text-base"
+              className="bg-primary hover:bg-primary/85 text-white font-bold px-10 h-14 rounded-2xl shadow-[0_0_32px_rgba(139,198,70,0.35)] hover:shadow-[0_0_48px_rgba(139,198,70,0.5)] hover:-translate-y-1 transition-all duration-300 text-base"
             >
               Vender mis productos
             </Button>
             <Link href="/productos">
-              <Button
-                size="lg"
-                className="bg-black hover:bg-black/80 text-white border border-white/10 font-semibold px-8 h-14 rounded-2xl shadow-lg hover:-translate-y-1 transition-all duration-300 text-base"
+              <span
+                className="relative inline-flex items-center justify-center px-8 h-14 rounded-2xl font-semibold text-base text-white cursor-pointer select-none overflow-hidden group hover:-translate-y-1 transition-transform duration-300"
+                style={{ WebkitBackdropFilter: "blur(8px)", backdropFilter: "blur(8px)" }}
               >
-                Buscar Proveedores
-              </Button>
+                {/* Glass tint — barely visible, just a light wash */}
+                <span className="absolute inset-0 rounded-2xl bg-white/8 group-hover:bg-white/12 transition-colors duration-400" />
+                {/* Outer border ring */}
+                <span className="absolute inset-0 rounded-2xl ring-1 ring-inset ring-white/30 group-hover:ring-white/50 transition-all duration-300" />
+                {/* Top edge — sharp reflective shine */}
+                <span className="absolute inset-x-4 top-0 h-[1.5px] bg-gradient-to-r from-transparent via-white/80 to-transparent" />
+                {/* Inner highlight — top half glow */}
+                <span className="absolute inset-x-0 top-0 h-1/2 rounded-t-2xl bg-gradient-to-b from-white/12 to-transparent pointer-events-none" />
+                {/* Hover shimmer sweep */}
+                <span className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 bg-gradient-to-br from-white/18 via-transparent to-transparent pointer-events-none" />
+                {/* Label */}
+                <span className="relative z-10 drop-shadow-sm">Buscar Proveedores</span>
+              </span>
             </Link>
           </motion.div>
 
-          {/* Stats Card */}
-          <motion.div variants={itemVariants} className="mt-14 p-6 sm:px-12 sm:py-8 rounded-[2rem] bg-transparent shadow-[0_24px_48px_rgba(0,0,0,0.25)] hover:shadow-[0_32px_64px_rgba(0,0,0,0.3)] hover:-translate-y-2 transition-all duration-500 flex flex-wrap items-center gap-8 sm:gap-16 w-fit relative overflow-hidden group">
-            <div className="absolute inset-0 backdrop-blur-md border border-white/10 group-hover:bg-white/10 pointer-events-none bg-white/5 transition-colors duration-500" />
-            
-            <div className="flex flex-col relative z-10">
-              <span className="text-4xl font-bold text-white mb-1 tracking-tight">3K+</span>
-              <span className="text-sm text-gray-300 font-medium tracking-wide">Vendedores verificados</span>
-            </div>
-            
-            <div className="flex flex-col relative z-10">
-              <span className="text-4xl font-bold text-white mb-1 tracking-tight">10+</span>
-              <span className="text-sm text-gray-300 font-medium tracking-wide">Países conectados</span>
-            </div>
 
-            <div className="flex flex-col relative z-10">
-              <span className="text-4xl font-bold text-white mb-1 tracking-tight">$10M+</span>
-              <span className="text-sm text-gray-300 font-medium tracking-wide">Volumen transaccionado</span>
-            </div>
-          </motion.div>
 
         </motion.div>
       </div>
