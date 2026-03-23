@@ -15,7 +15,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import { ChatOverlay } from "@/components/chat-overlay"
-import { Star, MapPin, MessageCircle, Check, ChevronLeft, FileText, ShoppingCart, Copy, Calendar, Package, Loader } from "lucide-react"
+import { Star, MapPin, MessageCircle, Check, ChevronLeft, FileText, ShoppingCart, Copy, Calendar, Package, Loader, AlertCircle } from "lucide-react"
 import { getProductBySlug, getProductsByCategory, allProducts } from "@/lib/products-data"
 import { createClient } from "@/lib/supabase/client"
 
@@ -64,7 +64,11 @@ export default function ProductPage() {
   const shouldFetch = isValidId(slug) && !staticProduct
   const [isLoading, setIsLoading] = useState(shouldFetch)
   const [notFoundError, setNotFoundError] = useState(false)
+  const [dynamicRelatedProducts, setDynamicRelatedProducts] = useState<any[]>([])
+
   const [isChatOpen, setIsChatOpen] = useState(false)
+  const [isAuthDialogOpen, setIsAuthDialogOpen] = useState(false)
+  const [authDialogAction, setAuthDialogAction] = useState("")
   const [isContactDialogOpen, setIsContactDialogOpen] = useState(false)
   const [isQuotationDialogOpen, setIsQuotationDialogOpen] = useState(false)
   const [isSubmittingQuotation, setIsSubmittingQuotation] = useState(false)
@@ -92,6 +96,35 @@ export default function ProductPage() {
     console.log('staticProduct:', !!staticProduct)
 
     window.scrollTo(0, 0)
+
+    // Fetch dynamic products for related section
+    fetch('/api/products/get-user-products', { cache: 'no-store' })
+      .then(res => res.json())
+      .then(data => {
+        if (data.products) {
+          const transformed = data.products.map((p: any) => ({
+             id: p.id,
+             name: p.title,
+             category: p.category,
+             description: p.description,
+             seller: p.company_name || "Productor Local",
+             location: p.country,
+             price: p.price,
+             quantity: p.quantity,
+             rating: 4.5,
+             reviews: 0,
+             minOrder: p.min_order || "N/A",
+             image: p.image || "/placeholder.svg",
+             slug: p.id,
+             verified: false,
+             contactMethod: p.contact_method,
+             contactInfo: p.contact_info,
+             vendorId: p.user_id
+          }))
+          setDynamicRelatedProducts(transformed.filter((p: any) => p.id !== slug))
+        }
+      })
+      .catch(console.error)
 
     if (isValidId(slug)) {
       console.log('Fetching user product...')
@@ -215,23 +248,35 @@ export default function ProductPage() {
     }
   }
 
-  const sameCategoryProducts = getProductsByCategory(product?.category || "")
-    .filter((p) => p.id !== product?.id)
-    .slice(0, 3)
+  const normalize = (str: string) => str?.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase() || ""
+  const currentName = normalize(product?.name || "")
 
-  // Fallback: if no same-category products, show random products from other categories
-  const relatedProducts = sameCategoryProducts.length > 0
-    ? sameCategoryProducts
-    : allProducts
-      .filter((p) => p.id !== product?.id)
-      .sort(() => Math.random() - 0.5)
-      .slice(0, 3)
+  const sameNameProducts = dynamicRelatedProducts
+    .filter((p) => {
+      const pName = normalize(p.name)
+      return (pName && currentName.includes(pName)) || (currentName && pName.includes(currentName))
+    })
 
-  const relatedTitle = sameCategoryProducts.length > 0
+  const sameCategoryProducts = dynamicRelatedProducts
+    .filter((p) => p.category === product?.category && !sameNameProducts.includes(p))
+
+  const otherProducts = dynamicRelatedProducts
+    .filter((p) => !sameNameProducts.includes(p) && !sameCategoryProducts.includes(p))
+    .sort(() => Math.random() - 0.5)
+
+  const relatedProducts = [...sameNameProducts, ...sameCategoryProducts, ...otherProducts].slice(0, 3)
+
+  const relatedTitle = (sameNameProducts.length > 0 || sameCategoryProducts.length > 0)
     ? "Productos relacionados"
     : "Otros productos que te pueden interesar"
 
   const handleContactVendor = () => {
+    if (!currentUserId) {
+      setAuthDialogAction("contactar al vendedor")
+      setIsAuthDialogOpen(true)
+      return
+    }
+
     console.log(`[v0] handleContactVendor called for: ${product.name}`)
     const contactMethod = (product as any).contactMethod
     const contactInfo = (product as any).contactInfo
@@ -281,6 +326,11 @@ export default function ProductPage() {
   }
 
   const handleBuy = () => {
+    if (!currentUserId) {
+      setAuthDialogAction("comprar este producto")
+      setIsAuthDialogOpen(true)
+      return
+    }
     router.push(`/compra/${slug}`)
   }
 
@@ -402,40 +452,63 @@ export default function ProductPage() {
     if (contactMethod === "WhatsApp" && countryCode && phoneNumber) {
       const message = encodeURIComponent(`Hola vi tu producto "${product.name}" en la plataforma Agrilpa, y estoy interesado.`)
       return (
-        <a
-          href={`https://wa.me/${countryCode}${phoneNumber}?text=${message}`}
-          target="_blank"
-          rel="noopener noreferrer"
+        <button
+          onClick={(e) => {
+            e.preventDefault()
+            e.stopPropagation()
+            if (!currentUserId) {
+              setAuthDialogAction("contactar al vendedor")
+              setIsAuthDialogOpen(true)
+            } else {
+              window.open(`https://wa.me/${countryCode}${phoneNumber}?text=${message}`, '_blank')
+              trackContactClick("whatsapp")
+            }
+          }}
           className={`flex items-center justify-center gap-2 text-sm bg-[#25D366] hover:bg-[#128C7E] text-white font-semibold rounded-md transition-colors ${className}`}
-          onClick={() => trackContactClick("whatsapp")}
         >
           <MessageCircle className="w-5 h-5" />
           Contactar Vendedor
-        </a>
+        </button>
       )
     } else if (contactMethod === "Email" && contactInfo) {
       return (
-        <a
-          href={`mailto:${contactInfo}`}
+        <button
+          onClick={(e) => {
+            e.preventDefault()
+            e.stopPropagation()
+            if (!currentUserId) {
+              setAuthDialogAction("contactar al vendedor")
+              setIsAuthDialogOpen(true)
+            } else {
+              window.open(`mailto:${contactInfo}`, '_blank')
+              trackContactClick("email")
+            }
+          }}
           className={`flex items-center justify-center gap-2 text-sm bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-md transition-colors ${className}`}
-          onClick={() => trackContactClick("email")}
         >
           <FileText className="w-5 h-5" />
           Contactar Vendedor
-        </a>
+        </button>
       )
     } else if (contactMethod === "Telegram" && contactInfo) {
       return (
-        <a
-          href={`https://t.me/${contactInfo}`}
-          target="_blank"
-          rel="noopener noreferrer"
+        <button
+          onClick={(e) => {
+            e.preventDefault()
+            e.stopPropagation()
+            if (!currentUserId) {
+              setAuthDialogAction("contactar al vendedor")
+              setIsAuthDialogOpen(true)
+            } else {
+              window.open(`https://t.me/${contactInfo}`, '_blank')
+              trackContactClick("telegram")
+            }
+          }}
           className={`flex items-center justify-center gap-2 text-sm bg-[#0088cc] hover:bg-[#007dbd] text-white font-semibold rounded-md transition-colors ${className}`}
-          onClick={() => trackContactClick("telegram")}
         >
           <FileText className="w-5 h-5" />
           Contactar Vendedor
-        </a>
+        </button>
       )
     }
     return (
@@ -589,7 +662,14 @@ export default function ProductPage() {
                   {product.price === "Por Cotizar" ? (
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       <Button
-                        onClick={() => setIsQuotationDialogOpen(true)}
+                        onClick={() => {
+                          if (!currentUserId) {
+                            setAuthDialogAction("solicitar una cotización")
+                            setIsAuthDialogOpen(true)
+                          } else {
+                            setIsQuotationDialogOpen(true)
+                          }
+                        }}
                         className="w-full bg-primary hover:bg-primary/90 text-white h-14 flex items-center justify-center gap-2"
                       >
                         <FileText className="w-5 h-5" />
@@ -608,7 +688,14 @@ export default function ProductPage() {
                       </Button>
                       {specificContactButton("w-full h-14")}
                       <Button
-                        onClick={() => setIsQuotationDialogOpen(true)}
+                        onClick={() => {
+                          if (!currentUserId) {
+                            setAuthDialogAction("solicitar una cotización")
+                            setIsAuthDialogOpen(true)
+                          } else {
+                            setIsQuotationDialogOpen(true)
+                          }
+                        }}
                         className="w-full bg-secondary hover:bg-secondary/90 text-foreground h-14 flex items-center justify-center gap-2 border border-border"
                       >
                         <FileText className="w-5 h-5" />
@@ -704,10 +791,10 @@ export default function ProductPage() {
                     </div>
                     <div className="p-4 flex-1 flex flex-col">
                       <h3 className="font-bold text-foreground mb-2">{relProduct.name}</h3>
-                      <p className="text-sm text-muted-foreground mb-3 flex-1">{relProduct.description}</p>
-                      <div className="flex items-center justify-between">
+                      <p className="text-sm text-muted-foreground mb-3 flex-1 line-clamp-2">{relProduct.description?.split("---")[0]}</p>
+                      <div className="flex items-center justify-between mt-auto pt-2">
                         <span className="font-bold text-primary">
-                          {relProduct.price?.includes('$') ? relProduct.price : `$${relProduct.price}`}
+                          {relProduct.price === "Por Cotizar" ? "Por Cotizar" : (relProduct.price?.includes('$') ? relProduct.price : `$${relProduct.price}`)}
                         </span>
                         <div className="flex items-center gap-1">
                           <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
@@ -1187,6 +1274,35 @@ export default function ProductPage() {
           )}
         </DialogContent>
       </Dialog>
-    </div >
+      {/* Auth Guard Dialog */}
+      <Dialog open={isAuthDialogOpen} onOpenChange={setIsAuthDialogOpen}>
+        <DialogContent className="sm:max-w-md text-center">
+          <DialogHeader className="flex flex-col items-center gap-2">
+            <div className="bg-primary/10 p-3 rounded-full mb-2">
+              <AlertCircle className="w-8 h-8 text-primary" />
+            </div>
+            <DialogTitle className="text-xl">Inicia sesión requerida</DialogTitle>
+            <DialogDescription className="text-center text-base pt-2">
+              Para {authDialogAction}, primero debes iniciar sesión o registrarte en Agrilpa.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-3 py-4 mt-2">
+            <Button
+              className="w-full bg-primary hover:bg-primary/90 text-white h-12 text-lg font-semibold"
+              onClick={() => router.push("/auth")}
+            >
+              Iniciar sesión
+            </Button>
+            <Button
+              variant="outline"
+              className="w-full h-12 text-lg font-semibold"
+              onClick={() => router.push("/auth")}
+            >
+              Registrarse
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </div>
   )
 }

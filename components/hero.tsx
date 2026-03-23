@@ -6,9 +6,19 @@ import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { motion, Variants } from "framer-motion"
 import { AuthStorage } from "@/lib/auth-storage"
+import { useEffect, useRef } from "react"
 
 export function Hero() {
   const router = useRouter()
+  const videoRef = useRef<HTMLVideoElement>(null)
+
+  useEffect(() => {
+    if (videoRef.current) {
+      videoRef.current.defaultMuted = true
+      videoRef.current.muted = true
+      videoRef.current.play().catch(e => console.log("Autoplay did not start:", e))
+    }
+  }, [])
 
   const handleVenderClick = () => {
     const session = AuthStorage.getSession()
@@ -46,13 +56,14 @@ export function Hero() {
     <section className="relative w-full min-h-screen flex items-center overflow-hidden">
       {/* Video Background */}
       <video
+        ref={videoRef}
         autoPlay
         loop
         muted
         playsInline
         className="absolute inset-0 w-full h-full object-cover"
       >
-        <source src="/hero-video.mp4" type="video/mp4" />
+        <source src={process.env.NEXT_PUBLIC_CLOUDINARY_URL || "/hero-video.mp4"} type="video/mp4" />
       </video>
 
       {/* Video Overlay: 25% oscuro izquierda → 0% difuminado derecha */}
