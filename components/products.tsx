@@ -41,20 +41,20 @@ export function Products() {
               transition={{ duration: 0.4, delay: i * 0.1 }}
             >
               <Card
-                className="bg-card border border-border rounded-lg p-6 hover:border-primary/50 hover:shadow-lg transition-all cursor-pointer text-center h-full"
+                className="bg-card/80 backdrop-blur-sm border border-border/50 rounded-3xl p-8 hover:border-primary/50 hover:shadow-[0_24px_48px_rgba(0,0,0,0.06)] hover:-translate-y-2 transition-all duration-500 cursor-pointer text-center h-full flex flex-col justify-center"
               >
-                <p className="text-4xl mb-3">{product.icon}</p>
-                <h3 className="font-bold text-foreground mb-2">{product.name}</h3>
-                <p className="text-sm text-muted-foreground">{product.description}</p>
+                <p className="text-5xl mb-4">{product.icon}</p>
+                <h3 className="text-lg font-bold text-foreground mb-2">{product.name}</h3>
+                <p className="text-sm text-muted-foreground leading-relaxed">{product.description}</p>
               </Card>
             </motion.div>
           ))}
         </div>
 
-        <div className="flex justify-center mt-12">
+        <div className="flex justify-center mt-16">
           <a href="/productos">
-            <button className="bg-primary hover:bg-primary/90 text-white font-semibold py-3 px-8 rounded-lg transition-colors">
-              Ver más
+            <button className="bg-primary hover:bg-primary/90 text-white font-semibold py-4 px-10 rounded-2xl shadow-lg hover:shadow-primary/25 hover:-translate-y-1 transition-all duration-300">
+              Explorar Catálogo
             </button>
           </a>
         </div>

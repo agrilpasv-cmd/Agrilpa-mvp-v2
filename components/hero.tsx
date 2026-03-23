@@ -95,14 +95,14 @@ export function Hero() {
             <Button
               size="lg"
               onClick={handleVenderClick}
-              className="bg-primary hover:bg-primary/90 text-white font-semibold px-8 h-12 rounded-lg transition-transform hover:scale-105"
+              className="bg-primary hover:bg-primary/90 text-white font-semibold px-8 h-14 rounded-2xl shadow-lg hover:shadow-primary/25 hover:-translate-y-1 transition-all duration-300 text-base"
             >
               Vender mis productos
             </Button>
             <Link href="/productos">
               <Button
                 size="lg"
-                className="bg-black hover:bg-black/80 text-white border border-white/10 font-semibold px-8 h-12 rounded-lg transition-transform hover:scale-105"
+                className="bg-black hover:bg-black/80 text-white border border-white/10 font-semibold px-8 h-14 rounded-2xl shadow-lg hover:-translate-y-1 transition-all duration-300 text-base"
               >
                 Buscar Proveedores
               </Button>
@@ -110,8 +110,8 @@ export function Hero() {
           </motion.div>
 
           {/* Stats Card */}
-          <motion.div variants={itemVariants} className="mt-12 p-6 sm:px-10 sm:py-7 rounded-3xl bg-transparent shadow-[0_8px_32px_rgba(0,0,0,0.2)] flex flex-wrap items-center gap-8 sm:gap-16 w-fit relative overflow-hidden">
-            <div className="absolute inset-0 backdrop-blur-md border border-white/10 rounded-3xl pointer-events-none bg-white/5" />
+          <motion.div variants={itemVariants} className="mt-14 p-6 sm:px-12 sm:py-8 rounded-[2rem] bg-transparent shadow-[0_24px_48px_rgba(0,0,0,0.25)] hover:shadow-[0_32px_64px_rgba(0,0,0,0.3)] hover:-translate-y-2 transition-all duration-500 flex flex-wrap items-center gap-8 sm:gap-16 w-fit relative overflow-hidden group">
+            <div className="absolute inset-0 backdrop-blur-md border border-white/10 group-hover:bg-white/10 pointer-events-none bg-white/5 transition-colors duration-500" />
             
             <div className="flex flex-col relative z-10">
               <span className="text-4xl font-bold text-white mb-1 tracking-tight">3K+</span>

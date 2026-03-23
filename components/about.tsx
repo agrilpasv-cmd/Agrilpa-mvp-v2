@@ -27,7 +27,7 @@ export function About() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.5, delay: 0.1 }}
-            className="group bg-card border border-border rounded-lg p-8 hover:border-primary hover:shadow-lg transition-all duration-300"
+            className="group bg-card/80 backdrop-blur-sm border border-border/50 rounded-3xl p-10 hover:border-primary/50 hover:shadow-[0_24px_48px_rgba(0,0,0,0.06)] hover:-translate-y-2 transition-all duration-500"
           >
             <div className="w-12 h-12 bg-primary/10 group-hover:bg-primary rounded-xl flex items-center justify-center mb-4 transition-colors duration-300">
               <Link2 className="w-6 h-6 text-primary group-hover:text-white transition-colors duration-300" />
@@ -45,7 +45,7 @@ export function About() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.5, delay: 0.2 }}
-            className="group bg-card border border-border rounded-lg p-8 hover:border-primary hover:shadow-lg transition-all duration-300"
+            className="group bg-card/80 backdrop-blur-sm border border-border/50 rounded-3xl p-10 hover:border-primary/50 hover:shadow-[0_24px_48px_rgba(0,0,0,0.06)] hover:-translate-y-2 transition-all duration-500"
           >
             <div className="w-12 h-12 bg-primary/10 group-hover:bg-primary rounded-xl flex items-center justify-center mb-4 transition-colors duration-300">
               <Package className="w-6 h-6 text-primary group-hover:text-white transition-colors duration-300" />
@@ -63,7 +63,7 @@ export function About() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.5, delay: 0.3 }}
-            className="group bg-card border border-border rounded-lg p-8 hover:border-primary hover:shadow-lg transition-all duration-300"
+            className="group bg-card/80 backdrop-blur-sm border border-border/50 rounded-3xl p-10 hover:border-primary/50 hover:shadow-[0_24px_48px_rgba(0,0,0,0.06)] hover:-translate-y-2 transition-all duration-500"
           >
             <div className="w-12 h-12 bg-primary/10 group-hover:bg-primary rounded-xl flex items-center justify-center mb-4 transition-colors duration-300">
               <DollarSign className="w-6 h-6 text-primary group-hover:text-white transition-colors duration-300" />
@@ -77,7 +77,7 @@ export function About() {
           </motion.div>
         </div>
 
-        <div className="mt-16 relative overflow-hidden rounded-2xl border border-primary/20 bg-gradient-to-br from-[#e8f0d8] via-[#edf3e0] to-[#e2eed4]">
+        <div className="mt-20 relative overflow-hidden rounded-[2.5rem] border border-primary/20 bg-gradient-to-br from-[#e8f0d8] via-[#edf3e0] to-[#e2eed4] shadow-[0_24px_48px_rgba(0,0,0,0.06)]">
           {/* Subtle grid texture overlay */}
           <div
             className="absolute inset-0 opacity-[0.04]"

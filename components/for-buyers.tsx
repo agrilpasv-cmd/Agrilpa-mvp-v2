@@ -75,9 +75,9 @@ export function ForBuyers() {
               {benefits.map((benefit, idx) => {
                 const Icon = benefit.icon
                 return (
-                  <div key={idx} className="group p-5 rounded-2xl bg-background border border-border/50 hover:border-primary/50 hover:shadow-md transition-all duration-300">
-                    <div className="mb-4 inline-flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-primary dark:bg-primary/20 group-hover:bg-primary group-hover:text-white transition-colors duration-300">
-                      <Icon className="h-5 w-5" />
+                  <div key={idx} className="group p-6 rounded-3xl bg-background/80 backdrop-blur-sm border border-border/50 hover:border-primary/50 hover:shadow-[0_24px_48px_rgba(0,0,0,0.06)] hover:-translate-y-1 transition-all duration-500">
+                    <div className="mb-4 inline-flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 text-primary dark:bg-primary/20 group-hover:bg-primary group-hover:text-white transition-colors duration-300">
+                      <Icon className="h-6 w-6" />
                     </div>
                     <h3 className="font-bold text-foreground mb-2 group-hover:text-primary transition-colors">{benefit.title}</h3>
                     <p className="text-muted-foreground text-sm leading-relaxed">{benefit.description}</p>
@@ -87,7 +87,7 @@ export function ForBuyers() {
             </div>
 
             <Link href="/auth" className="w-full sm:w-auto">
-              <Button size="lg" className="w-full sm:w-auto bg-primary hover:bg-primary/90 text-primary-foreground group px-8 py-6 text-base shadow-lg hover:shadow-primary/25 transition-all">
+              <Button size="lg" className="w-full sm:w-auto bg-primary hover:bg-primary/90 text-primary-foreground group px-8 py-7 rounded-2xl text-base shadow-lg hover:shadow-primary/25 transition-all">
                 Unirse como comprador
                 <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
               </Button>

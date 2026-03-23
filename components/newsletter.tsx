@@ -133,7 +133,7 @@ export function Newsletter() {
               </p>
             </div>
 
-            <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row gap-3 max-w-lg mx-auto w-full">
+            <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row gap-4 max-w-lg mx-auto w-full">
               <div className="flex-1 relative">
                 <Input
                   type="email"
@@ -142,10 +142,10 @@ export function Newsletter() {
                   onChange={(e) => setEmail(e.target.value)}
                   required
                   disabled={isSubmitting}
-                  className="bg-background/50 border-2 border-border/50 hover:border-primary/30 focus:border-primary transition-colors h-12 text-base"
+                  className="bg-background/80 backdrop-blur-[2px] border-2 border-border/50 hover:border-primary/30 focus:border-primary transition-all h-14 rounded-2xl text-base shadow-sm"
                 />
               </div>
-              <Button type="submit" disabled={isSubmitting} className="h-12 px-8 font-semibold text-base">
+              <Button type="submit" disabled={isSubmitting} className="h-14 px-8 font-semibold text-base rounded-2xl shadow-lg hover:shadow-primary/25 hover:-translate-y-1 transition-all duration-300">
                 {isSubmitting ? "Enviando..." : "Suscribirse"}
               </Button>
             </form>

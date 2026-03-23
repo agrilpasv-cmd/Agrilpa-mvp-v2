@@ -198,10 +198,10 @@ export function SuccessStories() {
             {allTestimonials.map((testimonial, index) => (
               <Card
                 key={`testimonial-${index}`}
-                className="min-w-[380px] max-w-[380px] p-4 bg-background hover:shadow-lg transition-shadow flex-shrink-0"
+                className="min-w-[400px] max-w-[400px] p-8 bg-background/80 backdrop-blur-sm border border-border/50 rounded-3xl hover:shadow-[0_24px_48px_rgba(0,0,0,0.06)] hover:-translate-y-2 transition-all duration-500 flex-shrink-0"
               >
-                <div className="flex items-start gap-3 mb-2">
-                  <div className="flex-shrink-0 w-12 h-12 rounded-lg overflow-hidden bg-muted">
+                <div className="flex items-start gap-4 mb-4">
+                  <div className="flex-shrink-0 w-14 h-14 rounded-2xl overflow-hidden bg-muted">
                     <img
                       src={testimonial.logo || "/placeholder.svg"}
                       alt={`${testimonial.company} logo`}
@@ -215,9 +215,9 @@ export function SuccessStories() {
                     </p>
                   </div>
                 </div>
-                <p className="text-sm text-foreground mb-2 leading-snug">{testimonial.quote}</p>
-                <div className="pt-2 border-t">
-                  <span className="inline-block px-2 py-0.5 bg-primary/10 text-primary text-xs font-semibold rounded-full">
+                <p className="text-base text-foreground mb-4 leading-relaxed line-clamp-3">"{testimonial.quote}"</p>
+                <div className="pt-4 border-t border-border/50">
+                  <span className="inline-block px-3 py-1 bg-primary/10 text-primary text-xs font-bold uppercase tracking-wider rounded-xl">
                     {testimonial.achievement}
                   </span>
                 </div>
