@@ -112,7 +112,7 @@ export function Navbar() {
             {isLoggedIn ? (
               <>
                 <Link href={getPanelUrl()}>
-                  <Button size="sm" className="gap-2 bg-primary hover:bg-primary/90 text-white relative">
+                  <Button className="text-base font-medium px-4 py-2 gap-2 bg-primary hover:bg-primary/90 text-white relative">
                     <User className="h-4 w-4" />
                     Panel
                     {notificationCount > 0 && (
@@ -125,8 +125,7 @@ export function Navbar() {
                 </Link>
                 <Button
                   variant="outline"
-                  size="sm"
-                  className="gap-2 hover:bg-red-500 hover:text-white hover:border-red-500 active:bg-red-600 bg-transparent"
+                  className="text-base font-medium px-4 py-2 gap-2 hover:bg-red-500 hover:text-white hover:border-red-500 active:bg-red-600 bg-transparent"
                   onClick={handleLogout}
                 >
                   <LogOut className="h-4 w-4" />

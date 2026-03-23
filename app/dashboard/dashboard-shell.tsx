@@ -140,25 +140,24 @@ export default function DashboardShell({
         <div className="min-h-screen bg-background">
             {/* Navbar */}
             <nav className="sticky top-0 z-50 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="flex justify-between items-center h-16">
+                <div className="px-6 lg:px-10">
+                    <div className="flex justify-between items-center h-20">
                         <Link href="/" className="flex items-center space-x-2">
-                            <Image src="/agrilpa-logo.svg" alt="Agrilpa Logo" width={100} height={100} priority />
+                            <Image src="/agrilpa-logo.svg" alt="Agrilpa Logo" width={130} height={130} priority />
                         </Link>
 
                         <div className="hidden md:flex items-center space-x-3">
                             <Link href="/dashboard/perfil">
-                                <Button variant="ghost" size="sm">
+                                <Button variant="ghost" className="text-base font-medium px-4 py-2">
                                     Mi Perfil
                                 </Button>
                             </Link>
                             <Button
                                 variant="outline"
-                                size="sm"
                                 onClick={handleLogout}
-                                className="hover:bg-red-500 hover:text-white hover:border-red-500 active:bg-red-600 bg-transparent"
+                                className="text-base font-medium px-4 py-2 gap-2 hover:bg-red-500 hover:text-white hover:border-red-500 active:bg-red-600 bg-transparent"
                             >
-                                <LogOut className="w-4 h-4 mr-2" />
+                                <LogOut className="w-4 h-4" />
                                 Cerrar Sesión
                             </Button>
                         </div>
@@ -212,7 +211,7 @@ export default function DashboardShell({
                 </aside>
 
                 {/* Main Content */}
-                <main className="flex-1 overflow-auto">{children}</main>
+                <main className="flex-1 overflow-auto bg-[#f5f7f5]">{children}</main>
             </div>
         </div>
     )

@@ -40,6 +40,15 @@ export async function GET() {
             process.env.SUPABASE_SERVICE_ROLE_KEY!
         )
 
+        // Fetch User Profile for Company Name
+        const { data: profile } = await supabaseAdmin
+            .from("users")
+            .select("full_name, company_name")
+            .eq("id", userId)
+            .single()
+            
+        const companyName = profile?.company_name || profile?.full_name || "Usuario"
+
         // Date reference for 7 day window
         const sevenDaysAgo = new Date()
         sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7)
@@ -257,6 +266,7 @@ export async function GET() {
 
         // Return unified structure
         return NextResponse.json({
+            companyName,
             activityType,
             seller: {
                 quotes_received_7d: sellerQuotes7d,

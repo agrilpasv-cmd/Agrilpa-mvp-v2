@@ -25,7 +25,7 @@ export function ForProducers() {
   ]
 
   return (
-    <section id="vendedores" className="py-20 md:py-32 relative overflow-hidden bg-muted/30">
+    <section id="vendedores" className="py-20 md:py-32 relative overflow-hidden bg-background">
       {/* Decorative background blobs */}
       <div className="absolute top-1/2 left-0 -mt-40 -ml-20 w-96 h-96 rounded-full bg-primary/5 blur-3xl pointer-events-none" />
       <div className="absolute bottom-0 right-0 -mb-20 -mr-20 w-80 h-80 rounded-full bg-primary/5 blur-3xl pointer-events-none" />
