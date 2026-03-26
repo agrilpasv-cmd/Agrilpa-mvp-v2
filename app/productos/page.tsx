@@ -7,6 +7,7 @@ import { Card } from "@/components/ui/card"
 import { Search, Filter, Star, MapPin, MessageCircle, X, AlertCircle } from "lucide-react"
 import { allProducts } from "@/lib/products-data"
 import { createClient } from "@/lib/supabase/client"
+import { PRODUCT_CATEGORIES } from "@/lib/constants"
 import { useToast } from "@/hooks/use-toast"
 import {
   Dialog,
@@ -74,18 +75,7 @@ export default function ProductosPage() {
 
   const categories = [
     "todos",
-    "Frutas",
-    "Verduras",
-    "Cereales",
-    "Semillas",
-    "Café",
-    "Cacao",
-    "Caña de azúcar",
-    "Algodón",
-    "Plaguicidas",
-    "Fertilizantes",
-    "Herbicidas",
-    "Forraje",
+    ...PRODUCT_CATEGORIES
   ]
 
   const countries = [

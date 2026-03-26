@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { Textarea } from "@/components/ui/textarea"
 import { ArrowLeft, Check, Loader, X, Plus } from "lucide-react"
+import { PRODUCT_CATEGORIES } from "@/lib/constants"
 
 export default function EditarPublicacionPage({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = use(params)
@@ -341,15 +342,9 @@ export default function EditarPublicacionPage({ params }: { params: Promise<{ id
                   required
                 >
                   <option value="">Selecciona una categoría</option>
-                  <option value="Frutas">Frutas</option>
-                  <option value="Verduras">Verduras</option>
-                  <option value="Café">Café</option>
-                  <option value="Cacao">Cacao</option>
-                  <option value="Cereales">Cereales</option>
-                  <option value="Especias">Especias</option>
-                  <option value="Lácteos">Lácteos</option>
-                  <option value="Aceites">Aceites</option>
-                  <option value="Otros">Otros</option>
+                  {PRODUCT_CATEGORIES.map((cat) => (
+                    <option key={cat} value={cat}>{cat}</option>
+                  ))}
                 </select>
               </div>
             </div>

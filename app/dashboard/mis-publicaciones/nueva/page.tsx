@@ -13,6 +13,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { ArrowLeft, Check, Loader, X, Plus } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 import { v4 as uuidv4 } from "uuid"
+import { PRODUCT_CATEGORIES } from "@/lib/constants"
 import { useDashboard } from "../../context"
 
 const exportRequirementsByCountry: Record<string, Array<{ name: string; description: string }>> = {
@@ -380,15 +381,9 @@ export default function NuevaPublicacionPage() {
                   required
                 >
                   <option value="">Selecciona una categoría</option>
-                  <option value="Frutas">Frutas</option>
-                  <option value="Verduras">Verduras</option>
-                  <option value="Café">Café</option>
-                  <option value="Cacao">Cacao</option>
-                  <option value="Cereales">Cereales</option>
-                  <option value="Especias">Especias</option>
-                  <option value="Lácteos">Lácteos</option>
-                  <option value="Aceites">Aceites</option>
-                  <option value="Otros">Otros</option>
+                  {PRODUCT_CATEGORIES.map((cat) => (
+                    <option key={cat} value={cat}>{cat}</option>
+                  ))}
                 </select>
               </div>
             </div>

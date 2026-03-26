@@ -4,6 +4,7 @@ import { useState, useEffect } from "react"
 import Link from "next/link"
 import { PlusCircle, Search, Monitor, MessageSquare, Users, Eye, CheckCircle2, CircleAlert, TrendingUp } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { motion, Variants } from "framer-motion"
 import {
     LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip,
     ResponsiveContainer, Cell, PieChart, Pie
@@ -164,21 +165,39 @@ export function UserDashboard() {
     const topProducts = [...performance].sort((a: any, b: any) => b.vistas - a.vistas).slice(0, 5)
     const maxViews = topProducts.length > 0 ? Math.max(...topProducts.map((p: any) => p.vistas)) : 1
 
+    const containerVariants: Variants = {
+        hidden: { opacity: 0 },
+        show: {
+            opacity: 1,
+            transition: { staggerChildren: 0.1 }
+        }
+    }
+
+    const itemVariants: Variants = {
+        hidden: { opacity: 0, y: 30 },
+        show: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 300, damping: 24 } }
+    }
+
     return (
         <div className="min-h-screen bg-[#f5f7f5]">
-            <div className="w-full px-6 lg:px-8 py-8 space-y-6">
+            <motion.div 
+                className="w-full px-6 lg:px-8 py-8 space-y-6"
+                variants={containerVariants}
+                initial="hidden"
+                animate="show"
+            >
 
                 {/* ── Page title ── */}
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <motion.div variants={itemVariants} className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                     <div>
                         <h1 className="text-2xl font-bold text-foreground">
                             Bienvenido a tu dashboard, <span className="text-primary">{companyName || 'Usuario'}</span>
                         </h1>
                     </div>
-                </div>
+                </motion.div>
 
                 {/* ══════ ROW 1: KPI Cards ══════ */}
-                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-5">
+                <motion.div variants={itemVariants} className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-5">
                     {kpis.map((kpi, i) => {
                         const Icon = kpi.icon
                         return (
@@ -207,10 +226,10 @@ export function UserDashboard() {
                             </div>
                         )
                     })}
-                </div>
+                </motion.div>
 
                 {/* ══════ ROW 2: Line Chart + Donut Chart ══════ */}
-                <div className="grid grid-cols-1 lg:grid-cols-5 gap-5">
+                <motion.div variants={itemVariants} className="grid grid-cols-1 lg:grid-cols-5 gap-5">
 
                     {/* Left: Line chart */}
                     <div className="lg:col-span-3 bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
@@ -295,10 +314,10 @@ export function UserDashboard() {
                             </div>
                         )}
                     </div>
-                </div>
+                </motion.div>
 
                 {/* ══════ ROW 3: Recent Quotes Table + Top Products ══════ */}
-                <div className="grid grid-cols-1 lg:grid-cols-5 gap-5">
+                <motion.div variants={itemVariants} className="grid grid-cols-1 lg:grid-cols-5 gap-5">
 
                     {/* Left: Actividad Reciente */}
                     <div className="lg:col-span-3 bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
@@ -372,8 +391,8 @@ export function UserDashboard() {
                         </div>
                     </div>
 
-                </div>
-            </div>
+                </motion.div>
+            </motion.div>
         </div>
     )
 }
