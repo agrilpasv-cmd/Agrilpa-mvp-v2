@@ -28,6 +28,7 @@ export default function NewsletterPage() {
     const [content, setContent] = useState("")
     const [contentMode, setContentMode] = useState<ContentMode>("text")
     const [showPreview, setShowPreview] = useState(false)
+    const [includeGreeting, setIncludeGreeting] = useState(true)
 
     const [recipientMode, setRecipientMode] = useState<RecipientMode>("all")
     const [specificEmail, setSpecificEmail] = useState("")
@@ -110,7 +111,7 @@ export default function NewsletterPage() {
             : content.replace(/\n/g, "<br>")  // plain text: convert newlines
 
         try {
-            const body: Record<string, any> = { subject, content: htmlForEmail, rawHtml: contentMode === "html" }
+            const body: Record<string, any> = { subject, content: htmlForEmail, rawHtml: contentMode === "html", includeGreeting }
             if (recipientMode === "specific") {
                 body.specificEmail = specificEmail
             } else if (recipientMode === "selected") {
@@ -151,9 +152,24 @@ export default function NewsletterPage() {
 
     // Build the preview HTML (for the preview panel)
     const previewHtml = useMemo(() => {
-        if (contentMode === "html") return content
-        return content.split("\n").map(l => `<p style="margin:0 0 12px 0">${l || "&nbsp;"}</p>`).join("")
-    }, [content, contentMode])
+        let bodyHtml = ""
+        if (contentMode === "html") {
+            bodyHtml = content
+        } else {
+            bodyHtml = content.split("\n").map(l => `<p style="margin:0 0 12px 0">${l || "&nbsp;"}</p>`).join("")
+        }
+
+        const greetingHtml = includeGreeting
+            ? `<p>Hola <strong>{{nombre_del_usuario}}</strong>,</p>`
+            : '';
+
+        return `
+            ${greetingHtml}
+            <div style="margin-top: ${includeGreeting ? '20px' : '0'};">
+                ${bodyHtml}
+            </div>
+        `
+    }, [content, contentMode, includeGreeting])
 
     return (
         <div className="space-y-6 p-6 max-w-5xl">
@@ -314,6 +330,22 @@ export default function NewsletterPage() {
                         />
                     </div>
 
+                    {/* ── Options ─────────────────────────────────────────────── */}
+                    <div className="space-y-3 p-4 bg-muted/30 rounded-lg border">
+                        <Label className="text-sm font-medium">Opciones adicionales</Label>
+                        <label className="flex items-center gap-2 cursor-pointer mt-1">
+                            <input
+                                type="checkbox"
+                                checked={includeGreeting}
+                                onChange={(e) => setIncludeGreeting(e.target.checked)}
+                                className="accent-primary w-4 h-4"
+                            />
+                            <span className="text-sm">
+                                Incluir saludo automático <span className="text-muted-foreground italic">(Hola nombre,)</span>
+                            </span>
+                        </label>
+                    </div>
+
                     {/* ── Content Mode Toggle ──────────────────────────────────── */}
                     <div className="space-y-3">
                         <div className="flex items-center justify-between">
@@ -371,7 +403,7 @@ export default function NewsletterPage() {
                                     id="content"
                                     placeholder={
                                         contentMode === "html"
-                                            ? "<h2>Título del correo</h2>\n<p>Hola <strong>{{nombre}}</strong>,</p>\n<p>Tu mensaje aquí...</p>"
+                                            ? "<h2>Título del correo</h2>\n<p>Tu mensaje aquí...</p>"
                                             : "Escribe aquí el contenido del correo...\n\nPuedes usar varias líneas para separar párrafos."
                                     }
                                     value={content}

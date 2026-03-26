@@ -245,18 +245,24 @@ export async function sendNewsletterEmail({
     recipientName,
     subject,
     htmlContent,
+    includeGreeting = true,
 }: {
     recipientEmail: string
     recipientName: string
     subject: string
     htmlContent: string
+    includeGreeting?: boolean
 }) {
     try {
         const resend = getResendClient()
 
+        const greetingHtml = includeGreeting 
+            ? `<p>Hola <strong>${recipientName}</strong>,</p>` 
+            : '';
+
         const content = `
-            <p>Hola <strong>${recipientName}</strong>,</p>
-            <div style="margin-top: 20px;">
+            ${greetingHtml}
+            <div style="margin-top: ${includeGreeting ? '20px' : '0'};">
                 ${htmlContent}
             </div>
         `
@@ -275,6 +281,53 @@ export async function sendNewsletterEmail({
         return { success: true, data }
     } catch (err: any) {
         console.error('[Email] Failed to send newsletter:', err)
+        return { success: false, error: { message: err.message } }
+    }
+}
+
+/**
+ * Send welcome email to a newly registered user
+ */
+export async function sendWelcomeEmail({
+    recipientEmail,
+    recipientName,
+}: {
+    recipientEmail: string
+    recipientName: string
+}) {
+    try {
+        const resend = getResendClient()
+
+        const content = `
+            <p>Hola <strong>${recipientName}</strong>,</p>
+            <p style="font-size: 18px; color: ${THEME.primary}; font-weight: 600;">¡Bienvenido a Agrilpa! 🌱</p>
+            
+            <p>Nos alegra tenerte en la <strong>plataforma agrícola global</strong> líder en compra y venta de productos agrícolas.</p>
+            
+            <p>En Agrilpa podrás:</p>
+            <ul style="color: #4b5563; padding-left: 20px; text-align: left; display: inline-block;">
+                <li style="margin-bottom: 8px;">🛒 <strong>Comprar y vender</strong> productos agrícolas de interés en todo el mundo.</li>
+                <li style="margin-bottom: 8px;">🤝 <strong>Negociar y cotizar</strong> directamente y sin intermediarios.</li>
+                <li style="margin-bottom: 8px;">🌍 <strong>Comunicarte</strong> de forma segura con compradores y proveedores globales.</li>
+            </ul>
+            
+            <p>Estamos aquí para ayudarte a impulsar tu agro-negocio al siguiente nivel. ¡Explora el mercado hoy mismo!</p>
+        `
+
+        const { data, error } = await resend.emails.send({
+            from: FROM_EMAIL,
+            to: recipientEmail,
+            subject: '🌱 ¡Bienvenido a Agrilpa! Tu mercado agrícola global',
+            html: getMinimalistTemplate('¡Bienvenido a la comunidad Agrilpa!', content, { text: 'Ir al Panel de Control', url: 'https://agrilpa.com/dashboard' }),
+        })
+
+        if (error) {
+            console.error('[Email] Error sending welcome email:', error)
+            return { success: false, error }
+        }
+        return { success: true, data }
+    } catch (err: any) {
+        console.error('[Email] Failed to send welcome email:', err)
         return { success: false, error: { message: err.message } }
     }
 }

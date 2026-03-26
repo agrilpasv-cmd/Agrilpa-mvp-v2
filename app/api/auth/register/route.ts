@@ -1,5 +1,6 @@
 import { createAdminClient } from "@/lib/supabase/admin"
 import { type NextRequest, NextResponse } from "next/server"
+import { sendWelcomeEmail } from "@/lib/email"
 
 export async function POST(request: NextRequest) {
   try {
@@ -86,6 +87,12 @@ export async function POST(request: NextRequest) {
         error: `Error al crear el perfil: ${profileError.message} (${profileError.details || 'No details'})`
       }, { status: 500 })
     }
+
+    // Enviar correo de bienvenida de forma asíncrona
+    sendWelcomeEmail({
+      recipientEmail: email,
+      recipientName: fullName
+    }).catch(err => console.error("[Email] Error asíncrono enviando correo de bienvenida:", err))
 
     return NextResponse.json({
       success: true,

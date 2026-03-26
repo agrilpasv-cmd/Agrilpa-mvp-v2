@@ -28,6 +28,7 @@ interface User {
   role: string
   created_at: string
   products_of_interest?: string[]
+  supply_countries?: string[]
   annual_volume?: string
   country_code?: string
   metadata_phone_number?: string
@@ -204,6 +205,7 @@ export default function AdminUsersPage() {
                     <th className="text-left p-4 font-medium">País</th>
                     <th className="text-left p-4 font-medium">Estado</th>
                     <th className="text-left p-4 font-medium">Productos de Interés</th>
+                    <th className="text-left p-4 font-medium">Países de Interés</th>
                     <th className="text-left p-4 font-medium">Volumen Anual</th>
                     <th className="text-left p-4 font-medium">Tipo</th>
                     <th className="text-left p-4 font-medium">Rol</th>
@@ -247,6 +249,19 @@ export default function AdminUsersPage() {
                             {user.products_of_interest.map((product, idx) => (
                               <span key={idx} className="text-xs font-medium text-foreground bg-secondary/50 px-2 py-1 rounded">
                                 {product}
+                              </span>
+                            ))}
+                          </div>
+                        ) : (
+                          <span className="text-muted-foreground">-</span>
+                        )}
+                      </td>
+                      <td className="p-4 max-w-xs">
+                        {user.supply_countries && user.supply_countries.length > 0 ? (
+                          <div className="flex flex-wrap gap-1">
+                            {user.supply_countries.map((country, idx) => (
+                              <span key={idx} className="text-xs font-medium text-foreground bg-green-100 text-green-800 px-2 py-1 rounded">
+                                {country}
                               </span>
                             ))}
                           </div>

@@ -4,8 +4,18 @@ import { notFound, useRouter, useParams } from "next/navigation"
 import { useState, useEffect } from "react"
 import Link from "next/link"
 import { Card } from "@/components/ui/card"
-import { Search, Filter, Star, MapPin, MessageCircle, X } from "lucide-react"
+import { Search, Filter, Star, MapPin, MessageCircle, X, AlertCircle } from "lucide-react"
 import { allProducts } from "@/lib/products-data"
+import { createClient } from "@/lib/supabase/client"
+import { useToast } from "@/hooks/use-toast"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
+import { Button } from "@/components/ui/button"
 
 interface UserProduct {
   id: string
@@ -35,6 +45,8 @@ const normalizeText = (text: string) =>
 
 export default function ProductosPage() {
   const router = useRouter()
+  const { toast } = useToast()
+  const supabase = createClient()
   const [searchTerm, setSearchTerm] = useState("")
   const [selectedCategory, setSelectedCategory] = useState("todos")
   const [showFilters, setShowFilters] = useState(false)
@@ -46,11 +58,19 @@ export default function ProductosPage() {
   const [userProducts, setUserProducts] = useState<UserProduct[]>([])
   const [staticVisibility, setStaticVisibility] = useState<Record<number, boolean>>({})
   const [isLoading, setIsLoading] = useState(true)
+  const [isAuthenticated, setIsAuthenticated] = useState(false)
+  const [isAuthDialogOpen, setIsAuthDialogOpen] = useState(false)
 
   useEffect(() => {
     window.scrollTo(0, 0)
     fetchUserProducts()
+    checkAuth()
   }, [])
+
+  const checkAuth = async () => {
+    const { data: { session } } = await supabase.auth.getSession()
+    setIsAuthenticated(!!session)
+  }
 
   const categories = [
     "todos",
@@ -448,6 +468,12 @@ export default function ProductosPage() {
                         onClick={(e) => {
                           e.preventDefault()
                           e.stopPropagation()
+
+                          if (!isAuthenticated) {
+                            setIsAuthDialogOpen(true)
+                            return
+                          }
+
                           const contactMethod = (product as any).contactMethod
                           const contactInfo = (product as any).contactInfo
 
@@ -488,6 +514,36 @@ export default function ProductosPage() {
           )}
         </div>
       )}
+
+      {/* Auth Guard Dialog */}
+      <Dialog open={isAuthDialogOpen} onOpenChange={setIsAuthDialogOpen}>
+        <DialogContent className="sm:max-w-md text-center">
+          <DialogHeader className="flex flex-col items-center gap-2">
+            <div className="bg-primary/10 p-3 rounded-full mb-2">
+              <AlertCircle className="w-8 h-8 text-primary" />
+            </div>
+            <DialogTitle className="text-xl">Inicia sesión requerida</DialogTitle>
+            <DialogDescription className="text-center text-base pt-2">
+              Para contactar al vendedor, primero debes iniciar sesión o registrarte en Agrilpa.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-3 py-4 mt-2">
+            <Button
+              className="w-full bg-primary hover:bg-primary/90 text-white h-12 text-lg font-semibold"
+              onClick={() => router.push("/auth")}
+            >
+              Iniciar sesión
+            </Button>
+            <Button
+              variant="outline"
+              className="w-full h-12 text-lg font-semibold"
+              onClick={() => router.push("/auth")}
+            >
+              Registrarse
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

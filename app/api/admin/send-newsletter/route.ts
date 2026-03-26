@@ -32,7 +32,7 @@ export async function POST(request: Request) {
             return NextResponse.json({ error: "No autorizado" }, { status: 401 })
         }
 
-        const { subject, content, specificEmail, selectedEmails } = await request.json()
+        const { subject, content, specificEmail, selectedEmails, includeGreeting = true } = await request.json()
 
         if (!subject || !content) {
             return NextResponse.json({ error: "Asunto y contenido son requeridos" }, { status: 400 })
@@ -48,6 +48,7 @@ export async function POST(request: Request) {
                 recipientName: "Usuario",
                 subject,
                 htmlContent,
+                includeGreeting,
             })
 
             if (result.success) {
@@ -71,6 +72,7 @@ export async function POST(request: Request) {
                     recipientName: recipient.name || "Usuario",
                     subject,
                     htmlContent,
+                    includeGreeting,
                 })
 
                 if (result.success) {
@@ -125,6 +127,7 @@ export async function POST(request: Request) {
                 recipientName: user.company_name || user.full_name || "Usuario",
                 subject,
                 htmlContent,
+                includeGreeting,
             })
 
             if (result.success) {

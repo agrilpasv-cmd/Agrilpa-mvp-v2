@@ -102,7 +102,7 @@ function EmptyState() {
                     <h3 className="text-2xl font-bold mb-3">Quiero Comprar</h3>
                     <p className="text-muted-foreground mb-8">Encuentra los mejores proveedores.</p>
                     <Button variant="outline" className="w-full py-6 border-blue-500 text-blue-500 hover:bg-blue-500 hover:text-white" asChild>
-                        <Link href="/sourcing">Explora productos</Link>
+                        <Link href="/productos">Explora productos</Link>
                     </Button>
                 </div>
             </div>
