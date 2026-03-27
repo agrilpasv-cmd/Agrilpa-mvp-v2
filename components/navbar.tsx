@@ -14,6 +14,7 @@ export function Navbar() {
   const [isLoggedIn, setIsLoggedIn] = useState(false)
   const [userRole, setUserRole] = useState<string | null>(null)
   const [notificationCount, setNotificationCount] = useState(0)
+  const [isLoggingOut, setIsLoggingOut] = useState(false)
   const pathname = usePathname()
 
   useEffect(() => {
@@ -42,35 +43,34 @@ export function Navbar() {
   }
 
   const handleLogout = async () => {
+    if (isLoggingOut) return
+    setIsLoggingOut(true)
+
     try {
       const supabase = createBrowserClient()
 
-      // Sign out from Supabase
-      const { error } = await supabase.auth.signOut()
-
-      if (error) {
-        console.error("[v0] Supabase signOut error:", error)
-      }
-
-      // Also call the API logout for server-side cleanup
-      await fetch("/api/auth/logout", { method: "POST" })
+      // Sign out from Supabase and clear server-side session in parallel
+      await Promise.allSettled([
+        supabase.auth.signOut(),
+        fetch("/api/auth/logout", { method: "POST" })
+      ])
 
       // Clear auth storage and browser storage
       AuthStorage.clearSession()
       localStorage.clear()
       sessionStorage.clear()
 
-      // Wait for cleanup to complete
-      await new Promise((resolve) => setTimeout(resolve, 500))
-
       // Use window.location.replace to prevent back button from restoring session
       window.location.replace("/")
     } catch (error) {
-      console.error("[v0] Logout error:", error)
+      console.error("[Navbar] Logout error:", error)
       AuthStorage.clearSession()
       localStorage.clear()
       sessionStorage.clear()
       window.location.replace("/")
+    } finally {
+      // If redirection fails for some reason
+      setIsLoggingOut(false)
     }
   }
 
@@ -125,11 +125,12 @@ export function Navbar() {
                 </Link>
                 <Button
                   variant="outline"
-                  className="text-base font-medium px-4 py-2 gap-2 hover:bg-red-500 hover:text-white hover:border-red-500 active:bg-red-600 bg-transparent"
+                  className="text-base font-medium px-4 py-2 gap-2 hover:bg-red-500 hover:text-white hover:border-red-500 active:bg-red-600 bg-transparent disabled:opacity-70"
                   onClick={handleLogout}
+                  disabled={isLoggingOut}
                 >
-                  <LogOut className="h-4 w-4" />
-                  Cerrar Sesión
+                  <LogOut className={`h-4 w-4 ${isLoggingOut ? "animate-spin" : ""}`} />
+                  {isLoggingOut ? "Cerrando..." : "Cerrar Sesión"}
                 </Button>
               </>
             ) : (
@@ -198,11 +199,12 @@ export function Navbar() {
                   <Button
                     variant="outline"
                     size="sm"
-                    className="w-full gap-2 hover:bg-red-500 hover:text-white hover:border-red-500 active:bg-red-600 bg-transparent"
+                    className="w-full gap-2 hover:bg-red-500 hover:text-white hover:border-red-500 active:bg-red-600 bg-transparent disabled:opacity-70"
                     onClick={handleLogout}
+                    disabled={isLoggingOut}
                   >
-                    <LogOut className="h-4 w-4" />
-                    Cerrar Sesión
+                    <LogOut className={`h-4 w-4 ${isLoggingOut ? "animate-spin" : ""}`} />
+                    {isLoggingOut ? "Cerrando..." : "Cerrar Sesión"}
                   </Button>
                 </>
               ) : (

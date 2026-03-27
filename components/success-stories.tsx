@@ -1,8 +1,6 @@
 "use client"
 
 import type React from "react"
-
-import { Card } from "@/components/ui/card"
 import { useRef, useState } from "react"
 import { motion } from "framer-motion"
 
@@ -137,13 +135,8 @@ export function SuccessStories() {
     scrollContainerRef.current.scrollLeft = scrollLeft - walk
   }
 
-  const handleMouseUp = () => {
-    setIsDragging(false)
-  }
-
-  const handleMouseLeave = () => {
-    setIsDragging(false)
-  }
+  const handleMouseUp = () => setIsDragging(false)
+  const handleMouseLeave = () => setIsDragging(false)
 
   const handleTouchStart = (e: React.TouchEvent) => {
     if (!scrollContainerRef.current) return
@@ -159,15 +152,13 @@ export function SuccessStories() {
     scrollContainerRef.current.scrollLeft = scrollLeft - walk
   }
 
-  const handleTouchEnd = () => {
-    setIsDragging(false)
-  }
+  const handleTouchEnd = () => setIsDragging(false)
 
   return (
-    <section className="py-16 md:py-24 bg-muted/30 overflow-hidden">
+    <section className="py-16 md:py-24 bg-white/30 backdrop-blur-xl overflow-hidden">
       {/* Header */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-12">
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: "-50px" }}
@@ -181,7 +172,7 @@ export function SuccessStories() {
         </motion.div>
       </div>
 
-      {/* Full width slider */}
+      {/* Full-width auto-scrolling slider */}
       <div className="w-full mb-12">
         <div
           className="relative overflow-x-auto scrollbar-hide cursor-grab active:cursor-grabbing w-full"
@@ -194,75 +185,165 @@ export function SuccessStories() {
           onTouchMove={handleTouchMove}
           onTouchEnd={handleTouchEnd}
         >
-          <div className={`flex gap-4 px-4 ${isDragging ? "" : "animate-scroll-right"}`}>
+          <div className={`flex gap-5 px-6 pb-8 pt-2 ${isDragging ? "" : "animate-scroll-right"}`}>
             {allTestimonials.map((testimonial, index) => (
-              <Card
+              <div
                 key={`testimonial-${index}`}
-                className="min-w-[400px] max-w-[400px] p-8 bg-background/80 backdrop-blur-sm border border-border/50 rounded-3xl hover:shadow-[0_24px_48px_rgba(0,0,0,0.06)] hover:-translate-y-2 transition-all duration-500 flex-shrink-0"
+                className="liquid-glass-card min-w-[380px] max-w-[380px] flex-shrink-0 relative overflow-hidden rounded-2xl p-6 flex flex-col justify-between"
+                style={{ minHeight: "240px" }}
               >
-                <div className="flex items-start gap-4 mb-4">
-                  <div className="flex-shrink-0 w-14 h-14 rounded-2xl overflow-hidden bg-muted">
-                    <img
-                      src={testimonial.logo || "/placeholder.svg"}
-                      alt={`${testimonial.company} logo`}
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
-                  <div className="flex-1">
-                    <h3 className="font-bold text-foreground text-sm">{testimonial.company}</h3>
-                    <p className="text-xs text-muted-foreground">
-                      {testimonial.type} • {testimonial.country}
-                    </p>
-                  </div>
-                </div>
-                <p className="text-base text-foreground mb-4 leading-relaxed line-clamp-3">"{testimonial.quote}"</p>
-                <div className="pt-4 border-t border-border/50">
-                  <span className="inline-block px-3 py-1 bg-primary/10 text-primary text-xs font-bold uppercase tracking-wider rounded-xl">
-                    {testimonial.achievement}
+                {/* Layered glass background */}
+                <div className="glass-layer-base" />
+                <div className="glass-layer-sheen" />
+
+                {/* Achievement badge — top right */}
+                <div className="absolute top-4 right-4 z-10">
+                  <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-primary/10 border border-primary/20 text-primary text-[10px] font-bold uppercase tracking-wider rounded-lg">
+                    ✦ {testimonial.achievement}
                   </span>
                 </div>
-              </Card>
+
+                {/* Quote block */}
+                <div className="relative z-10 flex-1 pr-2">
+                  <span
+                    style={{
+                      fontFamily: "Georgia, serif",
+                      fontSize: "52px",
+                      lineHeight: "1",
+                      color: "var(--primary)",
+                      opacity: 0.6,
+                      display: "block",
+                      marginBottom: "-8px",
+                      userSelect: "none",
+                    }}
+                  >
+                    &ldquo;
+                  </span>
+                  <p className="text-[14.5px] text-gray-800 leading-relaxed font-medium">
+                    {testimonial.quote}
+                  </p>
+                </div>
+
+                {/* Footer: avatar + name/role */}
+                <div className="relative z-10 flex items-center justify-between mt-5 pt-4 border-t border-white/50">
+                  <div className="flex items-center gap-3">
+                    {/* Circular avatar */}
+                    <div
+                      className="w-11 h-11 rounded-full overflow-hidden border-2 border-white/70 shadow-md flex-shrink-0"
+                      style={{ background: "linear-gradient(135deg, #ffffff, #f3f4f6)" }}
+                    >
+                      <img
+                        src={testimonial.logo || "/placeholder.svg"}
+                        alt={`${testimonial.company}`}
+                        className="w-full h-full object-cover"
+                        onError={(e) => {
+                          const img = e.target as HTMLImageElement
+                          img.style.display = "none"
+                          const parent = img.parentElement
+                          if (parent) {
+                            parent.innerHTML = `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:800;color:#15803d;">${testimonial.company.charAt(0)}</div>`
+                          }
+                        }}
+                      />
+                    </div>
+                    <div>
+                      <p className="font-bold text-sm text-gray-900 leading-tight">{testimonial.company}</p>
+                      <p className="text-xs text-gray-500 mt-0.5">
+                        {testimonial.type} · {testimonial.country}
+                      </p>
+                    </div>
+                  </div>
+
+
+                </div>
+              </div>
             ))}
           </div>
         </div>
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* View All Link */}
-        <div className="text-center"></div>
+        <div className="text-center" />
       </div>
 
       <style jsx>{`
         @keyframes scroll-right {
-          0% {
-            transform: translateX(0);
-          }
-          100% {
-            transform: translateX(-50%);
-          }
+          0%   { transform: translateX(0); }
+          100% { transform: translateX(-50%); }
         }
 
         .animate-scroll-right {
           animation: scroll-right 60s linear infinite;
         }
-
         .animate-scroll-right:hover {
           animation-play-state: paused;
         }
-
         @media (max-width: 768px) {
           .animate-scroll-right {
             animation: scroll-right 30s linear infinite;
           }
         }
 
-        .scrollbar-hide::-webkit-scrollbar {
-          display: none;
+        .scrollbar-hide::-webkit-scrollbar { display: none; }
+        .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+
+        /* ── Liquid Glass Card ── */
+        .liquid-glass-card {
+          background: rgba(255, 255, 255, 0.52);
+          backdrop-filter: blur(30px) saturate(190%) brightness(1.06);
+          -webkit-backdrop-filter: blur(30px) saturate(190%) brightness(1.06);
+          border: 1px solid rgba(255, 255, 255, 0.78);
+          box-shadow:
+            0 8px 32px rgba(0, 0, 0, 0.07),
+            0 2px 8px rgba(0, 0, 0, 0.04),
+            inset 0 1px 0 rgba(255, 255, 255, 0.92),
+            inset 1px 0 0 rgba(255, 255, 255, 0.65),
+            inset -1px 0 0 rgba(255, 255, 255, 0.65),
+            inset 0 -1px 0 rgba(255, 255, 255, 0.25);
+          transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.35s ease;
         }
 
-        .scrollbar-hide {
-          -ms-overflow-style: none;
-          scrollbar-width: none;
+        .liquid-glass-card:hover {
+          transform: translateY(-8px) scale(1.015);
+          box-shadow:
+            0 24px 56px rgba(0, 0, 0, 0.11),
+            0 6px 20px rgba(22, 163, 74, 0.09),
+            inset 0 1px 0 rgba(255, 255, 255, 0.98),
+            inset 1px 0 0 rgba(255, 255, 255, 0.75),
+            inset -1px 0 0 rgba(255, 255, 255, 0.75),
+            inset 0 -1px 0 rgba(255, 255, 255, 0.35);
+        }
+
+        /* Base gradient fill */
+        .glass-layer-base {
+          position: absolute;
+          inset: 0;
+          border-radius: 16px;
+          background: linear-gradient(
+            140deg,
+            rgba(255, 255, 255, 0.8) 0%,
+            rgba(255, 255, 255, 0.4) 50%,
+            rgba(255, 255, 255, 0.7) 100%
+          );
+          pointer-events: none;
+          z-index: 0;
+        }
+
+        /* Top specular sheen */
+        .glass-layer-sheen {
+          position: absolute;
+          top: 0;
+          left: 0;
+          right: 0;
+          height: 48%;
+          border-radius: 16px 16px 0 0;
+          background: linear-gradient(
+            180deg,
+            rgba(255, 255, 255, 0.58) 0%,
+            rgba(255, 255, 255, 0) 100%
+          );
+          pointer-events: none;
+          z-index: 1;
         }
       `}</style>
     </section>
