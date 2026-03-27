@@ -49,7 +49,7 @@ export async function POST(request: NextRequest) {
     })
 
     if (authError) {
-      console.error("[v0] Auth error:", authError)
+      console.error("[Agrilpa] Auth error:", authError)
       return NextResponse.json({ error: authError.message }, { status: 400 })
     }
 
@@ -80,7 +80,7 @@ export async function POST(request: NextRequest) {
     })
 
     if (profileError) {
-      console.error("[v0] Profile creation error:", profileError)
+      console.error("[Agrilpa] Profile creation error:", profileError)
       // Si falla la creación del perfil, eliminar usuario de auth usando admin client
       await adminClient.auth.admin.deleteUser(authData.user.id)
       return NextResponse.json({
@@ -102,7 +102,7 @@ export async function POST(request: NextRequest) {
       },
     })
   } catch (error) {
-    console.error("[v0] Registration error:", error)
+    console.error("[Agrilpa] Registration error:", error)
     return NextResponse.json({ error: "Error en el registro" }, { status: 500 })
   }
 }

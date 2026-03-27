@@ -63,7 +63,7 @@ export default function AdminPublicationsPage() {
             setProducts(data || [])
             setLastUpdate(new Date())
         } catch (error: any) {
-            console.error("[v0] Admin Products Page error:", error.message)
+            console.error("[Agrilpa] Admin Products Page error:", error.message)
             toast({
                 title: "Error",
                 description: "No se pudieron cargar las publicaciones",

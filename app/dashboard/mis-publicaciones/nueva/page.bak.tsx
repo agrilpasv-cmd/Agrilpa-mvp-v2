@@ -276,7 +276,7 @@ export default function NuevaPublicacionPage() {
         router.push("/dashboard/mis-publicaciones")
       }, 1500)
     } catch (error) {
-      console.error("[v0] Error creating product:", error)
+      console.error("[Agrilpa] Error creating product:", error)
       setStatusMessage({ type: 'error', text: "Ocurrió un error inesperado. Si el problema persiste, intenta con una imagen diferente." })
     } finally {
       setIsLoading(false)

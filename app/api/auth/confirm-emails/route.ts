@@ -9,7 +9,7 @@ export async function POST() {
     const { data: users, error: fetchError } = await supabase.auth.admin.listUsers()
 
     if (fetchError) {
-      console.error("[v0] Error fetching users:", fetchError)
+      console.error("[Agrilpa] Error fetching users:", fetchError)
       return NextResponse.json({ error: "Error al obtener usuarios" }, { status: 500 })
     }
 
@@ -30,7 +30,7 @@ export async function POST() {
       count: confirmPromises.length,
     })
   } catch (error) {
-    console.error("[v0] Error confirming emails:", error)
+    console.error("[Agrilpa] Error confirming emails:", error)
     return NextResponse.json({ error: "Error al confirmar emails" }, { status: 500 })
   }
 }

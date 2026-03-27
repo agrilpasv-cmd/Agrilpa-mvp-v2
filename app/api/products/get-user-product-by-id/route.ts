@@ -27,12 +27,12 @@ export async function GET(request: NextRequest) {
             .single()
 
         if (error) {
-            console.error("[v0] Database error fetching product:", error)
+            console.error("[Agrilpa] Database error fetching product:", error)
             return NextResponse.json({ error: "Database error" }, { status: 500 })
         }
 
         if (!data) {
-            console.log("[v0] Product not found for ID:", productId)
+            console.log("[Agrilpa] Product not found for ID:", productId)
             return NextResponse.json({ error: "Product not found" }, { status: 404 })
         }
 
@@ -44,7 +44,7 @@ export async function GET(request: NextRequest) {
             .eq("id", productId)
 
         if (updateError) {
-            console.error("[v0] Error incrementing views:", updateError)
+            console.error("[Agrilpa] Error incrementing views:", updateError)
         } else {
              // Force revalidation of the dashboard so the user sees the new count immediately
              revalidatePath('/dashboard/mis-publicaciones')
@@ -58,7 +58,7 @@ export async function GET(request: NextRequest) {
             }
         }, { status: 200 })
     } catch (error) {
-        console.error("[v0] API error:", error)
+        console.error("[Agrilpa] API error:", error)
         return NextResponse.json({ error: "Internal server error" }, { status: 500 })
     }
 }

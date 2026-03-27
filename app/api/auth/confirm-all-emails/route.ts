@@ -9,7 +9,7 @@ export async function POST() {
     const { data, error } = await adminClient.rpc("confirm_all_emails")
 
     if (error) {
-      console.error("[v0] Error confirmando emails:", error)
+      console.error("[Agrilpa] Error confirmando emails:", error)
 
       // Fallback: Obtener usuarios y confirmarlos uno por uno
       const { data: users, error: listError } = await adminClient.auth.admin.listUsers()
@@ -37,7 +37,7 @@ export async function POST() {
       message: "Todos los emails han sido confirmados",
     })
   } catch (error) {
-    console.error("[v0] Error en confirmación masiva:", error)
+    console.error("[Agrilpa] Error en confirmación masiva:", error)
     return NextResponse.json({ error: "Error en el proceso de confirmación" }, { status: 500 })
   }
 }

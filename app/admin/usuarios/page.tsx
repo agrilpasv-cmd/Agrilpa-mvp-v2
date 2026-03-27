@@ -68,7 +68,7 @@ export default function AdminUsersPage() {
       setUsers(data || [])
       setLastUpdate(new Date())
     } catch (error: any) {
-      console.error("[v0] Admin Users Page error:", error.message)
+      console.error("[Agrilpa] Admin Users Page error:", error.message)
     } finally {
       setLoading(false)
     }

@@ -55,7 +55,7 @@ function AuthPageContent() {
         } = await supabaseRef.current.auth.getSession()
 
         if (session?.user) {
-          console.log("[v0] User already has active session, checking profile...")
+          console.log("[Agrilpa] User already has active session, checking profile...")
 
           // Verificar el perfil del usuario para determinar el rol
           const { data: profile } = await supabaseRef.current
@@ -65,16 +65,16 @@ function AuthPageContent() {
             .maybeSingle()
 
           if (profile?.role === "admin") {
-            console.log("[v0] Admin user detected, redirecting to /admin")
+            console.log("[Agrilpa] Admin user detected, redirecting to /admin")
             router.push("/admin")
             return
           }
 
-          console.log("[v0] Regular user detected, redirecting to /")
+          console.log("[Agrilpa] Regular user detected, redirecting to /")
           router.push("/")
         }
       } catch (err) {
-        console.error("[v0] Error checking existing session:", err)
+        console.error("[Agrilpa] Error checking existing session:", err)
       }
     }
 
@@ -215,14 +215,14 @@ function AuthPageContent() {
         }
 
         setSubmitted(true)
-        console.log("[v0] Registration successful, redirecting to login...")
+        console.log("[Agrilpa] Registration successful, redirecting to login...")
 
         setTimeout(() => {
-          console.log("[v0] Reloading page and redirecting to login")
+          console.log("[Agrilpa] Reloading page and redirecting to login")
           window.location.href = `/auth?mode=login&email=${encodeURIComponent(formData.email)}`
         }, 2000) // Show success message for 2 seconds before redirecting
       } catch (err) {
-        console.error("[v0] Auth error:", err)
+        console.error("[Agrilpa] Auth error:", err)
         setError("Error de conexión. Intenta nuevamente.")
         setLoading(false)
       }
@@ -253,7 +253,7 @@ function AuthPageContent() {
         })
 
         if (loginError) {
-          console.error("[v0] Login error:", loginError)
+          console.error("[Agrilpa] Login error:", loginError)
           setError("Credenciales inválidas")
           setLoading(false)
           return
@@ -265,25 +265,25 @@ function AuthPageContent() {
           return
         }
 
-        console.log("[v0] User logged in:", data.user.id, data.user.email)
+        console.log("[Agrilpa] User logged in:", data.user.id, data.user.email)
 
         const isAdmin = data.user.email === "agrilpasv@gmail.com"
         const role = isAdmin ? "admin" : "user"
         AuthStorage.setSession(data.user.id, data.user.email || "", role)
 
         if (isAdmin) {
-          console.log("[v0] Admin email detected, redirecting to /admin")
+          console.log("[Agrilpa] Admin email detected, redirecting to /admin")
           setSubmitted(true)
           window.location.href = "/admin"
           return
         }
 
-        console.log("[v0] Regular user, redirecting to /")
+        console.log("[Agrilpa] Regular user, redirecting to /")
         setSubmitted(true)
         window.location.href = "/"
       }
     } catch (err) {
-      console.error("[v0] Auth error:", err)
+      console.error("[Agrilpa] Auth error:", err)
       setError("Error de conexión. Intenta nuevamente.")
       setLoading(false)
     }

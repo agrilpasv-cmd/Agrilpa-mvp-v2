@@ -44,7 +44,7 @@ export default function FinanciamientoPage() {
       setStats({ total, prendario, leasing, asociativo })
       setLoading(false)
     } catch (error) {
-      console.error("[v0] Error fetching financing clicks:", error)
+      console.error("[Agrilpa] Error fetching financing clicks:", error)
       setLoading(false)
     }
   }

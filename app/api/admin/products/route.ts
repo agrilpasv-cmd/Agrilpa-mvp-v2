@@ -18,7 +18,7 @@ export async function GET() {
             .order("created_at", { ascending: false })
 
         if (productsError) {
-            console.error("[v0] Admin Products API error (fetching products):", productsError)
+            console.error("[Agrilpa] Admin Products API error (fetching products):", productsError)
             return NextResponse.json({ error: productsError.message }, { status: 500 })
         }
 
@@ -28,7 +28,7 @@ export async function GET() {
             .select("id, full_name, email, company_name")
 
         if (usersError) {
-            console.error("[v0] Error fetching users for mapping:", usersError)
+            console.error("[Agrilpa] Error fetching users for mapping:", usersError)
             // We continue even if users fetch fails, to at least show the products
         }
 
@@ -54,7 +54,7 @@ export async function GET() {
             },
         })
     } catch (error: any) {
-        console.error("[v0] Admin Products API unexpected error:", error)
+        console.error("[Agrilpa] Admin Products API unexpected error:", error)
         return NextResponse.json({ error: "Error interno" }, { status: 500 })
     }
 }

@@ -35,7 +35,7 @@ export async function GET() {
             .order("created_at", { ascending: false })
 
         if (error) {
-            console.error("[v0] Database fetch error:", error)
+            console.error("[Agrilpa] Database fetch error:", error)
             return NextResponse.json({ error: "Database error" }, { status: 500 })
         }
 
@@ -50,7 +50,7 @@ export async function GET() {
 
         return NextResponse.json({ products: data || [] }, { status: 200 })
     } catch (error) {
-        console.error("[v0] API error:", error)
+        console.error("[Agrilpa] API error:", error)
         return NextResponse.json({ error: "Internal server error" }, { status: 500 })
     }
 }

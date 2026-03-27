@@ -181,7 +181,7 @@ export default function ProductosPage() {
         setStaticVisibility(visibilityMap)
       }
     } catch (error) {
-      console.error("[v0] Error fetching user products:", error)
+      console.error("[Agrilpa] Error fetching user products:", error)
     } finally {
       setIsLoading(false)
     }
@@ -189,7 +189,7 @@ export default function ProductosPage() {
 
   const trackContactClick = async (product: any, type: string) => {
     try {
-      console.log(`[v0] Tracking click on list: ${type}`, {
+      console.log(`[Agrilpa] Tracking click on list: ${type}`, {
         productId: product.id,
         sellerId: product.vendorId || product.id
       })
@@ -208,9 +208,9 @@ export default function ProductosPage() {
       })
 
       const result = await response.json()
-      console.log(`[v0] Tracking result for ${type}:`, result)
+      console.log(`[Agrilpa] Tracking result for ${type}:`, result)
     } catch (err) {
-      console.error("[v0] Failed to track contact click:", err)
+      console.error("[Agrilpa] Failed to track contact click:", err)
     }
   }
 

@@ -77,22 +77,21 @@ export default function EditarPublicacionPage({ params }: { params: Promise<{ id
             }
           }
 
-          // Determine best company name: DB column > extracted from description > user profile
-          let finalCompanyName = ""
-          if (p.company_name && p.company_name !== "") {
-            finalCompanyName = p.company_name
-          } else if (extractedCompanyName) {
-            finalCompanyName = extractedCompanyName
-          } else {
-            // Fall back to user profile company name
-            try {
-              const profileRes = await fetch("/api/user/profile")
-              if (profileRes.ok) {
-                const profileData = await profileRes.json()
-                finalCompanyName = profileData.user?.company_name || ""
+          // Always use the user's current registered company name as per requirements
+          let finalCompanyName = p.company_name || ""
+          try {
+            const profileRes = await fetch("/api/user/profile")
+            if (profileRes.ok) {
+              const profileData = await profileRes.json()
+              const company = profileData.user?.company_name || ""
+              if (company) {
+                finalCompanyName = company
               }
-            } catch (e) {
-              // silent — non-critical
+            }
+          } catch (e) {
+            // silent — fallback to stored name if profile call fails
+            if (!finalCompanyName) {
+              finalCompanyName = extractedCompanyName || ""
             }
           }
 
@@ -716,9 +715,15 @@ export default function EditarPublicacionPage({ params }: { params: Promise<{ id
                   name="companyName"
                   value={formData.companyName}
                   onChange={handleInputChange}
-                  placeholder="Ej: Agro Export S.A."
-                  disabled={isLoading}
+                  placeholder="Se completará automáticamente"
+                  className="bg-muted cursor-not-allowed border-muted-foreground/20"
+                  readOnly={true}
+                  tabIndex={-1}
                 />
+                <p className="text-[11px] text-muted-foreground mt-1.5 flex items-center gap-1">
+                  <span className="w-1 h-1 rounded-full bg-primary" />
+                  Este nombre se basa en tu de perfil y no se puede cambiar aquí.
+                </p>
               </div>
               <div>
                 <label className="block text-sm font-medium mb-2">

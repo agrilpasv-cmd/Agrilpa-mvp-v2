@@ -34,7 +34,7 @@ export default function LogisticaPage() {
       setTotalClicks(data?.length || 0)
       setLoading(false)
     } catch (error) {
-      console.error("[v0] Error fetching logistics clicks:", error)
+      console.error("[Agrilpa] Error fetching logistics clicks:", error)
       setLoading(false)
     }
   }

@@ -26,18 +26,18 @@ export function RatingOverlay({ onClose }: RatingOverlayProps) {
         })
 
         if (response.ok) {
-          console.log("[v0] Rating submitted successfully")
+          console.log("[Agrilpa] Rating submitted successfully")
           setSubmitted(true)
           setTimeout(() => {
             onClose()
           }, 2000)
         } else {
           const errorData = await response.json()
-          console.error("[v0] Rating submission error:", errorData.error)
+          console.error("[Agrilpa] Rating submission error:", errorData.error)
           alert("Error al guardar tu calificación. Por favor intenta de nuevo.")
         }
       } catch (error) {
-        console.error("[v0] Error submitting rating:", error)
+        console.error("[Agrilpa] Error submitting rating:", error)
         alert("Error al enviar la calificación")
       }
     }

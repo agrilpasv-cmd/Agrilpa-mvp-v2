@@ -5,10 +5,10 @@ export async function GET() {
   try {
     const cookieStore = cookies()
 
-    console.log("[v0] Fetching contact submissions API called")
+    console.log("[Agrilpa] Fetching contact submissions API called")
 
     if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
-      console.error("[v0] SUPABASE_SERVICE_ROLE_KEY is missing")
+      console.error("[Agrilpa] SUPABASE_SERVICE_ROLE_KEY is missing")
     }
 
     const supabase = createServerClient(
@@ -30,15 +30,15 @@ export async function GET() {
       .order("created_at", { ascending: false })
 
     if (error) {
-      console.error("[v0] Supabase error fetching submissions:", error)
+      console.error("[Agrilpa] Supabase error fetching submissions:", error)
       throw error
     }
 
-    console.log(`[v0] Successfully fetched ${data?.length} submissions (count: ${count})`)
+    console.log(`[Agrilpa] Successfully fetched ${data?.length} submissions (count: ${count})`)
 
     return Response.json({ data, count })
   } catch (error) {
-    console.error("[v0] Error fetching contact submissions:", error)
+    console.error("[Agrilpa] Error fetching contact submissions:", error)
     return Response.json({ error: "Failed to fetch contact submissions" }, { status: 500 })
   }
 }

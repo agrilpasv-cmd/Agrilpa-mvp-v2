@@ -17,7 +17,7 @@ export async function POST(request: NextRequest) {
     })
 
     if (error) {
-      console.error("[v0] Login error:", error)
+      console.error("[Agrilpa] Login error:", error)
       return NextResponse.json({ error: "Credenciales inválidas" }, { status: 401 })
     }
 
@@ -29,7 +29,7 @@ export async function POST(request: NextRequest) {
       .single()
 
     if (profileError) {
-      console.error("[v0] Profile fetch error:", profileError)
+      console.error("[Agrilpa] Profile fetch error:", profileError)
     }
 
     let role = profile?.role || "user"
@@ -47,7 +47,7 @@ export async function POST(request: NextRequest) {
       },
     })
   } catch (error) {
-    console.error("[v0] Login error:", error)
+    console.error("[Agrilpa] Login error:", error)
     return NextResponse.json({ error: "Error al iniciar sesión" }, { status: 500 })
   }
 }

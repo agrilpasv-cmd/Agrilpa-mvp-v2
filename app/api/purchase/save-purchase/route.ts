@@ -89,7 +89,7 @@ export async function POST(request: NextRequest) {
       ])
       .select()
     if (error) {
-      console.error("[v0] Purchase save error:", error.message)
+      console.error("[Agrilpa] Purchase save error:", error.message)
       return NextResponse.json({ error: "Error saving purchase" }, { status: 500 })
     }
 
@@ -148,7 +148,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ success: true, purchase }, { status: 200 })
   } catch (error) {
-    console.error("[v0] Purchase API error:", error)
+    console.error("[Agrilpa] Purchase API error:", error)
     return NextResponse.json({ error: "Internal server error" }, { status: 500 })
   }
 }

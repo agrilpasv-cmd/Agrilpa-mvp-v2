@@ -22,13 +22,13 @@ export async function POST(request: NextRequest) {
     const { error } = await supabase.from("subscriptions").delete().eq("id", id)
 
     if (error) {
-      console.error("[v0] Error deleting subscription:", error)
+      console.error("[Agrilpa] Error deleting subscription:", error)
       return NextResponse.json({ error: "Failed to delete subscription" }, { status: 500 })
     }
 
     return NextResponse.json({ success: true })
   } catch (error) {
-    console.error("[v0] Delete subscription error:", error)
+    console.error("[Agrilpa] Delete subscription error:", error)
     return NextResponse.json({ error: "Internal server error" }, { status: 500 })
   }
 }

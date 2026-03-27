@@ -34,7 +34,7 @@ export default function ComingSoon() {
       try {
         const localSession = AuthStorage.getSession()
         if (localSession) {
-          console.log("[v0] Local session found")
+          console.log("[Agrilpa] Local session found")
           // Removed automatic redirect for admins to allow viewing home page
         }
 
@@ -44,7 +44,7 @@ export default function ComingSoon() {
         } = await supabase.auth.getSession()
 
         if (session?.user) {
-          console.log("[v0] Supabase session found, checking profile...")
+          console.log("[Agrilpa] Supabase session found, checking profile...")
 
           const { data: profile } = await supabase.from("users").select("role").eq("id", session.user.id).maybeSingle()
 
@@ -54,7 +54,7 @@ export default function ComingSoon() {
           // Removed automatic redirect for admins to allow viewing home page
         }
       } catch (err) {
-        console.error("[v0] Error checking auth:", err)
+        console.error("[Agrilpa] Error checking auth:", err)
       }
     }
 
@@ -70,7 +70,7 @@ export default function ComingSoon() {
             setShowModal(false)
           }
         } catch (err) {
-          console.error("[v0] Error checking subscription:", err)
+          console.error("[Agrilpa] Error checking subscription:", err)
         }
       }
     }
@@ -80,7 +80,7 @@ export default function ComingSoon() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError(null)
-    console.log("[v0] Email submitted:", email)
+    console.log("[Agrilpa] Email submitted:", email)
 
     try {
       const response = await fetch("/api/newsletter/subscribe", {
@@ -117,7 +117,7 @@ export default function ComingSoon() {
         setShowModal(false)
       }, 2000)
     } catch (err) {
-      console.error("[v0] Subscription error:", err)
+      console.error("[Agrilpa] Subscription error:", err)
       setError(err instanceof Error ? err.message : "Error al procesar la suscripción")
     }
   }

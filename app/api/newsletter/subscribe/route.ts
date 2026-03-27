@@ -35,13 +35,13 @@ export async function POST(request: Request) {
       .single()
 
     if (error) {
-      console.error("[v0] Error al guardar suscripción:", error)
+      console.error("[Agrilpa] Error al guardar suscripción:", error)
       return NextResponse.json({ error: "Error al procesar la suscripción" }, { status: 500 })
     }
 
     return NextResponse.json({ message: "Suscripción exitosa", data }, { status: 201 })
   } catch (error) {
-    console.error("[v0] Error en /api/newsletter/subscribe:", error)
+    console.error("[Agrilpa] Error en /api/newsletter/subscribe:", error)
     return NextResponse.json({ error: "Error interno del servidor" }, { status: 500 })
   }
 }
@@ -67,7 +67,7 @@ export async function GET(request: Request) {
       subscribed: !!data && data.is_active,
     })
   } catch (error) {
-    console.error("[v0] Error en GET /api/newsletter/subscribe:", error)
+    console.error("[Agrilpa] Error en GET /api/newsletter/subscribe:", error)
     return NextResponse.json({ error: "Error interno del servidor" }, { status: 500 })
   }
 }

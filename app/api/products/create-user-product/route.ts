@@ -67,7 +67,7 @@ export async function POST(request: NextRequest) {
       .eq("user_id", userId)
 
     if (countError) {
-      console.error("[v0] Error checking product count:", countError)
+      console.error("[Agrilpa] Error checking product count:", countError)
       return NextResponse.json({ error: "Error checking limits" }, { status: 500 })
     }
 
@@ -111,13 +111,13 @@ export async function POST(request: NextRequest) {
       .select()
 
     if (error) {
-      console.error("[v0] Database insert error:", error)
+      console.error("[Agrilpa] Database insert error:", error)
       return NextResponse.json({ error: `Database error: ${error.message || JSON.stringify(error)}` }, { status: 500 })
     }
 
     return NextResponse.json({ success: true, product: data[0] }, { status: 201 })
   } catch (error) {
-    console.error("[v0] API error:", error)
+    console.error("[Agrilpa] API error:", error)
     return NextResponse.json({ error: "Internal server error" }, { status: 500 })
   }
 }

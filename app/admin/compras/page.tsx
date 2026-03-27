@@ -47,7 +47,7 @@ export default function ComprasPage() {
       setStats({ total, totalRevenue, totalQuantity })
       setLoading(false)
     } catch (error) {
-      console.error("[v0] Error fetching purchases:", error)
+      console.error("[Agrilpa] Error fetching purchases:", error)
       setLoading(false)
     }
   }

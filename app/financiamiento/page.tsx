@@ -31,10 +31,10 @@ async function trackFinancingClick(financingType: string) {
     })
 
     if (response.ok) {
-      console.log("[v0] Click tracked for:", financingType)
+      console.log("[Agrilpa] Click tracked for:", financingType)
     }
   } catch (error) {
-    console.error("[v0] Error tracking click:", error)
+    console.error("[Agrilpa] Error tracking click:", error)
     // Don't throw error - tracking shouldn't block navigation
   }
 }

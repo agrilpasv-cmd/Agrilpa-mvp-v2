@@ -275,7 +275,7 @@ export default function NuevaPublicacionPage() {
         router.push("/dashboard/mis-publicaciones")
       }, 1500)
     } catch (error) {
-      console.error("[v0] Error creating product:", error)
+      console.error("[Agrilpa] Error creating product:", error)
       setStatusMessage({ type: 'error', text: "Ocurrió un error inesperado. Si el problema persiste, intenta con una imagen diferente." })
     } finally {
       setIsLoading(false)
@@ -769,10 +769,16 @@ export default function NuevaPublicacionPage() {
                   name="companyName"
                   value={formData.companyName}
                   onChange={handleInputChange}
-                  placeholder="Ej: Agro Export S.A."
-                  disabled={isLoading}
+                  placeholder="Se completará automáticamente con el nombre de tu empresa"
+                  className="bg-muted cursor-not-allowed border-muted-foreground/20"
+                  readOnly={true}
+                  tabIndex={-1}
                   required
                 />
+                <p className="text-[11px] text-muted-foreground mt-1.5 flex items-center gap-1">
+                  <span className="w-1 h-1 rounded-full bg-primary" />
+                  Este nombre se basa en tu de perfil y no se puede cambiar aquí.
+                </p>
               </div>
               <div>
                 <label htmlFor="contactMethod" className="block text-sm font-medium mb-2">

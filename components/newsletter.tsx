@@ -23,7 +23,7 @@ export function Newsletter() {
           const response = await fetch(`/api/newsletter/subscribe?email=${encodeURIComponent(savedEmail)}`)
 
           if (!response.ok) {
-            console.error("[v0] Error checking subscription, status:", response.status)
+            console.error("[Agrilpa] Error checking subscription, status:", response.status)
             const localSubscribed = localStorage.getItem("agrilpa_subscribed")
             if (localSubscribed === "true") {
               setHasSubscribedBefore(true)
@@ -36,7 +36,7 @@ export function Newsletter() {
             setHasSubscribedBefore(true)
           }
         } catch (err) {
-          console.error("[v0] Error checking subscription:", err)
+          console.error("[Agrilpa] Error checking subscription:", err)
           const localSubscribed = localStorage.getItem("agrilpa_subscribed")
           if (localSubscribed === "true") {
             setHasSubscribedBefore(true)
@@ -86,7 +86,7 @@ export function Newsletter() {
 
       setTimeout(() => setIsSubscribed(false), 5000)
     } catch (err) {
-      console.error("[v0] Subscription error:", err)
+      console.error("[Agrilpa] Subscription error:", err)
       setError(err instanceof Error ? err.message : "Error al procesar la suscripción")
       setIsSubmitting(false)
     }

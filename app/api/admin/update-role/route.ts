@@ -34,13 +34,13 @@ export async function POST(request: Request) {
     const { error } = await adminClient.from("users").update({ role: newRole }).eq("id", userId)
 
     if (error) {
-      console.error("[v0] Error updating role:", error)
+      console.error("[Agrilpa] Error updating role:", error)
       return NextResponse.json({ error: error.message }, { status: 500 })
     }
 
     return NextResponse.json({ success: true })
   } catch (error) {
-    console.error("[v0] Error in update-role API:", error)
+    console.error("[Agrilpa] Error in update-role API:", error)
     return NextResponse.json({ error: "Error interno del servidor" }, { status: 500 })
   }
 }

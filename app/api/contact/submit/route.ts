@@ -34,13 +34,13 @@ export async function POST(request: NextRequest) {
     ])
 
     if (error) {
-      console.error("[v0] Contact submission error:", error)
+      console.error("[Agrilpa] Contact submission error:", error)
       return NextResponse.json({ error: "Error al guardar el mensaje de contacto" }, { status: 500 })
     }
 
     return NextResponse.json({ success: true, message: "Mensaje enviado correctamente" }, { status: 200 })
   } catch (error) {
-    console.error("[v0] Contact submission error:", error)
+    console.error("[Agrilpa] Contact submission error:", error)
     return NextResponse.json({ error: "Error al procesar el formulario" }, { status: 500 })
   }
 }

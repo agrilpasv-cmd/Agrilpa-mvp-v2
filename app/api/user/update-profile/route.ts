@@ -29,7 +29,7 @@ export async function PUT(request: Request) {
             .eq("id", user.id)
 
         if (updateError) {
-            console.error("[v0] Update profile error:", updateError)
+            console.error("[Agrilpa] Update profile error:", updateError)
             return NextResponse.json({
                 error: "Error al actualizar el perfil",
                 details: updateError.message || updateError.details || JSON.stringify(updateError)
@@ -38,7 +38,7 @@ export async function PUT(request: Request) {
 
         return NextResponse.json({ success: true, message: "Perfil actualizado correctamente" })
     } catch (error: any) {
-        console.error("[v0] Update profile unexpected error:", error)
+        console.error("[Agrilpa] Update profile unexpected error:", error)
         return NextResponse.json({ error: "Error interno" }, { status: 500 })
     }
 }

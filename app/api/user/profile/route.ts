@@ -20,7 +20,7 @@ export async function GET() {
             .single()
 
         if (profileError) {
-            console.error("[v0] Profile API error:", profileError)
+            console.error("[Agrilpa] Profile API error:", profileError)
             // If profile doesn't exist in public table yet, we can fallback to auth data
         }
 
@@ -35,7 +35,7 @@ export async function GET() {
 
         return NextResponse.json({ user: userData })
     } catch (error: any) {
-        console.error("[v0] Profile API unexpected error:", error)
+        console.error("[Agrilpa] Profile API unexpected error:", error)
         return NextResponse.json({ error: "Error interno" }, { status: 500 })
     }
 }

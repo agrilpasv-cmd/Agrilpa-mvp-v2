@@ -66,13 +66,13 @@ export async function DELETE(request: NextRequest) {
         const { error: deleteError } = await supabaseAdmin.from("user_products").delete().eq("id", id)
 
         if (deleteError) {
-            console.error("[v0] Database delete error:", deleteError)
+            console.error("[Agrilpa] Database delete error:", deleteError)
             return NextResponse.json({ error: `Error al eliminar: ${deleteError.message}` }, { status: 500 })
         }
 
         return NextResponse.json({ success: true }, { status: 200 })
     } catch (error: any) {
-        console.error("[v0] API error:", error)
+        console.error("[Agrilpa] API error:", error)
         return NextResponse.json({ error: `Error interno: ${error.message || "Error desconocido"}` }, { status: 500 })
     }
 }

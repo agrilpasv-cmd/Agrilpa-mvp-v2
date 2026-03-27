@@ -21,7 +21,7 @@ export async function POST(request: NextRequest) {
     })
 
     if (error) {
-      console.error("[v0] Error tracking click:", error.message)
+      console.error("[Agrilpa] Error tracking click:", error.message)
       // Return success anyway so the UI feedback still works
       // Once the database table is created, tracking will start working
       return NextResponse.json({ success: true })
@@ -29,7 +29,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ success: true })
   } catch (error) {
-    console.error("[v0] Unexpected error:", error)
+    console.error("[Agrilpa] Unexpected error:", error)
     return NextResponse.json({ error: "Internal server error" }, { status: 500 })
   }
 }

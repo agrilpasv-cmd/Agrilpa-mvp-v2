@@ -15,7 +15,7 @@ export async function GET() {
     const { data: profiles, error } = await supabaseAdmin.from("users").select("*").order("created_at", { ascending: false })
 
     if (error) {
-      console.error("[v0] Admin Users API error:", error)
+      console.error("[Agrilpa] Admin Users API error:", error)
       return NextResponse.json({ error: error.message }, { status: 500 })
     }
 
@@ -23,7 +23,7 @@ export async function GET() {
     const { data: { users: authUsers }, error: authError } = await supabaseAdmin.auth.admin.listUsers()
 
     if (authError) {
-      console.error("[v0] Error fetching auth users:", authError)
+      console.error("[Agrilpa] Error fetching auth users:", authError)
       // Continue with just profiles if auth fetch fails, but log it
     }
 
@@ -50,7 +50,7 @@ export async function GET() {
       },
     })
   } catch (error: any) {
-    console.error("[v0] Admin Users API unexpected error:", error)
+    console.error("[Agrilpa] Admin Users API unexpected error:", error)
     return NextResponse.json({ error: "Error interno" }, { status: 500 })
   }
 }

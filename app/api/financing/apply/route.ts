@@ -11,7 +11,7 @@ export async function POST(request: NextRequest) {
     const cookieStore = await cookies()
     const allCookies = cookieStore.getAll()
     console.log(
-      "[v0] API Route - Cookies received:",
+      "[Agrilpa] API Route - Cookies received:",
       allCookies.map((c) => c.name),
     )
 
@@ -21,16 +21,16 @@ export async function POST(request: NextRequest) {
       data: { session },
     } = await supabase.auth.getSession()
 
-    console.log("[v0] API Route - Session status:", session ? "Active" : "Inactive")
-    console.log("[v0] API Route - User ID:", session?.user?.id || "null")
+    console.log("[Agrilpa] API Route - Session status:", session ? "Active" : "Inactive")
+    console.log("[Agrilpa] API Route - User ID:", session?.user?.id || "null")
 
     if (!session?.user) {
-      console.log("[v0] API Route - Rejecting: No session found")
+      console.log("[Agrilpa] API Route - Rejecting: No session found")
       return NextResponse.json({ error: "Debes iniciar sesión para enviar una solicitud" }, { status: 401 })
     }
 
     const user_id = session.user.id
-    console.log("[v0] API Route - Processing request with user_id:", user_id)
+    console.log("[Agrilpa] API Route - Processing request with user_id:", user_id)
 
     let insertError
     if (financing_type === "linea-credito") {
@@ -68,13 +68,13 @@ export async function POST(request: NextRequest) {
     }
 
     if (insertError) {
-      console.error("[v0] Insert error:", insertError)
+      console.error("[Agrilpa] Insert error:", insertError)
       return NextResponse.json({ error: "Error al guardar la solicitud" }, { status: 400 })
     }
 
     return NextResponse.json({ message: "Solicitud enviada exitosamente" }, { status: 200 })
   } catch (error) {
-    console.error("[v0] API error:", error)
+    console.error("[Agrilpa] API error:", error)
     return NextResponse.json({ error: "Error interno del servidor" }, { status: 500 })
   }
 }

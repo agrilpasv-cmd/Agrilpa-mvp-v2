@@ -53,7 +53,7 @@ export default function ContactanosPage() {
 
       setStats({ total, registered, unregistered })
     } catch (error) {
-      console.error("[v0] Error fetching contact submissions:", error)
+      console.error("[Agrilpa] Error fetching contact submissions:", error)
     } finally {
       setLoading(false)
     }

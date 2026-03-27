@@ -71,7 +71,7 @@ export function Contact() {
         message: "",
       })
     } catch (err) {
-      console.error("[v0] Contact form error:", err)
+      console.error("[Agrilpa] Contact form error:", err)
       setError("Error al conectar con el servidor")
     } finally {
       setLoading(false)

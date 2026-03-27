@@ -14,13 +14,13 @@ export async function POST(request: Request) {
     })
 
     if (error) {
-      console.log("[v0] Logistics quote click tracking error:", error.message)
+      console.log("[Agrilpa] Logistics quote click tracking error:", error.message)
       return Response.json({ success: false, error: error.message }, { status: 500 })
     }
 
     return Response.json({ success: true })
   } catch (error) {
-    console.log("[v0] Logistics quote click error:", error)
+    console.log("[Agrilpa] Logistics quote click error:", error)
     return Response.json({ success: false, error: "Error al registrar click" }, { status: 500 })
   }
 }

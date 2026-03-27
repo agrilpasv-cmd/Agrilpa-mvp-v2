@@ -34,7 +34,7 @@ export default function LogisticsPartnersPage() {
         }),
       })
     } catch (error) {
-      console.log("[v0] Quote tracking error:", error)
+      console.log("[Agrilpa] Quote tracking error:", error)
     } finally {
       setIsTracking(false)
     }

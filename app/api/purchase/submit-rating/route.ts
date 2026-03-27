@@ -44,13 +44,13 @@ export async function POST(request: Request) {
     ])
 
     if (insertError) {
-      console.error("[v0] Error inserting rating:", insertError)
+      console.error("[Agrilpa] Error inserting rating:", insertError)
       return Response.json({ error: "Failed to save rating", details: insertError.message }, { status: 500 })
     }
 
     return Response.json({ success: true, message: "Rating saved successfully" })
   } catch (error) {
-    console.error("[v0] Error in submit-rating API:", error)
+    console.error("[Agrilpa] Error in submit-rating API:", error)
     return Response.json({ error: "Internal server error" }, { status: 500 })
   }
 }
