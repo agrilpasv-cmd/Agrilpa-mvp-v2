@@ -19,7 +19,7 @@ export function Commission() {
               <ul className="space-y-3 text-sm text-muted-foreground">
                 <li className="flex items-start gap-2">
                   <span className="text-primary font-bold mt-0.5">1.</span>
-                  <span>Se liquida al completarse la transacción verificada</span>
+                  <span>Se liquida al completarse la transacción</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="text-primary font-bold mt-0.5">2.</span>

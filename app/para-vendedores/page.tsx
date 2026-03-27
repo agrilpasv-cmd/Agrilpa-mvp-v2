@@ -31,12 +31,12 @@ export default function ParaVendedores() {
     {
       icon: Shield,
       title: "Pagos seguros",
-      description: "Transacciones protegidas con verificación de compradores y garantía de pago.",
+      description: "Transacciones protegidas y registro de compradores para mayor confiabilidad.",
     },
     {
       icon: Users,
       title: "Red de compradores",
-      description: "Accede a una base de compradores verificados activamente buscando productos.",
+      description: "Accede a una base de compradores activos buscando productos continuamente.",
     },
     {
       icon: Zap,

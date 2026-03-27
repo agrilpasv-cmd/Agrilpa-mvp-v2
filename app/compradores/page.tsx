@@ -35,8 +35,8 @@ export default function Compradores() {
     },
     {
       icon: ShieldCheck,
-      title: "Proveedores verificados",
-      description: "Todos los vendedores son verificados para garantizar calidad y confiabilidad.",
+      title: "Proveedores directos",
+      description: "Nuestros vendedores son profesionales del sector que garantizan calidad y confiabilidad.",
     },
     {
       icon: Globe2,
@@ -97,7 +97,7 @@ export default function Compradores() {
     {
       icon: ShieldCheck,
       title: "Transacciones seguras",
-      description: "Sistema de pagos protegido con verificación de vendedores y garantía de calidad.",
+      description: "Sistema de pagos protegido con perfiles de vendedores profesionales y garantía de calidad.",
     },
   ]
 
@@ -113,7 +113,7 @@ export default function Compradores() {
                 Encuentra los mejores productos agrícolas directamente
               </h1>
               <p className="text-xl text-muted-foreground mb-8 text-pretty">
-                Conecta con productores verificados, obtén mejores precios y asegura la calidad de tus compras con
+                Conecta con productores registrados, obtén mejores precios y asegura la calidad de tus compras con
                 Agrilpa.
               </p>
               <div className="flex flex-col sm:flex-row gap-4">

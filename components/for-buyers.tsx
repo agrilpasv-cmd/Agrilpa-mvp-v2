@@ -1,7 +1,7 @@
 "use client"
 
 import { Button } from "@/components/ui/button"
-import { Search, Zap, Lock, ArrowRight } from 'lucide-react'
+import { Search, Zap, Lock, ArrowRight, DollarSign } from 'lucide-react'
 import Link from "next/link"
 import { motion } from "framer-motion"
 
@@ -10,7 +10,7 @@ export function ForBuyers() {
     {
       icon: Search,
       title: "Catálogo diversificado",
-      description: "Accede a productos de múltiples vendedores verificados en una sola plataforma.",
+      description: "Accede a productos de múltiples vendedores registrados en una sola plataforma.",
     },
     {
       icon: Zap,
@@ -19,8 +19,13 @@ export function ForBuyers() {
     },
     {
       icon: Lock,
-      title: "Seguridad garantizada",
-      description: "Todos los vendedores están verificados y cumplen con estándares de calidad.",
+      title: "Conexiones confiables",
+      description: "Conecta con vendedores profesionales del sector que cumplen con estándares de calidad.",
+    },
+    {
+      icon: DollarSign,
+      title: "Precios competitivos",
+      description: "Obtén los mejores costos negociando directamente con productores desde el origen.",
     },
   ]
 

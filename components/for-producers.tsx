@@ -1,7 +1,7 @@
 "use client"
 
 import { Button } from "@/components/ui/button"
-import { TrendingUp, Globe, Megaphone, ArrowRight } from "lucide-react"
+import { TrendingUp, Globe, Megaphone, ArrowRight, Handshake } from "lucide-react"
 import Link from "next/link"
 import { motion } from "framer-motion"
 
@@ -21,6 +21,11 @@ export function ForProducers() {
       icon: TrendingUp,
       title: "Crecimiento escalable",
       description: "Crece a tu ritmo con acceso a compradores de múltiples sectores e industrias.",
+    },
+    {
+      icon: Handshake,
+      title: "Venta sin intermediarios",
+      description: "Conecta directamente con el comprador final y obtén el valor real de tu producción.",
     },
   ]
 

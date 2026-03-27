@@ -34,7 +34,7 @@ export function About() {
             </div>
             <h3 className="text-xl font-bold text-foreground mb-3">Visibilidad Global</h3>
             <p className="text-muted-foreground">
-              Publica tus productos y llega a una red de compradores verificados de todo el mundo sin salir de la plataforma.
+              Publica tus productos y llega a una red de compradores globales de todo el mundo sin salir de la plataforma.
             </p>
           </motion.div>
 
@@ -66,7 +66,7 @@ export function About() {
             </div>
             <h3 className="text-xl font-bold text-foreground mb-3">Seguridad en Identidad</h3>
             <p className="text-muted-foreground">
-              Validamos los perfiles de empresas para que puedas negociar con confianza en cada transacción.
+              Conectamos perfiles profesionales de empresas para que puedas negociar con confianza en cada transacción.
             </p>
           </motion.div>
         </div>
@@ -132,8 +132,8 @@ export function About() {
                   },
                   {
                     Icon: FileText,
-                    title: "Perfil de empresa verificado",
-                    desc: "Completa y gestiona tu perfil empresarial para generar confianza ante compradores y vendedores.",
+                    title: "Perfil de empresa completo",
+                    desc: "Completa y gestiona tu perfil empresarial profesional para generar confianza ante compradores y vendedores.",
                   },
                   {
                     Icon: Truck,

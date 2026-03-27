@@ -121,7 +121,7 @@ export function ProducerRegistrationForm() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     console.log("Form submitted:", formData)
-    alert("¡Solicitud enviada! Te contactaremos pronto para verificar tu información.")
+    alert("¡Solicitud enviada! Te contactaremos pronto para completar tu registro.")
   }
 
   return (
@@ -770,7 +770,7 @@ export function ProducerRegistrationForm() {
         <div className="mt-8 p-6 bg-primary/10 border border-primary/20 rounded-lg">
           <p className="text-sm text-foreground">
             <span className="font-semibold">Información importante:</span> Todos los campos marcados con * son
-            obligatorios. Tu información será verificada antes de activar tu cuenta como vendedor. El proceso
+            obligatorios. Tu información será revisada antes de activar tu cuenta como vendedor. El proceso
             típicamente toma entre 3-5 días hábiles.
           </p>
         </div>

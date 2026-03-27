@@ -288,7 +288,7 @@ export default function Financiamiento() {
                 </li>
                 <li className="flex items-start gap-3">
                   <CheckCircle className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
-                  <span className="text-sm text-muted-foreground">Para productores verificados</span>
+                  <span className="text-sm text-muted-foreground">Para productores registrados</span>
                 </li>
               </ul>
               <Button

@@ -59,7 +59,7 @@ export default function ComoFunciona() {
                   </li>
                   <li className="flex items-start gap-3">
                     <CheckCircle className="h-5 w-5 text-primary mt-1 flex-shrink-0" />
-                    <span className="text-muted-foreground">Verificación de identidad segura</span>
+                    <span className="text-muted-foreground">Registro de empresa profesional</span>
                   </li>
                   <li className="flex items-start gap-3">
                     <CheckCircle className="h-5 w-5 text-primary mt-1 flex-shrink-0" />
@@ -187,7 +187,7 @@ export default function ComoFunciona() {
                 <ul className="space-y-3">
                   <li className="flex items-start gap-3">
                     <CheckCircle className="h-5 w-5 text-primary mt-1 flex-shrink-0" />
-                    <span className="text-muted-foreground">Pagos seguros y verificados</span>
+                    <span className="text-muted-foreground">Pagos seguros y transparentes</span>
                   </li>
                   <li className="flex items-start gap-3">
                     <CheckCircle className="h-5 w-5 text-primary mt-1 flex-shrink-0" />
@@ -415,7 +415,7 @@ export default function ComoFunciona() {
               </div>
               <h3 className="mb-3 text-xl font-bold text-foreground">Transacciones Seguras</h3>
               <p className="leading-relaxed text-muted-foreground">
-                Sistema de pagos protegido y verificación de usuarios para mayor confianza
+                Sistema de pagos protegido y perfiles profesionales de usuarios para mayor confianza
               </p>
             </div>
 
