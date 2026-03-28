@@ -11,6 +11,7 @@ interface Stats {
   totalUsers: number
   adminUsers: number
   regularUsers: number
+  totalQuotations: number
 }
 
 export default function AdminDashboardPage() {
@@ -18,6 +19,7 @@ export default function AdminDashboardPage() {
     totalUsers: 0,
     adminUsers: 0,
     regularUsers: 0,
+    totalQuotations: 0,
   })
   const [analyticsData, setAnalyticsData] = useState<any>(null)
   const [loading, setLoading] = useState(true)
@@ -60,6 +62,7 @@ export default function AdminDashboardPage() {
             totalUsers: data.totalUsers,
             adminUsers: data.adminUsers,
             regularUsers: data.regularUsers,
+            totalQuotations: data.totalQuotations || 0,
           })
           if (data.detailedAnalytics) {
             setAnalyticsData(data.detailedAnalytics)
@@ -127,7 +130,7 @@ export default function AdminDashboardPage() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-muted-foreground mb-2">Cotizaciones</p>
-                  <p className="text-3xl font-bold text-foreground">{stats.adminUsers}</p>
+                  <p className="text-3xl font-bold text-foreground">{stats.totalQuotations}</p>
                   <p className="text-xs text-blue-600 mt-2">Gestionar solicitudes</p>
                 </div>
                 <ClipboardList className="w-12 h-12 text-primary/20" />

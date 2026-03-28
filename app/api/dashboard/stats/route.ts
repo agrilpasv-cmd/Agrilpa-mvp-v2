@@ -62,12 +62,11 @@ export async function GET() {
         console.log("[Stats API] User:", userId)
         console.log("[Stats API] Pending Quotes:", quotationsCount, "Total fetched:", allQuotes?.length, "Error:", quoteError)
 
-        // 3. User Products
+        // 3. User Products (all, regardless of verification status)
         const { count: activeProducts } = await supabaseAdmin
             .from("user_products")
             .select("*", { count: 'exact', head: true })
             .eq("user_id", userId)
-            .eq("verified", true)
 
         // Demo data for charts
         const monthlyData = [

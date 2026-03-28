@@ -71,13 +71,13 @@ export default function ProfilePage() {
 
     const fetchStats = async () => {
       try {
-        const res = await fetch("/api/dashboard/dynamic-data")
+        const res = await fetch("/api/dashboard/stats")
         if (res.ok) {
           const data = await res.json()
           setStats({
-            products: data.counts?.publicaciones || 0,
-            purchases: data.counts?.compras || 0,
-            quotations: data.counts?.cotizaciones || 0,
+            products: data.activeProducts || 0,
+            purchases: data.totalTransactions || 0,
+            quotations: data.quotationsCount || 0,
           })
         }
       } catch (error) {

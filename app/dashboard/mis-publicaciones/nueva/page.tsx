@@ -169,7 +169,7 @@ export default function NuevaPublicacionPage() {
       { key: "minOrder", label: "Pedido Mínimo" },
       { key: "packaging", label: "Tipo de Embalaje" },
       { key: "packagingSize", label: "Tamaño del Embalaje" },
-      { key: "companyName", label: "Nombre de la Empresa" },
+      { key: "companyName", label: "Nombre del Vendedor" },
       { key: "contactMethod", label: "Medio de Contacto" },
     ]
 
@@ -761,7 +761,7 @@ export default function NuevaPublicacionPage() {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
                 <label htmlFor="companyName" className="block text-sm font-medium mb-2">
-                  Nombre de la Empresa <span className="text-red-500">*</span>
+                  Nombre del Vendedor <span className="text-red-500">*</span>
                 </label>
                 <Input
                   id="companyName"
@@ -769,15 +769,22 @@ export default function NuevaPublicacionPage() {
                   name="companyName"
                   value={formData.companyName}
                   onChange={handleInputChange}
-                  placeholder="Se completará automáticamente con el nombre de tu empresa"
+                  placeholder="Se completará automáticamente con el nombre de tu perfil"
                   className="bg-muted cursor-not-allowed border-muted-foreground/20"
                   readOnly={true}
                   tabIndex={-1}
                   required
                 />
-                <p className="text-[11px] text-muted-foreground mt-1.5 flex items-center gap-1">
-                  <span className="w-1 h-1 rounded-full bg-primary" />
-                  Este nombre se basa en tu de perfil y no se puede cambiar aquí.
+                <p className="text-[11px] text-muted-foreground mt-1.5 flex items-center flex-wrap gap-1">
+                  <span className="w-1 h-1 rounded-full bg-primary shrink-0" />
+                  Este nombre se basa en tu configuración de perfil y no se puede cambiar aquí.
+                  <button 
+                    type="button"
+                    onClick={() => router.push("/dashboard/perfil")}
+                    className="text-primary hover:underline font-medium ml-1 outline-none"
+                  >
+                    Ir a configuración de perfil
+                  </button>
                 </p>
               </div>
               <div>

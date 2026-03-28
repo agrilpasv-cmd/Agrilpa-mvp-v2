@@ -86,6 +86,22 @@ export async function GET(request: Request) {
 
         const adminUsers = admins?.length || 0
         const regularUsers = totalUsers - adminUsers
+        const adminIds = (admins || []).map((a: any) => a.id)
+
+        // 3b. Count quotations excluding those sent/received by admins
+        let totalQuotations = 0
+        try {
+            let query = supabaseAdmin
+                .from("quotations")
+                .select("id", { count: 'exact', head: true })
+            if (adminIds.length > 0) {
+                query = query.not("buyer_id", "in", `(${adminIds.join(",")})`)
+            }
+            const { count } = await query
+            totalQuotations = count || 0
+        } catch (e) {
+            console.error("[Stats API] Error counting quotations:", e)
+        }
 
         // 4. Analytics Data - Dynamic Range Support
         const url = new URL(request.url)
@@ -263,6 +279,7 @@ export async function GET(request: Request) {
             totalSubscriptions: subscriptionsCount || 0,
             adminUsers,
             regularUsers,
+            totalQuotations,
             monthlyData,
             analyticsData: detailedAnalytics.topCountries, // Keeping legacy prop for safety
             detailedAnalytics, // New Full Data
