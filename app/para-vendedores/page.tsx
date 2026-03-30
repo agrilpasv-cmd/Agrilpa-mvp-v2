@@ -29,11 +29,6 @@ export default function ParaVendedores() {
       description: "Crece a tu ritmo con acceso a compradores de múltiples sectores.",
     },
     {
-      icon: Shield,
-      title: "Pagos seguros",
-      description: "Transacciones protegidas y registro de compradores para mayor confiabilidad.",
-    },
-    {
       icon: Users,
       title: "Red de compradores",
       description: "Accede a una base de compradores activos buscando productos continuamente.",
@@ -67,7 +62,7 @@ export default function ParaVendedores() {
     {
       number: "04",
       title: "Cierra ventas",
-      description: "Acuerda términos, coordina logística y recibe pagos seguros.",
+      description: "Acuerda términos y finaliza la venta.",
       icon: CheckCircle2,
     },
   ]

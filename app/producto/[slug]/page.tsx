@@ -15,7 +15,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import { ChatOverlay } from "@/components/chat-overlay"
-import { Star, MapPin, MessageCircle, Check, ChevronLeft, FileText, ShoppingCart, Copy, Calendar, Package, Loader, AlertCircle } from "lucide-react"
+import { Star, MapPin, MessageCircle, Check, ChevronLeft, FileText, ShoppingCart, Copy, Calendar, Package, Loader, AlertCircle, ArrowRight } from "lucide-react"
 import { getProductBySlug, getProductsByCategory, allProducts } from "@/lib/products-data"
 import { createClient } from "@/lib/supabase/client"
 
@@ -601,21 +601,47 @@ export default function ProductPage() {
               <span className="text-sm text-muted-foreground">({product.reviews} reseñas)</span>
             </div>
 
-            <Card className="bg-primary/5 border border-primary/20 p-6">
-              <div className="space-y-3">
-                <div>
-                  <p className="text-sm text-muted-foreground mb-1">Productor</p>
-                  <p className="text-lg font-bold text-foreground">{product.producer}</p>
+            {(product as any).vendorId ? (
+              <Link href={`/vendedor/${(product as any).vendorId}`}>
+                <Card className="bg-primary/5 border border-primary/20 p-5 hover:border-primary/50 hover:bg-primary/10 hover:shadow-md transition-all duration-200 cursor-pointer group">
+                  <div className="flex items-center gap-4">
+                    {/* Avatar circle */}
+                    <div className="shrink-0 w-12 h-12 rounded-full bg-gradient-to-br from-primary to-primary/60 flex items-center justify-center text-white font-bold text-base shadow-sm shadow-primary/30">
+                      {(product.producer || "P").slice(0, 2).toUpperCase()}
+                    </div>
+                    {/* Info */}
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs text-muted-foreground mb-0.5">Productor</p>
+                      <p className="text-base font-bold text-foreground group-hover:text-primary transition-colors truncate">{product.producer}</p>
+                      <div className="flex items-center gap-1.5 text-muted-foreground mt-0.5">
+                        <MapPin className="w-3 h-3 shrink-0" />
+                        <p className="text-xs">{product.location}</p>
+                      </div>
+                    </div>
+                    {/* Ver perfil */}
+                    <span className="inline-flex items-center gap-1 text-xs text-primary font-medium group-hover:gap-1.5 transition-all shrink-0">
+                      Ver perfil
+                      <ArrowRight className="w-3 h-3" />
+                    </span>
+                  </div>
+                </Card>
+              </Link>
+            ) : (
+              <Card className="bg-primary/5 border border-primary/20 p-6">
+                <div className="space-y-3">
+                  <div>
+                    <p className="text-sm text-muted-foreground mb-1">Productor</p>
+                    <p className="text-lg font-bold text-foreground">{product.producer}</p>
+                  </div>
+                  <div className="flex items-center gap-2 text-muted-foreground">
+                    <MapPin className="w-4 h-4" />
+                    <p className="text-sm">{product.location}</p>
+                  </div>
                 </div>
+              </Card>
+            )}
 
-                <div className="flex items-center gap-2 text-muted-foreground">
-                  <MapPin className="w-4 h-4" />
-                  <p className="text-sm">{product.location}</p>
-                </div>
-              </div>
-            </Card>
-
-            <Card className="bg-primary/10 border border-primary/30 p-6 space-y-4">
+            <Card className="mt-4 bg-primary/10 border border-primary/30 p-6 space-y-4">
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <div>
                   <p className="text-sm text-muted-foreground mb-2">Precio</p>

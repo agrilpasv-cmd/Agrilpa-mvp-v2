@@ -10,7 +10,7 @@ import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
 import {
   User, Mail, Phone, Building2, Globe, MapPin, FileText,
   Edit2, Save, X, Loader, CheckCircle2, AlertCircle,
-  Package, ShoppingCart, Star, TrendingUp, Calendar, Link as LinkIcon
+  Package, ShoppingCart, Star, TrendingUp, Calendar, Link as LinkIcon, Camera
 } from "lucide-react"
 
 type Status = { type: "success" | "error"; message: string } | null
@@ -22,6 +22,8 @@ export default function ProfilePage() {
   const [saveStatus, setSaveStatus] = useState<Status>(null)
   const [originalData, setOriginalData] = useState<any>(null)
   const [stats, setStats] = useState({ products: 0, purchases: 0, quotations: 0 })
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null)
+  const [uploadingAvatar, setUploadingAvatar] = useState(false)
   const [formData, setFormData] = useState({
     fullName: "",
     email: "",
@@ -53,6 +55,7 @@ export default function ProfilePage() {
             }
             setFormData(userData)
             setOriginalData(userData)
+            if (data.user.avatar_url) setAvatarUrl(data.user.avatar_url)
 
             if (data.user.created_at) {
               const date = new Date(data.user.created_at)
@@ -136,6 +139,37 @@ export default function ProfilePage() {
       .slice(0, 2)
   }
 
+  const handleAvatarClick = () => {
+    document.getElementById("avatar-upload-input")?.click()
+  }
+
+  const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setUploadingAvatar(true)
+    try {
+      const fd = new FormData()
+      fd.append("avatar", file)
+      const res = await fetch("/api/user/upload-avatar", { method: "POST", body: fd })
+      const data = await res.json()
+      if (res.ok && data.avatarUrl) {
+        setAvatarUrl(data.avatarUrl)
+        if (data.dbWarning) {
+          setSaveStatus({ type: "error", message: "⚠️ Foto visible solo en esta sesión. Para guardarla permanentemente, ejecuta en Supabase SQL Editor: ALTER TABLE public.users ADD COLUMN IF NOT EXISTS avatar_url TEXT;" })
+        } else {
+          setSaveStatus({ type: "success", message: "¡Foto de perfil actualizada!" })
+        }
+      } else {
+        setSaveStatus({ type: "error", message: data.error || "Error al subir la imagen" })
+      }
+    } catch {
+      setSaveStatus({ type: "error", message: "Error de conexión al subir la imagen" })
+    } finally {
+      setUploadingAvatar(false)
+      e.target.value = ""
+    }
+  }
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
@@ -208,16 +242,35 @@ export default function ProfilePage() {
       <Card>
         <CardContent className="pt-6">
           <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6">
-            <div className="relative">
+            <div className="relative group cursor-pointer" onClick={handleAvatarClick} title="Cambiar foto de perfil">
               <Avatar className="w-24 h-24 border-4 border-primary/20">
-                <AvatarImage src="/placeholder-user.jpg" alt="Foto de perfil" />
+                {avatarUrl ? (
+                  <AvatarImage src={avatarUrl} alt="Foto de perfil" className="object-cover" />
+                ) : null}
                 <AvatarFallback className="text-2xl font-bold bg-primary/10 text-primary">
                   {getInitials(formData.fullName || "U")}
                 </AvatarFallback>
               </Avatar>
+              {/* Hover overlay */}
+              <div className="absolute inset-0 rounded-full bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                {uploadingAvatar ? (
+                  <Loader className="w-6 h-6 text-white animate-spin" />
+                ) : (
+                  <Camera className="w-6 h-6 text-white" />
+                )}
+              </div>
+              {/* Green dot */}
               <div className="absolute -bottom-1 -right-1 w-7 h-7 bg-green-500 border-2 border-background rounded-full flex items-center justify-center">
                 <CheckCircle2 className="w-4 h-4 text-white" />
               </div>
+              {/* Hidden file input */}
+              <input
+                id="avatar-upload-input"
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                className="hidden"
+                onChange={handleAvatarChange}
+              />
             </div>
 
             <div className="flex-1 text-center sm:text-left">

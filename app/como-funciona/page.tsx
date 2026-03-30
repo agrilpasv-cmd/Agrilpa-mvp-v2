@@ -181,21 +181,16 @@ export default function ComoFunciona() {
                   <h3 className="text-3xl font-bold text-foreground">Vende y Entrega</h3>
                 </div>
                 <p className="text-lg leading-relaxed text-muted-foreground mb-6">
-                  Cierra el trato, coordina la logística y recibe tu pago de forma segura. 
-                  Agrilpa garantiza transacciones protegidas y ofrece soporte en cada paso del proceso.
+                  Cierra el trato y finaliza la venta. Agrilpa brinda soporte en cada paso del proceso.
                 </p>
                 <ul className="space-y-3">
                   <li className="flex items-start gap-3">
                     <CheckCircle className="h-5 w-5 text-primary mt-1 flex-shrink-0" />
-                    <span className="text-muted-foreground">Pagos seguros y transparentes</span>
+                    <span className="text-muted-foreground">Comunicación directa con el comprador</span>
                   </li>
                   <li className="flex items-start gap-3">
                     <CheckCircle className="h-5 w-5 text-primary mt-1 flex-shrink-0" />
-                    <span className="text-muted-foreground">Soporte logístico disponible</span>
-                  </li>
-                  <li className="flex items-start gap-3">
-                    <CheckCircle className="h-5 w-5 text-primary mt-1 flex-shrink-0" />
-                    <span className="text-muted-foreground">Seguimiento de entregas</span>
+                    <span className="text-muted-foreground">Acuerdos flexibles entre las partes</span>
                   </li>
                 </ul>
               </div>
@@ -360,24 +355,24 @@ export default function ComoFunciona() {
                   <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary text-white font-bold text-xl">
                     4
                   </div>
-                  <h3 className="text-3xl font-bold text-foreground">Compra y Recibe</h3>
+                  <h3 className="text-3xl font-bold text-foreground">Compra y Acuerda</h3>
                 </div>
                 <p className="text-lg leading-relaxed text-muted-foreground mb-6">
-                  Confirma tu pedido y realiza el pago de forma segura a través de nuestra 
-                  plataforma. Rastrea tu envío en tiempo real hasta que llegue a tu destino.
+                  Confirma tu pedido y acuerda los términos directamente con el vendedor. 
+                  Coordina la entrega y finaliza la compra de manera sencilla.
                 </p>
                 <ul className="space-y-3">
                   <li className="flex items-start gap-3">
                     <Shield className="h-5 w-5 text-primary mt-1 flex-shrink-0" />
-                    <span className="text-muted-foreground">Pagos protegidos</span>
+                    <span className="text-muted-foreground">Comunicación directa con vendedores</span>
                   </li>
                   <li className="flex items-start gap-3">
                     <Shield className="h-5 w-5 text-primary mt-1 flex-shrink-0" />
-                    <span className="text-muted-foreground">Rastreo GPS en tiempo real</span>
+                    <span className="text-muted-foreground">Acuerdos flexibles de entrega</span>
                   </li>
                   <li className="flex items-start gap-3">
                     <Shield className="h-5 w-5 text-primary mt-1 flex-shrink-0" />
-                    <span className="text-muted-foreground">Garantía de calidad</span>
+                    <span className="text-muted-foreground">Productos de calidad directo del productor</span>
                   </li>
                 </ul>
               </div>
@@ -413,9 +408,9 @@ export default function ComoFunciona() {
               <div className="mb-4 inline-flex h-12 w-12 items-center justify-center rounded-lg bg-primary/10">
                 <Shield className="h-6 w-6 text-primary" />
               </div>
-              <h3 className="mb-3 text-xl font-bold text-foreground">Transacciones Seguras</h3>
+              <h3 className="mb-3 text-xl font-bold text-foreground">Perfiles Profesionales</h3>
               <p className="leading-relaxed text-muted-foreground">
-                Sistema de pagos protegido y perfiles profesionales de usuarios para mayor confianza
+                Vendedores con perfiles de empresa detallados para que compres con confianza
               </p>
             </div>
 

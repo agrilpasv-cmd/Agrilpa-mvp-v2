@@ -21,8 +21,13 @@ export function Footer() {
                 </Link>
               </li>
               <li>
-                <Link href="/financiamiento" className="hover:opacity-100">
-                  Financiamiento
+                <Link href="/para-vendedores" className="hover:opacity-100">
+                  Para vendedores
+                </Link>
+              </li>
+              <li>
+                <Link href="/compradores" className="hover:opacity-100">
+                  Para compradores
                 </Link>
               </li>
               <li>
@@ -30,7 +35,6 @@ export function Footer() {
                   Reserva tu lugar
                 </Link>
               </li>
-              <li></li>
             </ul>
           </div>
           <div>

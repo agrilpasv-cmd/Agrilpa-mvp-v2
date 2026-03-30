@@ -1,9 +1,9 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import Link from "next/link"
-import { Menu, X, User, LogOut } from "lucide-react"
-import { usePathname } from "next/navigation"
+import { Menu, X, User, LogOut, Plus } from "lucide-react"
+import { usePathname, useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import Image from "next/image"
 import { AuthStorage } from "@/lib/auth-storage"
@@ -15,7 +15,11 @@ export function Navbar() {
   const [userRole, setUserRole] = useState<string | null>(null)
   const [notificationCount, setNotificationCount] = useState(0)
   const [isLoggingOut, setIsLoggingOut] = useState(false)
+  const [showVenderPopup, setShowVenderPopup] = useState(false)
+  const venderPopupRef = useRef<HTMLDivElement>(null)
+  const venderButtonRef = useRef<HTMLButtonElement>(null)
   const pathname = usePathname()
+  const router = useRouter()
 
   useEffect(() => {
     const session = AuthStorage.getSession()
@@ -29,6 +33,23 @@ export function Navbar() {
       return () => clearInterval(interval)
     }
   }, [])
+
+  // Close popup when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        showVenderPopup &&
+        venderPopupRef.current &&
+        !venderPopupRef.current.contains(event.target as Node) &&
+        venderButtonRef.current &&
+        !venderButtonRef.current.contains(event.target as Node)
+      ) {
+        setShowVenderPopup(false)
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside)
+    return () => document.removeEventListener("mousedown", handleClickOutside)
+  }, [showVenderPopup])
 
   const fetchNotificationCount = async () => {
     try {
@@ -78,14 +99,20 @@ export function Navbar() {
     return userRole === "admin" ? "/admin" : "/dashboard"
   }
 
+  const handleVenderClick = () => {
+    if (isLoggedIn) {
+      router.push("/dashboard/mis-publicaciones/nueva")
+    } else {
+      setShowVenderPopup(!showVenderPopup)
+    }
+  }
+
   const navLinks = [
     { href: "/como-funciona", label: "Cómo funciona" },
     { href: "/productos", label: "Productos" },
-    { href: "/para-vendedores", label: "Vendedores" },
-    { href: "/compradores", label: "Compradores" },
-    { href: "/sobre-nosotros", label: "Sobre nosotros" },
-    { href: "/contacto", label: "Contáctenos" },
   ]
+
+  const contactLink = { href: "/contacto", label: "Contáctenos" }
 
   return (
     <nav className="sticky top-0 z-50 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -96,7 +123,7 @@ export function Navbar() {
           </Link>
 
           {/* Desktop Menu */}
-          <div className="hidden md:flex items-center space-x-1">
+          <div className="hidden md:flex flex-1 items-center justify-center space-x-1">
             {navLinks.map((link) => (
               <Link
                 key={link.href}
@@ -106,6 +133,53 @@ export function Navbar() {
                 {link.label}
               </Link>
             ))}
+            {/* Vender Button */}
+            <div className="relative">
+              <button
+                ref={venderButtonRef}
+                onClick={handleVenderClick}
+                className="px-4 py-2 text-base font-semibold text-primary hover:text-primary/80 transition-colors"
+              >
+                Vender
+              </button>
+
+              {/* Popup for non-logged-in users */}
+              {showVenderPopup && !isLoggedIn && (
+                <div
+                  ref={venderPopupRef}
+                  className="absolute top-full right-0 mt-3 w-80 bg-card border border-border text-card-foreground p-6 rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.12)] z-50 animate-in fade-in slide-in-from-top-2 duration-200"
+                >
+                  <div className="absolute -top-2.5 right-8 w-5 h-5 bg-card border-t border-l border-border transform rotate-45"></div>
+                  <div className="relative z-10">
+                    <p className="font-semibold text-lg text-foreground mb-2 text-center">
+                      ¡Empieza a vender!
+                    </p>
+                    <p className="text-sm text-muted-foreground text-center mb-5">
+                      Para publicar tus productos agrícolas necesitas una cuenta en Agrilpa. Es <span className="font-bold text-primary">gratis</span>.
+                    </p>
+                    <div className="flex flex-col gap-3">
+                      <Link href="/auth" onClick={() => setShowVenderPopup(false)}>
+                        <Button variant="outline" className="w-full bg-transparent">
+                          Iniciar sesión
+                        </Button>
+                      </Link>
+                      <Link href="/auth?mode=register" onClick={() => setShowVenderPopup(false)}>
+                        <Button className="w-full bg-primary hover:bg-primary/90 shadow-lg shadow-primary/20">
+                          Crear Cuenta Gratis
+                        </Button>
+                      </Link>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <Link
+              href={contactLink.href}
+              className="px-4 py-2 text-base font-medium text-foreground hover:text-primary transition-colors"
+            >
+              {contactLink.label}
+            </Link>
           </div>
 
           <div className="hidden md:flex items-center space-x-3">
@@ -181,6 +255,47 @@ export function Navbar() {
                 {link.label}
               </Link>
             ))}
+
+            {/* Vender - Mobile */}
+            {isLoggedIn ? (
+              <Link
+                href="/dashboard/mis-publicaciones/nueva"
+                className="block px-3 py-2 text-sm font-semibold text-primary hover:bg-primary/10 rounded-md transition-colors"
+                onClick={() => setIsOpen(false)}
+              >
+                Vender
+              </Link>
+            ) : (
+              <div className="px-3 py-3 bg-muted/50 rounded-lg mx-1">
+                <p className="text-sm font-semibold text-foreground mb-1">
+                  ¿Quieres vender?
+                </p>
+                <p className="text-xs text-muted-foreground mb-3">
+                  Inicia sesión o crea una cuenta gratis para publicar tus productos.
+                </p>
+                <div className="flex gap-2">
+                  <Link href="/auth" className="flex-1" onClick={() => setIsOpen(false)}>
+                    <Button variant="outline" size="sm" className="w-full bg-transparent text-xs">
+                      Iniciar sesión
+                    </Button>
+                  </Link>
+                  <Link href="/auth?mode=register" className="flex-1" onClick={() => setIsOpen(false)}>
+                    <Button size="sm" className="w-full bg-primary hover:bg-primary/90 text-xs">
+                      Crear Cuenta
+                    </Button>
+                  </Link>
+                </div>
+              </div>
+            )}
+
+            <Link
+              href={contactLink.href}
+              className="block px-3 py-2 text-sm font-medium text-foreground hover:text-primary hover:bg-muted rounded-md transition-colors"
+              onClick={() => setIsOpen(false)}
+            >
+              {contactLink.label}
+            </Link>
+
             <div className="space-y-2 pt-2 border-t border-border">
               {isLoggedIn ? (
                 <>
