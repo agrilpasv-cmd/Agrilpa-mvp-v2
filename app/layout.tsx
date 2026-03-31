@@ -15,8 +15,8 @@ export const metadata: Metadata = {
   description:
     "Conecta vendedores agrícolas con compradores mayoristas y empresas industriales en todo el mundo. Elimina intermediarios y accede a mercados globales.",
   icons: {
-    icon: "/favicon.png",
-    apple: "/favicon.png",
+    icon: "/favicon.png?v=2",
+    apple: "/favicon.png?v=2",
   },
 }
 
