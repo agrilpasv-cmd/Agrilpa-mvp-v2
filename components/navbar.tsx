@@ -2,9 +2,16 @@
 
 import { useState, useEffect, useRef } from "react"
 import Link from "next/link"
-import { Menu, X, User, LogOut, Plus } from "lucide-react"
+import { Menu, X, User, LogOut, Plus, AlertCircle } from "lucide-react"
 import { usePathname, useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
 import Image from "next/image"
 import { AuthStorage } from "@/lib/auth-storage"
 import { createBrowserClient } from "@/lib/supabase/client"
@@ -143,35 +150,41 @@ export function Navbar() {
                 Vender
               </button>
 
-              {/* Popup for non-logged-in users */}
-              {showVenderPopup && !isLoggedIn && (
-                <div
-                  ref={venderPopupRef}
-                  className="absolute top-full right-0 mt-3 w-80 bg-card border border-border text-card-foreground p-6 rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.12)] z-50 animate-in fade-in slide-in-from-top-2 duration-200"
-                >
-                  <div className="absolute -top-2.5 right-8 w-5 h-5 bg-card border-t border-l border-border transform rotate-45"></div>
-                  <div className="relative z-10">
-                    <p className="font-semibold text-lg text-foreground mb-2 text-center">
-                      ¡Empieza a vender!
-                    </p>
-                    <p className="text-sm text-muted-foreground text-center mb-5">
-                      Para publicar tus productos agrícolas necesitas una cuenta en Agrilpa. Es <span className="font-bold text-primary">gratis</span>.
-                    </p>
-                    <div className="flex flex-col gap-3">
-                      <Link href="/auth" onClick={() => setShowVenderPopup(false)}>
-                        <Button variant="outline" className="w-full bg-transparent">
-                          Iniciar sesión
-                        </Button>
-                      </Link>
-                      <Link href="/auth?mode=register" onClick={() => setShowVenderPopup(false)}>
-                        <Button className="w-full bg-primary hover:bg-primary/90 shadow-lg shadow-primary/20">
-                          Crear Cuenta Gratis
-                        </Button>
-                      </Link>
+              {/* Auth Guard Dialog for Vender */}
+              <Dialog open={showVenderPopup && !isLoggedIn} onOpenChange={(open) => setShowVenderPopup(open)}>
+                <DialogContent className="sm:max-w-md text-center">
+                  <DialogHeader className="flex flex-col items-center gap-2">
+                    <div className="bg-primary/10 p-3 rounded-full mb-2">
+                      <AlertCircle className="w-8 h-8 text-primary" />
                     </div>
+                    <DialogTitle className="text-xl">Inicia sesión requerida</DialogTitle>
+                    <DialogDescription className="text-center text-base pt-2">
+                      Para publicar tus productos, primero debes iniciar sesión o registrarte en Agrilpa.
+                    </DialogDescription>
+                  </DialogHeader>
+                  <div className="grid gap-3 py-4 mt-2">
+                    <Button
+                      className="w-full bg-primary hover:bg-primary/90 text-white h-12 text-lg font-semibold"
+                      onClick={() => {
+                        setShowVenderPopup(false)
+                        router.push("/auth")
+                      }}
+                    >
+                      Iniciar sesión
+                    </Button>
+                    <Button
+                      variant="outline"
+                      className="w-full h-12 text-lg font-semibold"
+                      onClick={() => {
+                        setShowVenderPopup(false)
+                        router.push("/auth?mode=register")
+                      }}
+                    >
+                      Registrarse
+                    </Button>
                   </div>
-                </div>
-              )}
+                </DialogContent>
+              </Dialog>
             </div>
 
             <Link

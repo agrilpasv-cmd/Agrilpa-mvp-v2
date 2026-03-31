@@ -112,13 +112,23 @@ export async function GET() {
             process.env.SUPABASE_SERVICE_ROLE_KEY!
         )
 
-        // Fetch User Profile for Company Name
-        const { data: profile } = await supabaseAdmin
-            .from("users")
-            .select("full_name, company_name")
-            .eq("id", userId)
-            .single()
-            
+        // Run all queries concurrently to drastically reduce DB latency overhead
+        const [
+            { data: profile },
+            { data: userProducts },
+            { data: sellerQuotes },
+            { data: buyerQuotes },
+            { data: sellerOrders },
+            { data: buyerOrders }
+        ] = await Promise.all([
+            supabaseAdmin.from("users").select("full_name, company_name").eq("id", userId).single(),
+            supabaseAdmin.from("user_products").select("id, title, views, category").eq("user_id", userId),
+            supabaseAdmin.from("quotations").select("*").eq("seller_id", userId),
+            supabaseAdmin.from("quotations").select("*").eq("buyer_id", userId),
+            supabaseAdmin.from("orders").select("*").eq("seller_id", userId),
+            supabaseAdmin.from("orders").select("*").eq("buyer_id", userId)
+        ])
+
         const companyName = profile?.company_name || profile?.full_name || "Usuario"
 
         // Date reference for 7 day window
@@ -126,39 +136,8 @@ export async function GET() {
         sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7)
         const sevenDaysAgoIso = sevenDaysAgo.toISOString()
 
-        // 1. Fetch User Products (To check if Seller & get performance)
-        const { data: userProducts, error: productsError } = await supabaseAdmin
-            .from("user_products")
-            .select("id, title, views, category")
-            .eq("user_id", userId)
-
         const isSeller = userProducts && userProducts.length > 0
-
-        // 2. Fetch Quotations (As Seller and As Buyer)
-        const { data: sellerQuotes, error: sqError } = await supabaseAdmin
-            .from("quotations")
-            .select("*")
-            .eq("seller_id", userId)
-
-        // Assuming email match as a fallback if buyer_id isn't fully migrated, but buyer_id is better.
-        const { data: buyerQuotes, error: bqError } = await supabaseAdmin
-            .from("quotations")
-            .select("*")
-            .eq("buyer_id", userId)
-
         const hasSentQuotes = buyerQuotes && buyerQuotes.length > 0
-
-        // 3. Fetch Orders (As Seller and As Buyer)
-        const { data: sellerOrders, error: soError } = await supabaseAdmin
-            .from("orders")
-            .select("*")
-            .eq("seller_id", userId)
-
-        const { data: buyerOrders, error: boError } = await supabaseAdmin
-            .from("orders")
-            .select("*")
-            .eq("buyer_id", userId)
-
         const hasBoughtOrders = buyerOrders && buyerOrders.length > 0
         const isBuyer = hasSentQuotes || hasBoughtOrders
 
