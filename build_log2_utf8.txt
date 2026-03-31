@@ -1,0 +1,353 @@
+﻿
+> agrilpa-mvp@0.1.0 build
+> next build
+
+   Ôû▓ Next.js 15.1.4
+   - Environments: .env.local
+
+   Creating an optimized production build ...
+node.exe : [Error: Can't 
+resolve 'tw-animate-css' 
+in 'C:\Users\mrgua\OneDrive
+\Desktop\DAVID\Agrilpa 
+mvp\app'] {
+En línea: 1 Carácter: 1
++ & "C:\Program 
+Files\nodejs/node.exe" 
+"C:\Program 
+Files\nodejs/node_mo ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~
+    + CategoryInfo         
+     : NotSpecified: ([Er  
+  ror: Can't r...lpa mvp   
+ \app'] {:String) [], R    
+emoteException
+    + FullyQualifiedErrorI 
+   d : NativeCommandError
+ 
+  details: "resolve 
+'tw-animate-css' in 'C:\\Us
+ers\\mrgua\\OneDrive\\Deskt
+op\\DAVID\\Agrilpa 
+mvp\\app'\n" +
+    '  Parsed request is a 
+module\n' +
+    '  using description 
+file: C:\\Users\\mrgua\\One
+Drive\\Desktop\\DAVID\\Agri
+lpa mvp\\package.json 
+(relative path: ./app)\n' +
+    '    resolve as 
+module\n' +
+    "      C:\\Users\\mrgua
+\\OneDrive\\Desktop\\DAVID\
+\Agrilpa 
+mvp\\app\\node_modules 
+doesn't exist or is not a 
+directory\n" +
+    '      looking for 
+modules in C:\\Users\\mrgua
+\\OneDrive\\Desktop\\DAVID\
+\Agrilpa 
+mvp\\node_modules\n' +
+    '        single file 
+module\n' +
+    '          using 
+description file: C:\\Users
+\\mrgua\\OneDrive\\Desktop\
+\DAVID\\Agrilpa 
+mvp\\package.json 
+(relative path: ./node_modu
+les/tw-animate-css)\n' +
+    '            no 
+extension\n' +
+    "              C:\\User
+s\\mrgua\\OneDrive\\Desktop
+\\DAVID\\Agrilpa mvp\\node_
+modules\\tw-animate-css 
+doesn't exist\n" +
+    '            .css\n' +
+    "              C:\\User
+s\\mrgua\\OneDrive\\Desktop
+\\DAVID\\Agrilpa mvp\\node_
+modules\\tw-animate-css.css
+ doesn't exist\n" +
+    "        C:\\Users\\mrg
+ua\\OneDrive\\Desktop\\DAVI
+D\\Agrilpa mvp\\node_module
+s\\tw-animate-css doesn't 
+exist\n" +
+    "      C:\\Users\\mrgua
+\\OneDrive\\Desktop\\DAVID\
+\node_modules doesn't 
+exist or is not a 
+directory\n" +
+    "      C:\\Users\\mrgua
+\\OneDrive\\Desktop\\node_m
+odules doesn't exist or is 
+not a directory\n" +
+    "      C:\\Users\\mrgua
+\\OneDrive\\node_modules 
+doesn't exist or is not a 
+directory\n" +
+    "      C:\\Users\\mrgua
+\\node_modules doesn't 
+exist or is not a 
+directory\n" +
+    "      
+C:\\Users\\node_modules 
+doesn't exist or is not a 
+directory\n" +
+    "      
+C:\\node_modules doesn't 
+exist or is not a 
+directory"
+}
+<w> [webpack.cache.PackFile
+CacheStrategy] Skipped not 
+serializable cache item 'Co
+mpilation/modules|C:\Users\
+mrgua\OneDrive\Desktop\DAVI
+D\Agrilpa mvp\node_modules\
+next\dist\build\webpack\loa
+ders\css-loader\src\index.j
+s??ruleSet[1].rules[13].one
+Of[10].use[2]!C:\Users\mrgu
+a\OneDrive\Desktop\DAVID\Ag
+rilpa mvp\node_modules\next
+\dist\build\webpack\loaders
+\postcss-loader\src\index.j
+s??ruleSet[1].rules[13].one
+Of[10].use[3]!C:\Users\mrgu
+a\OneDrive\Desktop\DAVID\Ag
+rilpa 
+mvp\app\globals.css': No 
+serializer registered for 
+PostCSSSyntaxError
+<w> while serializing webpa
+ck/lib/cache/PackFileCacheS
+trategy.PackContentItems 
+-> 
+webpack/lib/NormalModule 
+-> webpack/lib/ModuleBuildE
+rror -> PostCSSSyntaxError
+Failed to compile.
+
+./app/globals.css:1:1
+Syntax error: tailwindcss: 
+C:\Users\mrgua\OneDrive\Des
+ktop\DAVID\Agrilpa 
+mvp\app\globals.css Can't 
+resolve 'tw-animate-css' 
+in 'C:\Users\mrgua\OneDrive
+\Desktop\DAVID\Agrilpa 
+mvp\app'
+
+[1m[31m>[39m[22m[90m 
+1 | [39m[36m@import[39m 
+[32m"tailwindcss"[39m[33
+m;[39m
+ [90m   | 
+[39m[1m[31m^[39m[22m
+ [90m 2 | 
+[39m[36m@import[39m [32
+m"tw-animate-css"[39m[33m
+;[39m
+ [90m 3 | [39m
+
+./app/globals.css
+Syntax error: tailwindcss: 
+C:\Users\mrgua\OneDrive\Des
+ktop\DAVID\Agrilpa 
+mvp\app\globals.css Can't 
+resolve 'tw-animate-css' 
+in 'C:\Users\mrgua\OneDrive
+\Desktop\DAVID\Agrilpa 
+mvp\app' (1:1)
+
+[1m[31m>[39m[22m[90m 
+1 | [39m[36m@import[39m 
+[32m"tailwindcss"[39m[33
+m;[39m
+ [90m   | 
+[39m[1m[31m^[39m[22m
+ [90m 2 | 
+[39m[36m@import[39m [32
+m"tw-animate-css"[39m[33m
+;[39m
+ [90m 3 | [39m
+
+    at 
+tryRunOrWebpackError (C:\Us
+ers\mrgua\OneDrive\Desktop\
+DAVID\Agrilpa mvp\node_modu
+les\next\dist\compiled\webp
+ack\bundle5.js:28:314962)
+    at 
+__webpack_require_module__ 
+(C:\Users\mrgua\OneDrive\De
+sktop\DAVID\Agrilpa mvp\nod
+e_modules\next\dist\compile
+d\webpack\bundle5.js:28:131
+434)
+    at __nested_webpack_req
+uire_161179__ (C:\Users\mrg
+ua\OneDrive\Desktop\DAVID\A
+grilpa mvp\node_modules\nex
+t\dist\compiled\webpack\bun
+dle5.js:28:130872)
+    at C:\Users\mrgua\OneDr
+ive\Desktop\DAVID\Agrilpa m
+vp\node_modules\next\dist\c
+ompiled\webpack\bundle5.js:
+28:131723
+    at symbolIterator (C:\U
+sers\mrgua\OneDrive\Desktop
+\DAVID\Agrilpa mvp\node_mod
+ules\next\dist\compiled\neo
+-async\async.js:1:14444)
+    at done (C:\Users\mrgua
+\OneDrive\Desktop\DAVID\Agr
+ilpa mvp\node_modules\next\
+dist\compiled\neo-async\asy
+nc.js:1:14824)
+    at Hook.eval [as 
+callAsync] (eval at create 
+(C:\Users\mrgua\OneDrive\De
+sktop\DAVID\Agrilpa mvp\nod
+e_modules\next\dist\compile
+d\webpack\bundle5.js:13:921
+8), <anonymous>:15:1)
+    at 
+Hook.CALL_ASYNC_DELEGATE 
+[as _callAsync] (C:\Users\m
+rgua\OneDrive\Desktop\DAVID
+\Agrilpa mvp\node_modules\n
+ext\dist\compiled\webpack\b
+undle5.js:13:6372)
+    at C:\Users\mrgua\OneDr
+ive\Desktop\DAVID\Agrilpa m
+vp\node_modules\next\dist\c
+ompiled\webpack\bundle5.js:
+28:130593
+    at symbolIterator (C:\U
+sers\mrgua\OneDrive\Desktop
+\DAVID\Agrilpa mvp\node_mod
+ules\next\dist\compiled\neo
+-async\async.js:1:14402)
+-- inner error --
+Syntax error: tailwindcss: 
+C:\Users\mrgua\OneDrive\Des
+ktop\DAVID\Agrilpa 
+mvp\app\globals.css Can't 
+resolve 'tw-animate-css' 
+in 'C:\Users\mrgua\OneDrive
+\Desktop\DAVID\Agrilpa 
+mvp\app' (1:1)
+
+[1m[31m>[39m[22m[90m 
+1 | [39m[36m@import[39m 
+[32m"tailwindcss"[39m[33
+m;[39m
+ [90m   | 
+[39m[1m[31m^[39m[22m
+ [90m 2 | 
+[39m[36m@import[39m [32
+m"tw-animate-css"[39m[33m
+;[39m
+ [90m 3 | [39m
+
+    at Object.<anonymous> (
+C:\Users\mrgua\OneDrive\Des
+ktop\DAVID\Agrilpa mvp\node
+_modules\next\dist\build\we
+bpack\loaders\css-loader\sr
+c\index.js??ruleSet[1].rule
+s[13].oneOf[10].use[2]!C:\U
+sers\mrgua\OneDrive\Desktop
+\DAVID\Agrilpa mvp\node_mod
+ules\next\dist\build\webpac
+k\loaders\postcss-loader\sr
+c\index.js??ruleSet[1].rule
+s[13].oneOf[10].use[3]!C:\U
+sers\mrgua\OneDrive\Desktop
+\DAVID\Agrilpa 
+mvp\app\globals.css:1:7)
+    at C:\Users\mrgua\OneDr
+ive\Desktop\DAVID\Agrilpa m
+vp\node_modules\next\dist\c
+ompiled\webpack\bundle5.js:
+28:955548
+    at Hook.eval [as call] 
+(eval at create (C:\Users\m
+rgua\OneDrive\Desktop\DAVID
+\Agrilpa mvp\node_modules\n
+ext\dist\compiled\webpack\b
+undle5.js:13:8996), 
+<anonymous>:7:1)
+    at Hook.CALL_DELEGATE 
+[as _call] (C:\Users\mrgua\
+OneDrive\Desktop\DAVID\Agri
+lpa mvp\node_modules\next\d
+ist\compiled\webpack\bundle
+5.js:13:6266)
+    at C:\Users\mrgua\OneDr
+ive\Desktop\DAVID\Agrilpa m
+vp\node_modules\next\dist\c
+ompiled\webpack\bundle5.js:
+28:131467
+    at 
+tryRunOrWebpackError (C:\Us
+ers\mrgua\OneDrive\Desktop\
+DAVID\Agrilpa mvp\node_modu
+les\next\dist\compiled\webp
+ack\bundle5.js:28:314916)
+    at 
+__webpack_require_module__ 
+(C:\Users\mrgua\OneDrive\De
+sktop\DAVID\Agrilpa mvp\nod
+e_modules\next\dist\compile
+d\webpack\bundle5.js:28:131
+434)
+    at __nested_webpack_req
+uire_161179__ (C:\Users\mrg
+ua\OneDrive\Desktop\DAVID\A
+grilpa mvp\node_modules\nex
+t\dist\compiled\webpack\bun
+dle5.js:28:130872)
+    at C:\Users\mrgua\OneDr
+ive\Desktop\DAVID\Agrilpa m
+vp\node_modules\next\dist\c
+ompiled\webpack\bundle5.js:
+28:131723
+    at symbolIterator (C:\U
+sers\mrgua\OneDrive\Desktop
+\DAVID\Agrilpa mvp\node_mod
+ules\next\dist\compiled\neo
+-async\async.js:1:14444)
+
+Generated code for C:\Users
+\mrgua\OneDrive\Desktop\DAV
+ID\Agrilpa mvp\node_modules
+\next\dist\build\webpack\lo
+aders\css-loader\src\index.
+js??ruleSet[1].rules[13].on
+eOf[10].use[2]!C:\Users\mrg
+ua\OneDrive\Desktop\DAVID\A
+grilpa mvp\node_modules\nex
+t\dist\build\webpack\loader
+s\postcss-loader\src\index.
+js??ruleSet[1].rules[13].on
+eOf[10].use[3]!C:\Users\mrg
+ua\OneDrive\Desktop\DAVID\A
+grilpa mvp\app\globals.css
+
+Import trace for requested 
+module:
+./app/globals.css
+
+
+> Build failed because of 
+webpack errors

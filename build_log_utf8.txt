@@ -1,0 +1,62 @@
+﻿
+> agrilpa-mvp@0.1.0 build
+> next build
+
+   Ôû▓ Next.js 15.1.4
+   - Environments: .env.local
+
+   Creating an optimized production build ...
+node.exe : Failed to 
+compile.
+En línea: 1 Carácter: 1
++ & "C:\Program 
+Files\nodejs/node.exe" 
+"C:\Program 
+Files\nodejs/node_mo ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~
+    + CategoryInfo         
+     : NotSpecified: (Fai  
+  led to compile.:String   
+ ) [], RemoteException
+    + FullyQualifiedErrorI 
+   d : NativeCommandError
+ 
+
+./components/ui/avatar.tsx
+Module not found: Can't 
+resolve 
+'@radix-ui/react-avatar'
+
+https://nextjs.org/docs/mes
+sages/module-not-found
+
+./components/ui/country-pic
+ker.tsx
+Module not found: Can't 
+resolve 
+'react-country-flag'
+
+https://nextjs.org/docs/mes
+sages/module-not-found
+
+Import trace for requested 
+module:
+./app/auth/page.tsx
+
+./lib/email.ts
+Module not found: Can't 
+resolve 'resend'
+
+https://nextjs.org/docs/mes
+sages/module-not-found
+
+Import trace for requested 
+module:
+./app/api/auth/register/rou
+te.ts
+
+
+> Build failed because of 
+webpack errors
