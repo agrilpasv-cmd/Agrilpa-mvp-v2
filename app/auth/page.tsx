@@ -35,6 +35,11 @@ function AuthPageContent() {
     supplyCountry1: "",
     supplyCountry2: "",
     supplyCountry3: "",
+    providerCountry1: "",
+    providerCountry2: "",
+    providerCountry3: "",
+    hasExportCertificates: false,
+    doesProvideInternationally: "false",
     volumeRange: "",
     companyWebsite: "",
     address: "",
@@ -173,6 +178,11 @@ function AuthPageContent() {
         return
       }
 
+      if (formData.doesProvideInternationally === "true" && !formData.providerCountry1) {
+        setError("Por favor ingresa al menos un país del cual te abasteces o provees")
+        return
+      }
+
       if (!formData.volumeRange) {
         setError("Por favor selecciona tu volumen de movimiento")
         return
@@ -203,6 +213,10 @@ function AuthPageContent() {
             supplyCountry1: formData.supplyCountry1,
             supplyCountry2: formData.supplyCountry2,
             supplyCountry3: formData.supplyCountry3,
+            providerCountry1: formData.doesProvideInternationally === "true" ? formData.providerCountry1 : "",
+            providerCountry2: formData.doesProvideInternationally === "true" ? formData.providerCountry2 : "",
+            providerCountry3: formData.doesProvideInternationally === "true" ? formData.providerCountry3 : "",
+            hasExportCertificates: formData.hasExportCertificates,
           }),
         })
 
@@ -458,6 +472,11 @@ function AuthPageContent() {
                           supplyCountry1: "",
                           supplyCountry2: "",
                           supplyCountry3: "",
+                          providerCountry1: "",
+                          providerCountry2: "",
+                          providerCountry3: "",
+                          hasExportCertificates: false,
+                          doesProvideInternationally: "false",
                           volumeRange: "",
                           companyWebsite: "",
                           address: "",
@@ -589,6 +608,19 @@ function AuthPageContent() {
                             required
                           />
                         </div>
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-foreground mb-2">¿Posee certificados para exportar? *</label>
+                        <select
+                          name="hasExportCertificates"
+                          value={formData.hasExportCertificates ? "true" : "false"}
+                          onChange={(e) => setFormData({ ...formData, hasExportCertificates: e.target.value === "true" })}
+                          className="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary bg-white transition"
+                        >
+                          <option value="false">No</option>
+                          <option value="true">Sí</option>
+                        </select>
                       </div>
 
                       <div>
@@ -777,6 +809,49 @@ function AuthPageContent() {
                           className="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary transition"
                         />
                       </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-foreground mb-2">¿Abastecen o proveen productos de algún país? *</label>
+                      <select
+                        name="doesProvideInternationally"
+                        value={formData.doesProvideInternationally}
+                        onChange={handleInputChange}
+                        className="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary bg-white transition mb-3"
+                      >
+                        <option value="false">No</option>
+                        <option value="true">Sí</option>
+                      </select>
+
+                      {formData.doesProvideInternationally === "true" && (
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 animate-in fade-in zoom-in duration-300">
+                          <input
+                            type="text"
+                            name="providerCountry1"
+                            value={formData.providerCountry1}
+                            onChange={handleInputChange}
+                            placeholder="Ej. México *"
+                            className="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary transition"
+                            required={formData.doesProvideInternationally === "true"}
+                          />
+                          <input
+                            type="text"
+                            name="providerCountry2"
+                            value={formData.providerCountry2}
+                            onChange={handleInputChange}
+                            placeholder="Ej. Colombia (Opcional)"
+                            className="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary transition"
+                          />
+                          <input
+                            type="text"
+                            name="providerCountry3"
+                            value={formData.providerCountry3}
+                            onChange={handleInputChange}
+                            placeholder="Ej. Guatemala (Opcional)"
+                            className="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary transition"
+                          />
+                        </div>
+                      )}
                     </div>
 
                     <div>

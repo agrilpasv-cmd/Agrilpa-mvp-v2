@@ -270,36 +270,15 @@ export function Navbar() {
             ))}
 
             {/* Vender - Mobile */}
-            {isLoggedIn ? (
-              <Link
-                href="/dashboard/mis-publicaciones/nueva"
-                className="block px-3 py-2 text-sm font-semibold text-primary hover:bg-primary/10 rounded-md transition-colors"
-                onClick={() => setIsOpen(false)}
-              >
-                Vender
-              </Link>
-            ) : (
-              <div className="px-3 py-3 bg-muted/50 rounded-lg mx-1">
-                <p className="text-sm font-semibold text-foreground mb-1">
-                  ¿Quieres vender?
-                </p>
-                <p className="text-xs text-muted-foreground mb-3">
-                  Inicia sesión o crea una cuenta gratis para publicar tus productos.
-                </p>
-                <div className="flex gap-2">
-                  <Link href="/auth" className="flex-1" onClick={() => setIsOpen(false)}>
-                    <Button variant="outline" size="sm" className="w-full bg-transparent text-xs">
-                      Iniciar sesión
-                    </Button>
-                  </Link>
-                  <Link href="/auth?mode=register" className="flex-1" onClick={() => setIsOpen(false)}>
-                    <Button size="sm" className="w-full bg-primary hover:bg-primary/90 text-xs">
-                      Crear Cuenta
-                    </Button>
-                  </Link>
-                </div>
-              </div>
-            )}
+            <button
+              onClick={() => {
+                handleVenderClick();
+                setIsOpen(false);
+              }}
+              className="w-full text-left px-3 py-2 text-sm font-semibold text-primary hover:bg-primary/10 rounded-md transition-colors"
+            >
+              Vender
+            </button>
 
             <Link
               href={contactLink.href}

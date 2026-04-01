@@ -21,7 +21,11 @@ export async function POST(request: NextRequest) {
       supplyCountry1,
       supplyCountry2,
       supplyCountry3,
-      volumeRange
+      volumeRange,
+      hasExportCertificates,
+      providerCountry1,
+      providerCountry2,
+      providerCountry3
     } = await request.json()
 
     // Validar datos requeridos
@@ -44,6 +48,8 @@ export async function POST(request: NextRequest) {
         state: state,
         products_of_interest: [product1, product2, product3].filter(Boolean),
         supply_countries: [supplyCountry1, supplyCountry2, supplyCountry3].filter(Boolean),
+        provider_countries: [providerCountry1, providerCountry2, providerCountry3].filter(Boolean),
+        has_export_certificates: hasExportCertificates,
         annual_volume: volumeRange,
       },
     })
@@ -76,6 +82,8 @@ export async function POST(request: NextRequest) {
       role: role,
       products_of_interest: productsOfInterest,
       supply_countries: [supplyCountry1, supplyCountry2, supplyCountry3].filter(Boolean),
+      provider_countries: [providerCountry1, providerCountry2, providerCountry3].filter(Boolean),
+      has_export_certificates: hasExportCertificates === true,
       annual_volume: volumeRange || null,
     })
 

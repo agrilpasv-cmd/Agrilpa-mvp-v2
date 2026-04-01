@@ -29,6 +29,9 @@ interface User {
   created_at: string
   products_of_interest?: string[]
   supply_countries?: string[]
+  provider_countries?: string[]
+  has_export_certificates?: boolean
+  address?: string
   annual_volume?: string
   country_code?: string
   metadata_phone_number?: string
@@ -204,8 +207,11 @@ export default function AdminUsersPage() {
                     <th className="text-left p-4 font-medium">Teléfono</th>
                     <th className="text-left p-4 font-medium">País</th>
                     <th className="text-left p-4 font-medium">Estado</th>
+                    <th className="text-left p-4 font-medium">Dirección</th>
+                    <th className="text-left p-4 font-medium">Certificados</th>
                     <th className="text-left p-4 font-medium">Productos de Interés</th>
                     <th className="text-left p-4 font-medium">Países de Interés</th>
+                    <th className="text-left p-4 font-medium">Países P.</th>
                     <th className="text-left p-4 font-medium">Volumen Anual</th>
                     <th className="text-left p-4 font-medium">Tipo</th>
                     <th className="text-left p-4 font-medium">Rol</th>
@@ -243,6 +249,16 @@ export default function AdminUsersPage() {
                       </td>
                       <td className="p-4">{user.country || "-"}</td>
                       <td className="p-4">{user.state || "-"}</td>
+                      <td className="p-4 min-w-[200px] whitespace-normal break-words">{user.address || "-"}</td>
+                      <td className="p-4">
+                        {user.has_export_certificates ? (
+                          <span className="px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 border border-green-200 shadow-sm flex items-center w-fit gap-1">
+                            <span className="w-1.5 h-1.5 rounded-full bg-green-500"></span> Sí
+                          </span>
+                        ) : (
+                          <span className="text-muted-foreground">-</span>
+                        )}
+                      </td>
                       <td className="p-4 max-w-xs">
                         {user.products_of_interest && user.products_of_interest.length > 0 ? (
                           <div className="flex flex-wrap gap-1">
@@ -261,6 +277,19 @@ export default function AdminUsersPage() {
                           <div className="flex flex-wrap gap-1">
                             {user.supply_countries.map((country, idx) => (
                               <span key={idx} className="text-xs font-medium text-foreground bg-green-100 text-green-800 px-2 py-1 rounded">
+                                {country}
+                              </span>
+                            ))}
+                          </div>
+                        ) : (
+                          <span className="text-muted-foreground">-</span>
+                        )}
+                      </td>
+                      <td className="p-4 max-w-xs">
+                        {user.provider_countries && user.provider_countries.length > 0 ? (
+                          <div className="flex flex-wrap gap-1">
+                            {user.provider_countries.map((country, idx) => (
+                              <span key={idx} className="text-xs font-medium text-amber-800 bg-amber-100 px-2 py-1 rounded border border-amber-200 shadow-sm">
                                 {country}
                               </span>
                             ))}

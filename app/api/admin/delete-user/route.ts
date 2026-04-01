@@ -19,13 +19,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "No autorizado" }, { status: 401 })
     }
 
-    // Verificar que sea el admin autorizado por email
-    if (requestingUser.email !== "agrilpasv@gmail.com") {
-      return NextResponse.json({ error: "Acceso denegado: solo Administrador Principal" }, { status: 403 })
-    }
-
-    // Use service role admin client
-    console.log(`[Admin Delete] Inicializando admin client para borrar usuario: ${userId}`)
+    // Initialize admin client to verify role
     const adminClient = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.SUPABASE_SERVICE_ROLE_KEY!,
@@ -36,6 +30,13 @@ export async function POST(request: Request) {
         },
       }
     )
+
+    // Verify req user profile
+    const { data: adminProfile } = await adminClient.from("users").select("role").eq("id", requestingUser.id).single()
+
+    if (adminProfile?.role !== "admin" && requestingUser.email !== "agrilpasv@gmail.com") {
+      return NextResponse.json({ error: "Acceso denegado: requieres permisos de Administrador" }, { status: 403 })
+    }
 
     // Delete profile from users table
     console.log(`[Admin Delete] Borrando perfil de BD...`)
