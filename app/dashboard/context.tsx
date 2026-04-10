@@ -36,10 +36,11 @@ export function DashboardProvider({ children }: { children: React.ReactNode }) {
 
     const refreshCounts = useCallback(async () => {
         try {
-            const res = await fetch("/api/dashboard/sidebar-counts", { cache: "no-store" })
+            const res = await fetch("/api/dashboard/sidebar-counts", {
+                cache: "no-cache", // Uses ETags — avoids full response if unchanged
+            })
             if (res.ok) {
                 const data = await res.json()
-                console.log("[DASHBOARD] Received counts:", data)
                 setCounts((prev) => ({ ...prev, ...data }))
             }
         } catch (e) {
@@ -49,8 +50,8 @@ export function DashboardProvider({ children }: { children: React.ReactNode }) {
 
     useEffect(() => {
         refreshCounts()
-        // Keep the polling as a backup, but maybe slower (e.g. 30s) or same 10s
-        const interval = setInterval(refreshCounts, 10000)
+        // Poll every 60s — sidebar numbers don't change that fast
+        const interval = setInterval(refreshCounts, 60000)
         return () => clearInterval(interval)
     }, [refreshCounts])
 

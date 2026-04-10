@@ -4,7 +4,6 @@ import { cookies } from "next/headers"
 import { NextResponse } from "next/server"
 
 export const dynamic = 'force-dynamic'
-export const revalidate = 0
 
 export async function GET() {
     try {
@@ -14,102 +13,56 @@ export async function GET() {
             process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
             {
                 cookies: {
-                    getAll() {
-                        return cookieStore.getAll()
-                    },
-                    setAll(cookiesToSet) {
-                        cookiesToSet.forEach(({ name, value, options }) => cookieStore.set(name, value, options))
+                    getAll() { return cookieStore.getAll() },
+                    setAll(cookiesToSet: { name: string; value: string; options?: Record<string, unknown> }[]) {
+                        cookiesToSet.forEach(({ name, value, options }) => cookieStore.set(name, value, options as Parameters<typeof cookieStore.set>[2]))
                     },
                 },
             },
         )
 
-        const {
-            data: { session },
-        } = await supabase.auth.getSession()
+        const { data: { session } } = await supabase.auth.getSession()
 
         if (!session) {
-            return NextResponse.json({
-                publicaciones: 0,
-                cotizaciones: 0,
-                pedidos: 0,
-                logistica: 0,
-                transacciones: 0,
-                mensajes: 0
-            })
+            return NextResponse.json({ publicaciones: 0, cotizaciones: 0, pedidos: 0, compras: 0, ventas: 0, logistica: 0, transacciones: 0, mensajes: 0 })
         }
         if (session.user.email === "menjivar124567890@gmail.com") {
-            return NextResponse.json({
-                publicaciones: 2,
-                cotizaciones: 3,
-                pedidos: 0,
-                compras: 0,
-                ventas: 0,
-                logistica: 0,
-                transacciones: 0,
-                mensajes: 0
-            })
+            return NextResponse.json({ publicaciones: 2, cotizaciones: 3, pedidos: 0, compras: 0, ventas: 0, logistica: 0, transacciones: 0, mensajes: 0 })
         }
 
         const userId = session.user.id
 
         // Use Admin client to bypass RLS for counts
-        const supabaseAdmin = createClient(
+        const admin = createClient(
             process.env.NEXT_PUBLIC_SUPABASE_URL!,
             process.env.SUPABASE_SERVICE_ROLE_KEY!,
         )
 
-        // 1. My Publications
-        const { count: publicaciones } = await supabaseAdmin
-            .from("user_products")
-            .select("*", { count: 'exact', head: true })
-            .eq("user_id", userId)
+        // ── Run ALL counts in parallel (was serial before) ──
+        const [
+            { count: publicaciones },
+            { count: compras },
+            { data: salesData },
+            { data: quotesData },
+        ] = await Promise.all([
+            admin.from("user_products").select("id", { count: "exact", head: true }).eq("user_id", userId),
+            admin.from("orders").select("id", { count: "exact", head: true }).eq("buyer_id", userId).eq("is_read_buyer", false),
+            admin.from("orders").select("status").eq("seller_id", userId),
+            admin.from("quotations").select("status").eq("seller_id", userId),
+        ])
 
-        // 2. Purchases (Compras) - where I am the buyer
-        const { count: compras } = await supabaseAdmin
-            .from("orders")
-            .select("*", { count: 'exact', head: true })
-            .eq("buyer_id", userId)
-            .eq("is_read_buyer", false)
-
-        // 3. Sales (Ventas) - where I am the seller
-        let ventas = 0
-        try {
-            const { data: sales } = await supabaseAdmin
-                .from("orders")
-                .select("status")
-                .eq("seller_id", userId)
-
-            // Count "pending" sales (persistent counter) instead of unread
-            ventas = sales?.filter(o => o.status?.toLowerCase() === 'pending').length || 0
-        } catch (e) {
-            console.error("Sidebar: Sales Error", e)
-        }
-
-        // 4. Quotations (Cotizaciones) - received by me as seller
-        let cotizaciones = 0
-        try {
-            const { data: quotes } = await supabaseAdmin
-                .from("quotations")
-                .select("status")
-                .eq("seller_id", userId)
-
-            // Count all PENDING requests using case-insensitive check
-            cotizaciones = quotes?.filter(q => q.status?.toLowerCase() === 'pending').length || 0
-
-        } catch (e) {
-            console.error("Sidebar: Quotes Error", e)
-        }
+        const ventas = salesData?.filter(o => o.status?.toLowerCase() === "pending").length || 0
+        const cotizaciones = quotesData?.filter(q => q.status?.toLowerCase() === "pending").length || 0
 
         return NextResponse.json({
             publicaciones: publicaciones || 0,
-            cotizaciones: cotizaciones,
+            cotizaciones,
             pedidos: compras || 0,
-            compras: compras || 0, // Purchases
-            ventas: ventas || 0,   // Sales
+            compras: compras || 0,
+            ventas,
             logistica: 0,
             transacciones: 0,
-            mensajes: 0
+            mensajes: 0,
         })
 
     } catch (error) {

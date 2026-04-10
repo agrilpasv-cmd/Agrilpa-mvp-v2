@@ -33,9 +33,11 @@ export async function GET() {
       const authUser = authUsers?.find(u => u.id === profile.id)
       return {
         ...profile,
-        products_of_interest: authUser?.user_metadata?.products_of_interest || profile?.products_of_interest || [],
-        supply_countries: authUser?.user_metadata?.supply_countries || profile?.supply_countries || [],
-        annual_volume: authUser?.user_metadata?.annual_volume || null,
+        products_of_interest: profile?.products_of_interest || authUser?.user_metadata?.products_of_interest || [],
+        supply_countries: profile?.supply_countries || authUser?.user_metadata?.supply_countries || [],
+        provider_countries: profile?.provider_countries || authUser?.user_metadata?.provider_countries || [],
+        has_export_certificates: profile?.has_export_certificates ?? authUser?.user_metadata?.has_export_certificates ?? null,
+        annual_volume: profile?.annual_volume || authUser?.user_metadata?.annual_volume || null,
         country_code: authUser?.user_metadata?.country_code || null,
         metadata_phone_number: authUser?.user_metadata?.phone_number || null,
         company_website: profile.company_website || authUser?.user_metadata?.company_website || null

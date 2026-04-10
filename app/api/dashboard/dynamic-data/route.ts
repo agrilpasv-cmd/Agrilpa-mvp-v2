@@ -16,8 +16,8 @@ export async function GET() {
                     getAll() {
                         return cookieStore.getAll()
                     },
-                    setAll(cookiesToSet) {
-                        cookiesToSet.forEach(({ name, value, options }) => cookieStore.set(name, value, options))
+                    setAll(cookiesToSet: { name: string; value: string; options?: Record<string, unknown> }[]) {
+                        cookiesToSet.forEach(({ name, value, options }) => cookieStore.set(name, value, options as Parameters<typeof cookieStore.set>[2]))
                     },
                 },
             },
@@ -106,13 +106,12 @@ export async function GET() {
         const userId = session.user.id
 
         // Use Admin client for counts and complex queries to bypass RLS issues 
-        // while we aggregate full dashboard data.
         const supabaseAdmin = createClient(
             process.env.NEXT_PUBLIC_SUPABASE_URL!,
             process.env.SUPABASE_SERVICE_ROLE_KEY!
         )
 
-        // Run all queries concurrently to drastically reduce DB latency overhead
+        // Run all queries concurrently — select only needed fields (was select("*") before)
         const [
             { data: profile },
             { data: userProducts },
@@ -123,10 +122,10 @@ export async function GET() {
         ] = await Promise.all([
             supabaseAdmin.from("users").select("full_name, company_name").eq("id", userId).single(),
             supabaseAdmin.from("user_products").select("id, title, views, category").eq("user_id", userId),
-            supabaseAdmin.from("quotations").select("*").eq("seller_id", userId),
-            supabaseAdmin.from("quotations").select("*").eq("buyer_id", userId),
-            supabaseAdmin.from("orders").select("*").eq("seller_id", userId),
-            supabaseAdmin.from("orders").select("*").eq("buyer_id", userId)
+            supabaseAdmin.from("quotations").select("id, status, created_at, updated_at, buyer_name, product_id, target_price, quantity").eq("seller_id", userId),
+            supabaseAdmin.from("quotations").select("id, status, created_at, updated_at, product_title, product_id").eq("buyer_id", userId),
+            supabaseAdmin.from("orders").select("id, status, created_at, updated_at").eq("seller_id", userId),
+            supabaseAdmin.from("orders").select("id, status, created_at, updated_at, total_price").eq("buyer_id", userId)
         ])
 
         const companyName = profile?.company_name || profile?.full_name || "Usuario"

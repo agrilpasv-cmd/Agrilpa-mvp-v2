@@ -42,39 +42,69 @@ const cardVariants = {
   },
 }
 
+// ── Module-level cache so data survives React re-mounts within the same session ──
+let cachedProducts: UserProduct[] | null = null
+let fetchPromise: Promise<UserProduct[]> | null = null
+
+function loadProducts(): Promise<UserProduct[]> {
+  if (cachedProducts) return Promise.resolve(cachedProducts)
+  if (fetchPromise) return fetchPromise
+
+  fetchPromise = (async () => {
+    const controller = new AbortController()
+    const timeout = setTimeout(() => controller.abort(), 8000) // 8s max
+    try {
+      const res = await fetch("/api/products/get-user-products", {
+        signal: controller.signal,
+        // Use browser cache: second visit is instant
+        cache: "force-cache",
+        next: { revalidate: 60 },
+      } as RequestInit)
+      if (!res.ok) return []
+      const data = await res.json()
+      const all: UserProduct[] = data.products || []
+
+      const targeted = all.filter((p) =>
+        TARGET_TITLES.some((t) => p.title.toLowerCase().includes(t))
+      )
+      const others = all.filter(
+        (p) => !TARGET_TITLES.some((t) => p.title.toLowerCase().includes(t))
+      )
+
+      const combined = [...targeted, ...others].slice(0, 4)
+      cachedProducts = combined
+      return combined
+    } finally {
+      clearTimeout(timeout)
+      fetchPromise = null
+    }
+  })()
+
+  return fetchPromise
+}
+
+// Kick off the fetch as soon as the module loads (before component mounts)
+if (typeof window !== "undefined") {
+  loadProducts().catch(() => {})
+}
+
 export function ProductPreview() {
-  const [products, setProducts] = useState<UserProduct[]>([])
-  const [isLoading, setIsLoading] = useState(true)
+  const [products, setProducts] = useState<UserProduct[]>(cachedProducts ?? [])
+  const [isLoading, setIsLoading] = useState(cachedProducts === null)
 
   useEffect(() => {
-    const fetchProducts = async () => {
-      try {
-        // Cache enabled by removing no-store, speeds up subsequent renders
-        const res = await fetch("/api/products/get-user-products")
-        if (!res.ok) {
-          setIsLoading(false)
-          return
-        }
-        const data = await res.json()
-        const all: UserProduct[] = data.products || []
-
-        // Filter to the specific products requested, then fill up to 4 with any others
-        const targeted = all.filter((p) =>
-          TARGET_TITLES.some((t) => p.title.toLowerCase().includes(t))
-        )
-        const others = all.filter(
-          (p) => !TARGET_TITLES.some((t) => p.title.toLowerCase().includes(t))
-        )
-
-        const combined = [...targeted, ...others].slice(0, 4)
-        setProducts(combined)
-      } catch (err) {
-        console.error("Error fetching preview products:", err)
-      } finally {
-        setIsLoading(false)
-      }
+    if (cachedProducts) {
+      setProducts(cachedProducts)
+      setIsLoading(false)
+      return
     }
-    fetchProducts()
+
+    let cancelled = false
+    loadProducts()
+      .then((p) => { if (!cancelled) { setProducts(p); setIsLoading(false) } })
+      .catch(() => { if (!cancelled) setIsLoading(false) })
+
+    return () => { cancelled = true }
   }, [])
 
   if (!isLoading && products.length === 0) return null

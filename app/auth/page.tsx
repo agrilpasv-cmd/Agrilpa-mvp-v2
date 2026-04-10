@@ -38,7 +38,7 @@ function AuthPageContent() {
     providerCountry1: "",
     providerCountry2: "",
     providerCountry3: "",
-    hasExportCertificates: false,
+    hasExportCertificates: "",
     doesProvideInternationally: "false",
     volumeRange: "",
     companyWebsite: "",
@@ -165,6 +165,12 @@ function AuthPageContent() {
         return
       }
 
+      // Validate export certificates field (required)
+      if (formData.hasExportCertificates === "") {
+        setError("Por favor indica si posees certificados para exportar")
+        return
+      }
+
       // Move to step 3
       setRegistrationStep(3)
       setError("")
@@ -216,7 +222,7 @@ function AuthPageContent() {
             providerCountry1: formData.doesProvideInternationally === "true" ? formData.providerCountry1 : "",
             providerCountry2: formData.doesProvideInternationally === "true" ? formData.providerCountry2 : "",
             providerCountry3: formData.doesProvideInternationally === "true" ? formData.providerCountry3 : "",
-            hasExportCertificates: formData.hasExportCertificates,
+            hasExportCertificates: formData.hasExportCertificates === "true",
           }),
         })
 
@@ -475,7 +481,7 @@ function AuthPageContent() {
                           providerCountry1: "",
                           providerCountry2: "",
                           providerCountry3: "",
-                          hasExportCertificates: false,
+                          hasExportCertificates: "",
                           doesProvideInternationally: "false",
                           volumeRange: "",
                           companyWebsite: "",
@@ -614,13 +620,20 @@ function AuthPageContent() {
                         <label className="block text-sm font-medium text-foreground mb-2">¿Posee certificados para exportar? *</label>
                         <select
                           name="hasExportCertificates"
-                          value={formData.hasExportCertificates ? "true" : "false"}
-                          onChange={(e) => setFormData({ ...formData, hasExportCertificates: e.target.value === "true" })}
-                          className="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary bg-white transition"
+                          value={formData.hasExportCertificates as string}
+                          onChange={(e) => setFormData({ ...formData, hasExportCertificates: e.target.value })}
+                          className={`w-full px-4 py-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary bg-white transition ${
+                            formData.hasExportCertificates === "" ? "border-amber-400 bg-amber-50" : "border-gray-300"
+                          }`}
+                          required
                         >
-                          <option value="false">No</option>
-                          <option value="true">Sí</option>
+                          <option value="" disabled>Selecciona una opción...</option>
+                          <option value="true">Sí, tengo certificados de exportación</option>
+                          <option value="false">No, no tengo certificados</option>
                         </select>
+                        {formData.hasExportCertificates === "" && (
+                          <p className="text-xs text-amber-600 mt-1">⚠ Este campo es obligatorio</p>
+                        )}
                       </div>
 
                       <div>
@@ -731,6 +744,10 @@ function AuthPageContent() {
                             !formData.phoneNumber
                           ) {
                             setError("Por favor completa los campos requeridos antes de continuar")
+                            return
+                          }
+                          if (formData.hasExportCertificates === "") {
+                            setError("Por favor indica si posees certificados para exportar")
                             return
                           }
                           setError("")

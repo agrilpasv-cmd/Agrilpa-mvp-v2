@@ -251,13 +251,30 @@ export default function AdminUsersPage() {
                       <td className="p-4">{user.state || "-"}</td>
                       <td className="p-4 min-w-[200px] whitespace-normal break-words">{user.address || "-"}</td>
                       <td className="p-4">
-                        {user.has_export_certificates ? (
-                          <span className="px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 border border-green-200 shadow-sm flex items-center w-fit gap-1">
-                            <span className="w-1.5 h-1.5 rounded-full bg-green-500"></span> Sí
-                          </span>
-                        ) : (
-                          <span className="text-muted-foreground">-</span>
-                        )}
+                        {(() => {
+                          // La pregunta de certificados se activó el 10 de abril 2026.
+                          // Usuarios anteriores a esa fecha con false = nunca se les preguntó.
+                          const CERT_QUESTION_DATE = new Date("2026-04-10T00:00:00Z")
+                          const userCreatedAt = new Date(user.created_at)
+                          const wasAsked = userCreatedAt >= CERT_QUESTION_DATE
+
+                          if (user.has_export_certificates === true) {
+                            return (
+                              <span className="px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 border border-green-200 shadow-sm flex items-center w-fit gap-1">
+                                <span className="w-1.5 h-1.5 rounded-full bg-green-500"></span> Sí
+                              </span>
+                            )
+                          }
+                          if (user.has_export_certificates === false && wasAsked) {
+                            return (
+                              <span className="px-2 py-1 rounded-full text-xs font-medium bg-red-50 text-red-700 border border-red-200 shadow-sm flex items-center w-fit gap-1">
+                                <span className="w-1.5 h-1.5 rounded-full bg-red-400"></span> No
+                              </span>
+                            )
+                          }
+                          // null o false en usuario viejo (antes del campo)
+                          return <span className="text-muted-foreground text-xs">Sin respuesta</span>
+                        })()}
                       </td>
                       <td className="p-4 max-w-xs">
                         {user.products_of_interest && user.products_of_interest.length > 0 ? (
