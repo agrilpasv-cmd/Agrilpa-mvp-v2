@@ -14,16 +14,7 @@ interface UserProduct {
   description: string
   country: string
   image?: string
-  company_name?: string
 }
-
-const TARGET_TITLES = [
-  "plátano harton",
-  "tabaco",
-  "sulfato ferroso monohidratado",
-  "brocoli en florete",
-  "verduras",
-]
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -42,69 +33,32 @@ const cardVariants = {
   },
 }
 
-// ── Module-level cache so data survives React re-mounts within the same session ──
-let cachedProducts: UserProduct[] | null = null
-let fetchPromise: Promise<UserProduct[]> | null = null
-
-function loadProducts(): Promise<UserProduct[]> {
-  if (cachedProducts) return Promise.resolve(cachedProducts)
-  if (fetchPromise) return fetchPromise
-
-  fetchPromise = (async () => {
-    const controller = new AbortController()
-    const timeout = setTimeout(() => controller.abort(), 8000) // 8s max
-    try {
-      const res = await fetch("/api/products/get-user-products", {
-        signal: controller.signal,
-        // Use browser cache: second visit is instant
-        cache: "force-cache",
-        next: { revalidate: 60 },
-      } as RequestInit)
-      if (!res.ok) return []
-      const data = await res.json()
-      const all: UserProduct[] = data.products || []
-
-      const targeted = all.filter((p) =>
-        TARGET_TITLES.some((t) => p.title.toLowerCase().includes(t))
-      )
-      const others = all.filter(
-        (p) => !TARGET_TITLES.some((t) => p.title.toLowerCase().includes(t))
-      )
-
-      const combined = [...targeted, ...others].slice(0, 4)
-      cachedProducts = combined
-      return combined
-    } finally {
-      clearTimeout(timeout)
-      fetchPromise = null
-    }
-  })()
-
-  return fetchPromise
-}
-
-// Kick off the fetch as soon as the module loads (before component mounts)
-if (typeof window !== "undefined") {
-  loadProducts().catch(() => {})
-}
-
 export function ProductPreview() {
-  const [products, setProducts] = useState<UserProduct[]>(cachedProducts ?? [])
-  const [isLoading, setIsLoading] = useState(cachedProducts === null)
+  const [products, setProducts] = useState<UserProduct[]>([])
+  const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
-    if (cachedProducts) {
-      setProducts(cachedProducts)
-      setIsLoading(false)
-      return
+    const controller = new AbortController()
+    const timeout = setTimeout(() => controller.abort(), 8000)
+
+    fetch("/api/products/get-user-products", {
+      signal: controller.signal,
+      cache: "no-store",
+    })
+      .then(res => res.ok ? res.json() : { products: [] })
+      .then(data => {
+        setProducts((data.products || []).slice(0, 4))
+      })
+      .catch(() => setProducts([]))
+      .finally(() => {
+        clearTimeout(timeout)
+        setIsLoading(false)
+      })
+
+    return () => {
+      controller.abort()
+      clearTimeout(timeout)
     }
-
-    let cancelled = false
-    loadProducts()
-      .then((p) => { if (!cancelled) { setProducts(p); setIsLoading(false) } })
-      .catch(() => { if (!cancelled) setIsLoading(false) })
-
-    return () => { cancelled = true }
   }, [])
 
   if (!isLoading && products.length === 0) return null
@@ -140,15 +94,15 @@ export function ProductPreview() {
         >
           {isLoading ? (
             Array.from({ length: 4 }).map((_, i) => (
-              <motion.div key={`skeleton-${i}`} variants={cardVariants} className="h-full">
-                <Card className="bg-card border border-border rounded-lg overflow-hidden flex flex-col h-[350px]">
+              <motion.div key={`sk-${i}`} variants={cardVariants} className="h-full">
+                <Card className="bg-card border border-border rounded-lg overflow-hidden flex flex-col h-[320px]">
                   <Skeleton className="h-48 w-full shrink-0 rounded-none bg-primary/5" />
                   <div className="p-5 flex flex-col gap-3 flex-1">
-                    <Skeleton className="h-6 w-3/4 bg-primary/10" />
-                    <Skeleton className="h-5 w-24 rounded-full bg-primary/10" />
-                    <div className="flex items-center gap-2 mt-2">
-                       <Skeleton className="h-4 w-4 rounded-full bg-primary/10" />
-                       <Skeleton className="h-4 w-1/2 bg-primary/10" />
+                    <Skeleton className="h-5 w-3/4 bg-primary/10" />
+                    <Skeleton className="h-4 w-24 rounded-full bg-primary/10" />
+                    <div className="flex items-center gap-2 mt-1">
+                      <Skeleton className="h-3 w-3 rounded-full bg-primary/10" />
+                      <Skeleton className="h-3 w-1/2 bg-primary/10" />
                     </div>
                     <div className="mt-auto space-y-2">
                       <Skeleton className="h-3 w-full bg-primary/5" />
@@ -163,8 +117,7 @@ export function ProductPreview() {
               <motion.div key={product.id} variants={cardVariants} className="h-full">
                 <Link href={`/producto/${product.id}`} className="block h-full">
                   <Card className="bg-card border border-border rounded-lg overflow-hidden hover:border-primary/50 hover:shadow-lg transition-all cursor-pointer flex flex-col h-full">
-  
-                    {/* Product image - fixed height */}
+
                     <div className="h-48 w-full shrink-0 overflow-hidden bg-gradient-to-br from-primary/5 to-primary/10">
                       <img
                         src={product.image || "/placeholder.svg"}
@@ -172,30 +125,24 @@ export function ProductPreview() {
                         className="w-full h-full object-cover"
                       />
                     </div>
-  
-                    {/* Content - flex grows to fill remaining space */}
+
                     <div className="p-5 flex flex-col gap-2 flex-1">
-                      <div className="flex items-start justify-between gap-2">
-                        <div>
-                          <h3 className="font-bold text-base text-foreground leading-snug line-clamp-1">{product.title}</h3>
-                          <span className="text-xs font-semibold text-primary bg-primary/10 px-2 py-0.5 rounded-full inline-block mt-1">
-                            {product.category}
-                          </span>
-                        </div>
+                      <div>
+                        <h3 className="font-bold text-base text-foreground leading-snug line-clamp-1">
+                          {product.title}
+                        </h3>
+                        <span className="text-xs font-semibold text-primary bg-primary/10 px-2 py-0.5 rounded-full inline-block mt-1">
+                          {product.category}
+                        </span>
                       </div>
-  
-                      {product.company_name && (
-                        <p className="text-sm font-medium text-foreground line-clamp-1">{product.company_name}</p>
-                      )}
-  
+
                       <div className="flex items-center gap-1 text-xs text-muted-foreground">
                         <MapPin className="w-3 h-3 shrink-0" />
                         <span className="line-clamp-1">{product.country}</span>
                       </div>
-  
-                      {/* Description pinned to bottom with fixed height */}
+
                       <p className="text-xs text-muted-foreground line-clamp-3 mt-auto pt-2">
-                        {product.description}
+                        {product.description?.split("---")[0]}
                       </p>
                     </div>
                   </Card>
