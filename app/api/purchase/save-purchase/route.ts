@@ -21,6 +21,7 @@ interface PurchaseData {
   shippingMethod: string
   paymentMethod: string
   specialInstructions?: string
+  containerSize?: string
 }
 
 export async function POST(request: NextRequest) {
@@ -76,6 +77,7 @@ export async function POST(request: NextRequest) {
           shipping_method: data.shippingMethod,
           payment_method: data.paymentMethod,
           special_instructions: data.specialInstructions || null,
+          container_size: data.containerSize || null,
           is_read: false,
           status: "Pendiente",
           tracking: [

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import Link from "next/link"
-import { PlusCircle, Search, Monitor, MessageSquare, Users, Eye, CheckCircle2, CircleAlert, TrendingUp } from "lucide-react"
+import { PlusCircle, Search, Monitor, MessageSquare, Users, Eye, CheckCircle2, CircleAlert, TrendingUp, Star, Crown } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { motion, Variants } from "framer-motion"
 import {
@@ -14,6 +14,9 @@ import { es } from "date-fns/locale"
 
 export interface DashboardData {
     companyName?: string
+    planType?: string
+    isPro?: boolean
+    publicationLimit?: number
     activityType: 'empty' | 'buyer' | 'seller' | 'mixed'
     seller: any
     buyer: any
@@ -134,7 +137,7 @@ export function UserDashboard() {
 
     if (data.activityType === 'empty') return <EmptyState />
 
-    const { companyName, activityType, seller, buyer, performance, recentActivity, pendingActions } = data
+    const { companyName, activityType, seller, buyer, performance, recentActivity, pendingActions, isPro, publicationLimit } = data
     const isSeller = activityType === 'seller' || activityType === 'mixed'
 
     // Derived data for charts
@@ -189,11 +192,32 @@ export function UserDashboard() {
 
                 {/* ── Page title ── */}
                 <motion.div variants={itemVariants} className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                    <div>
+                    <div className="flex items-center gap-3 flex-wrap">
                         <h1 className="text-2xl font-bold text-foreground">
                             Bienvenido a tu dashboard, <span className="text-primary">{companyName || 'Usuario'}</span>
                         </h1>
+                        {isPro ? (
+                            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-700 border border-amber-200 shadow-sm">
+                                <Crown className="w-3.5 h-3.5 fill-amber-500 text-amber-600" />
+                                Plan Pro
+                            </span>
+                        ) : (
+                            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-gray-100 text-gray-500 border border-gray-200">
+                                Plan Gratis
+                            </span>
+                        )}
                     </div>
+                    {publicationLimit && (
+                        <div className="flex items-center gap-2 text-xs text-muted-foreground bg-muted/40 px-3 py-1.5 rounded-full border">
+                            <Monitor className="w-3.5 h-3.5" />
+                            <span>
+                                <strong className="text-foreground">{performance.length}</strong>/{publicationLimit} publicaciones
+                            </span>
+                            {!isPro && (
+                                <span className="text-amber-600 font-semibold ml-1">· Actualiza a Pro para llegar a 10</span>
+                            )}
+                        </div>
+                    )}
                 </motion.div>
 
                 {/* ══════ ROW 1: KPI Cards ══════ */}

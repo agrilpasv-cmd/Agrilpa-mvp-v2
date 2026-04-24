@@ -215,6 +215,7 @@ export default function AdminUsersPage() {
                     <th className="text-left p-4 font-medium">Volumen Anual</th>
                     <th className="text-left p-4 font-medium">Tipo</th>
                     <th className="text-left p-4 font-medium">Rol</th>
+                    <th className="text-left p-4 font-medium">Plan</th>
                     <th className="text-left p-4 font-medium">Registro</th>
                     <th className="text-left p-4 font-medium">Acción</th>
                   </tr>
@@ -340,7 +341,12 @@ export default function AdminUsersPage() {
                           </SelectContent>
                         </Select>
                       </td>
-                      <td className="p-4 text-sm text-muted-foreground">
+                      <td className="p-4">
+                        <span className={`px-2 py-1 rounded-full text-xs font-bold ${user.plan_type === 'pro' ? 'bg-amber-100 text-amber-700' : 'bg-gray-100 text-gray-700'}`}>
+                          {(user.plan_type || 'gratis').toUpperCase()}
+                        </span>
+                      </td>
+                      <td className="p-4 whitespace-nowrap text-sm text-muted-foreground">
                         {new Date(user.created_at).toLocaleDateString()}
                       </td>
                       <td className="p-4">

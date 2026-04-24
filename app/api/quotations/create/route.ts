@@ -24,7 +24,8 @@ export async function POST(request: Request) {
             targetPrice,
             incoterm,
             currency,
-            buyerId
+            buyerId,
+            containerSize
         } = body
 
         // Validate required fields
@@ -79,6 +80,7 @@ export async function POST(request: Request) {
                     incoterm: incoterm || null,
                     currency: currency || "USD",
                     buyer_id: buyerId || null,
+                    container_size: containerSize || null,
                     status: "pending",
                     created_at: new Date().toISOString()
                 }

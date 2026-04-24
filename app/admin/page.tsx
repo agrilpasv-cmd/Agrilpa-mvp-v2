@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useRef, useCallback } from "react"
 import { Card } from "@/components/ui/card"
-import { Users, MessageSquare, Shield, Database, ClipboardList, Package } from "lucide-react"
+import { Users, MessageSquare, Shield, Database, ClipboardList, Package, Crown } from "lucide-react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { AnalyticsDashboard } from "./components/analytics-dashboard"
@@ -11,6 +11,8 @@ interface Stats {
   totalUsers: number
   adminUsers: number
   regularUsers: number
+  proUsers: number
+  freeUsers: number
   totalQuotations: number
 }
 
@@ -19,6 +21,8 @@ export default function AdminDashboardPage() {
     totalUsers: 0,
     adminUsers: 0,
     regularUsers: 0,
+    proUsers: 0,
+    freeUsers: 0,
     totalQuotations: 0,
   })
   const [analyticsData, setAnalyticsData] = useState<any>(null)
@@ -62,6 +66,8 @@ export default function AdminDashboardPage() {
             totalUsers: data.totalUsers,
             adminUsers: data.adminUsers,
             regularUsers: data.regularUsers,
+            proUsers: data.proUsers || 0,
+            freeUsers: data.freeUsers || 0,
             totalQuotations: data.totalQuotations || 0,
           })
           if (data.detailedAnalytics) {
@@ -121,6 +127,19 @@ export default function AdminDashboardPage() {
                   <p className="text-xs text-green-600 mt-2">{stats.regularUsers} regulares</p>
                 </div>
                 <Users className="w-12 h-12 text-primary/20" />
+              </div>
+            </Card>
+          </Link>
+
+          <Link href="/admin/membresias">
+            <Card className="p-6 border-l-4 border-l-amber-500 cursor-pointer hover:shadow-lg hover:scale-[1.02] transition-all duration-200">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-muted-foreground mb-2">Membresías</p>
+                  <p className="text-3xl font-bold text-foreground">{stats.proUsers}</p>
+                  <p className="text-xs text-amber-600 mt-2">{stats.freeUsers} gratuitos</p>
+                </div>
+                <Crown className="w-12 h-12 text-amber-500/20" />
               </div>
             </Card>
           </Link>

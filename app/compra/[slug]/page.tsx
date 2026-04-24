@@ -67,6 +67,8 @@ export default function PurchasePage() {
     shippingMethod: "barco",
     paymentMethod: "transferencia",
     specialInstructions: "",
+    containerSize: "", // selected by buyer
+    containerCount: 1, // number of containers
   })
 
   useEffect(() => {
@@ -95,8 +97,16 @@ export default function PurchasePage() {
               image: data.product.image || "/placeholder.svg",
               verified: false,
               slug: data.product.id,
+              shippingUnitType: data.product.shipping_unit_type || null,
+              containerSize: data.product.container_size || "20ST",
             }
             setUserProduct(transformed)
+            // Initialize selection with seller's default
+            setFormData(prev => ({ 
+              ...prev, 
+              containerSize: data.product.container_size || "20ST",
+              containerCount: parseInt(data.product.min_order) || 1
+            }))
           }
         })
         .finally(() => setIsLoading(false))
@@ -123,8 +133,16 @@ export default function PurchasePage() {
 
   if (!product) return null
 
+  const isFCL = product.shippingUnitType === "FCL"
+  
+  // Calculate effective quantity in kg if it's FCL
+  // 20ST = 21000kg, 40HC = 26000kg
+  const effectiveKg = isFCL 
+    ? (formData.containerCount * (formData.containerSize === "40HC" ? 26000 : 21000))
+    : kg
+
   const pricePerUnit = Number.parseFloat((product.price || "0").replace(/[^0-9.]/g, "")) || 0
-  const subtotal = pricePerUnit * kg
+  const subtotal = pricePerUnit * effectiveKg
   const shippingCost = SHIPPING_COSTS[formData.shippingMethod]
   const taxRate = TAX_RATES[formData.country] || 0.15
   const taxAmount = subtotal * taxRate
@@ -168,6 +186,9 @@ export default function PurchasePage() {
           shippingMethod: formData.shippingMethod,
           paymentMethod: formData.paymentMethod,
           specialInstructions: formData.specialInstructions,
+          containerSize: isFCL ? formData.containerSize : null,
+          containerCount: isFCL ? formData.containerCount : null,
+          quantityKg: effectiveKg,
         }),
       })
 
@@ -200,7 +221,7 @@ export default function PurchasePage() {
             <p className="text-muted-foreground mb-6">
               Tu solicitud de compra de{" "}
               <strong>
-                {kg} kg de {product.name}
+                {isFCL ? `${formData.containerCount} Contenedor(es) ${formData.containerSize}` : `${kg} kg`} de {product.name}
               </strong>{" "}
               ha sido procesada correctamente.
             </p>
@@ -551,19 +572,69 @@ export default function PurchasePage() {
                   </div>
                 </div>
 
-                <div>
-                  <Label htmlFor="kg">Cantidad (kg) *</Label>
-                  <Input
-                    id="kg"
-                    type="number"
-                    min="100"
-                    step="100"
-                    value={kg}
-                    onChange={(e) => setKg(Math.max(100, Number.parseInt(e.target.value) || 100))}
-                    className="mt-1"
-                  />
-                  <p className="text-xs text-muted-foreground mt-1">Pedido mínimo: {product.minOrder}</p>
-                </div>
+                {isFCL ? (
+                  <div className="space-y-4">
+                    <div>
+                      <Label htmlFor="containerCount">Cantidad de Contenedores *</Label>
+                      <Input
+                        id="containerCount"
+                        type="number"
+                        min="1"
+                        value={formData.containerCount}
+                        onChange={(e) => setFormData(prev => ({ ...prev, containerCount: Math.max(1, parseInt(e.target.value) || 1) }))}
+                        className="mt-1"
+                      />
+                      <p className="text-xs text-muted-foreground mt-1 text-primary font-semibold">
+                        Pedido mínimo: {product.minOrder} Contenedor(es)
+                      </p>
+                    </div>
+                    
+                    <div>
+                      <Label className="mb-2 block text-sm font-medium">Tipo de Contenedor *</Label>
+                      <div className="grid grid-cols-2 gap-2">
+                        <button
+                          type="button"
+                          onClick={() => setFormData(prev => ({ ...prev, containerSize: "20ST" }))}
+                          className={`p-2 text-xs rounded-md border-2 transition-all ${
+                            formData.containerSize === "20ST"
+                              ? "border-primary bg-primary/10 font-bold"
+                              : "border-border hover:border-primary/40"
+                          }`}
+                        >
+                          20&apos; Standard
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setFormData(prev => ({ ...prev, containerSize: "40HC" }))}
+                          className={`p-2 text-xs rounded-md border-2 transition-all ${
+                            formData.containerSize === "40HC"
+                              ? "border-primary bg-primary/10 font-bold"
+                              : "border-border hover:border-primary/40"
+                          }`}
+                        >
+                          40&apos; High Cube
+                        </button>
+                      </div>
+                      <p className="text-[10px] text-muted-foreground mt-1">
+                        {formData.containerSize === "20ST" ? "Capacidad: ~21,000 kg" : "Capacidad: ~26,000 kg"}
+                      </p>
+                    </div>
+                  </div>
+                ) : (
+                  <div>
+                    <Label htmlFor="kg">Cantidad (kg) *</Label>
+                    <Input
+                      id="kg"
+                      type="number"
+                      min="100"
+                      step="100"
+                      value={kg}
+                      onChange={(e) => setKg(Math.max(100, Number.parseInt(e.target.value) || 100))}
+                      className="mt-1"
+                    />
+                    <p className="text-xs text-muted-foreground mt-1">Pedido mínimo: {product.minOrder}</p>
+                  </div>
+                )}
 
                 <div className="space-y-2 pt-4 border-t border-border">
                   <div className="flex justify-between text-sm">
@@ -571,8 +642,8 @@ export default function PurchasePage() {
                     <span className="font-medium">{product.price}</span>
                   </div>
                   <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Cantidad</span>
-                    <span className="font-medium">{kg} kg</span>
+                    <span className="text-muted-foreground">Volumen Total</span>
+                    <span className="font-medium">{isFCL ? `${effectiveKg.toLocaleString()} kg` : `${kg} kg`}</span>
                   </div>
                   <div className="flex justify-between text-sm">
                     <span className="text-muted-foreground">Subtotal</span>

@@ -30,6 +30,8 @@ export async function POST(request: NextRequest) {
       companyName,
       contactMethod,
       contactInfo,
+      shippingUnitType,
+      containerSize,
     } = body
 
     if (
@@ -60,7 +62,16 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Check product limit (Max 3)
+    // Check product limit based on user plan
+    const { data: userProfile, error: profileError } = await supabaseAdmin
+      .from("users")
+      .select("plan_type")
+      .eq("id", userId)
+      .single()
+
+    const isPro = userProfile?.plan_type === "pro"
+    const productLimit = isPro ? 10 : 3
+
     const { count, error: countError } = await supabaseAdmin
       .from("user_products")
       .select("*", { count: "exact", head: true })
@@ -71,9 +82,10 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Error checking limits" }, { status: 500 })
     }
 
-    if (count !== null && count >= 3) {
+    if (count !== null && count >= productLimit) {
+      const planLabel = isPro ? "Pro (10 publicaciones)" : "Gratis (3 publicaciones)"
       return NextResponse.json(
-        { error: "Has alcanzado el límite de 3 publicaciones. Elimina una para crear nueva." },
+        { error: `Has alcanzado el límite de tu plan ${planLabel}. ${isPro ? "Elimina una publicación para crear una nueva." : "Actualiza a Pro para publicar hasta 10 productos."}` },
         { status: 403 }
       )
     }
@@ -101,6 +113,8 @@ export async function POST(request: NextRequest) {
           contact_method: contactMethod,
           contact_info: contactInfo,
           certifications: body.certifications || null,
+          shipping_unit_type: shippingUnitType || null,
+          container_size: containerSize || null,
           // Add WhatsApp specific fields if method is WhatsApp
           ...(contactMethod === "WhatsApp" && body.countryCode && body.phoneNumber && {
             country_code: body.countryCode,

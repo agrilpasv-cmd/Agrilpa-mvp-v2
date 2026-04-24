@@ -85,7 +85,8 @@ export default function ProductPage() {
     notes: "",
     targetPrice: "",
     incoterm: "",
-    currency: "USD"
+    currency: "USD",
+    containerSize: ""
   })
 
   // Fetch user product if slug is a UUID
@@ -194,12 +195,22 @@ export default function ProductPage() {
               countryCode: data.product.country_code,
               phoneNumber: data.product.phone_number,
               incoterm: extractedIncoterm,
+              shippingUnitType: data.product.shipping_unit_type || null,
+              containerSize: data.product.container_size || null,
               specifications: [
                 { label: "Origen", value: data.product.country },
                 { label: "Categoría", value: data.product.category },
                 { label: "Embalaje", value: data.product.packaging },
                 { label: "Tamaño Embalaje", value: `${data.product.packaging_size} kg` },
                 { label: "Vendedor", value: producerName },
+                ...(data.product.shipping_unit_type ? [{ 
+                  label: "Unidad de Envío", 
+                  value: data.product.shipping_unit_type === "FCL" 
+                    ? `FCL${data.product.container_size === "20ST" ? " – 20' Standard (~21 TM)" : data.product.container_size === "40HC" ? " – 40' High Cube (~26 TM)" : ""}` 
+                    : data.product.shipping_unit_type === "LCL" 
+                      ? "Carga Consolidada (LCL)" 
+                      : "Cantidad Personalizada" 
+                }] : []),
               ],
               certifications: data.product.certifications || null
             }
@@ -379,7 +390,8 @@ export default function ProductPage() {
         targetPrice: quotationForm.targetPrice,
         incoterm: quotationForm.incoterm,
         currency: quotationForm.currency,
-        buyerId: currentUserId
+        buyerId: currentUserId,
+        containerSize: product.shippingUnitType === "FCL" ? (quotationForm.containerSize || product.containerSize || "20ST") : null
       }
 
       console.log("=== SENDING QUOTATION ===")
@@ -653,7 +665,15 @@ export default function ProductPage() {
                 <div>
                   <p className="text-sm text-muted-foreground mb-2">Pedido mínimo</p>
                   <p className="text-2xl font-bold text-foreground">{product.minOrder}</p>
-                  <p className="text-xs text-muted-foreground mt-1">kg</p>
+                  {(product as any).shippingUnitType && (
+                    <p className="text-xs text-primary font-semibold mt-1">
+                      {(product as any).shippingUnitType === "FCL"
+                        ? `🚢 FCL${(product as any).containerSize === "20ST" ? " – 20' Std" : (product as any).containerSize === "40HC" ? " – 40' HC" : ""}`
+                        : (product as any).shippingUnitType === "LCL"
+                          ? "📦 Carga LCL"
+                          : "📋 Cantidad personalizada"}
+                    </p>
+                  )}
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground mb-2">Tipo de Embalaje</p>
@@ -1138,11 +1158,11 @@ export default function ProductPage() {
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <label className="block text-sm font-medium mb-2">
-                        Cantidad (kg) <span className="text-red-500">*</span>
+                        {product.shippingUnitType === "FCL" ? "Cantidad (Contenedores)" : "Cantidad (kg)"} <span className="text-red-500">*</span>
                       </label>
                       <Input
                         type="number"
-                        placeholder="Ej: 500"
+                        placeholder={product.shippingUnitType === "FCL" ? "Ej: 1" : "Ej: 500"}
                         min="1"
                         value={quotationForm.quantity}
                         onChange={(e) => setQuotationForm({ ...quotationForm, quantity: e.target.value })}
@@ -1150,12 +1170,59 @@ export default function ProductPage() {
                     </div>
                     <div>
                       <label className="block text-sm font-medium mb-2">
+                        {product.shippingUnitType === "FCL" ? "Tipo de Contenedor" : "País de Destino"} <span className="text-red-500">*</span>
+                      </label>
+                      <select
+                        value={product.shippingUnitType === "FCL" ? (quotationForm.containerSize || product.containerSize || "20ST") : quotationForm.destinationCountry}
+                        onChange={(e) => {
+                          if (product.shippingUnitType === "FCL") {
+                            setQuotationForm({ ...quotationForm, containerSize: e.target.value })
+                          } else {
+                            setQuotationForm({ ...quotationForm, destinationCountry: e.target.value })
+                          }
+                        }}
+                        className="w-full px-3 py-2 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary bg-background"
+                      >
+                        {product.shippingUnitType === "FCL" ? (
+                          <>
+                            <option value="20ST">20&apos; Standard (~21 TM)</option>
+                            <option value="40HC">40&apos; High Cube (~26 TM)</option>
+                          </>
+                        ) : (
+                          <>
+                            <option value="">Selecciona un país</option>
+                        <option value="Estados Unidos">Estados Unidos</option>
+                        <option value="Canadá">Canadá</option>
+                        <option value="México">México</option>
+                        <option value="El Salvador">El Salvador</option>
+                        <option value="Guatemala">Guatemala</option>
+                        <option value="Honduras">Honduras</option>
+                        <option value="Nicaragua">Nicaragua</option>
+                        <option value="Costa Rica">Costa Rica</option>
+                        <option value="Panamá">Panamá</option>
+                        <option value="Colombia">Colombia</option>
+                        <option value="Perú">Perú</option>
+                        <option value="Ecuador">Ecuador</option>
+                        <option value="Unión Europea">Unión Europea</option>
+                        <option value="Reino Unido">Reino Unido</option>
+                        <option value="Japón">Japón</option>
+                        <option value="China">China</option>
+                        <option value="Otro">Otro</option>
+                          </>
+                        )}
+                      </select>
+                    </div>
+                  </div>
+
+                  {product.shippingUnitType === "FCL" && (
+                    <div>
+                      <label className="block text-sm font-medium mb-2 text-primary font-semibold">
                         País de Destino <span className="text-red-500">*</span>
                       </label>
                       <select
                         value={quotationForm.destinationCountry}
                         onChange={(e) => setQuotationForm({ ...quotationForm, destinationCountry: e.target.value })}
-                        className="w-full px-3 py-2 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary bg-background"
+                        className="w-full px-3 py-2 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary bg-background h-10 mb-4"
                       >
                         <option value="">Selecciona un país</option>
                         <option value="Estados Unidos">Estados Unidos</option>
@@ -1177,7 +1244,9 @@ export default function ProductPage() {
                         <option value="Otro">Otro</option>
                       </select>
                     </div>
-                  </div>
+                  )}
+
+
 
                   <div>
                     <label className="block text-sm font-medium mb-2">

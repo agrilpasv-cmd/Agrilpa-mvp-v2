@@ -20,7 +20,7 @@ export async function GET(request: Request) {
         // 1. Fetch Users Count & Breakdown
         const { data: profiles, error: usersError } = await supabaseAdmin
             .from("users")
-            .select("id, created_at")
+            .select("id, created_at, plan_type")
 
         // If users table fails, try auth users as fallback for count
         let usersData = profiles || []
@@ -66,6 +66,10 @@ export async function GET(request: Request) {
 
         // Clean up chart data for frontend
         const monthlyData = chartData.map(({ name, usuarios }) => ({ name, usuarios }))
+
+        // 1b. Plan Breakdown
+        const proUsers = usersData.filter((u: any) => u.plan_type === 'pro').length
+        const freeUsers = totalUsers - proUsers
 
         // 2. Fetch Subscriptions Count
         const { count: subscriptionsCount, error: subsError } = await supabaseAdmin
@@ -279,6 +283,8 @@ export async function GET(request: Request) {
             totalSubscriptions: subscriptionsCount || 0,
             adminUsers,
             regularUsers,
+            proUsers,
+            freeUsers,
             totalQuotations,
             monthlyData,
             analyticsData: detailedAnalytics.topCountries, // Keeping legacy prop for safety

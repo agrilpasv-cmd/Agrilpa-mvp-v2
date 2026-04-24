@@ -24,10 +24,13 @@ export default function EditarPublicacionPage({ params }: { params: Promise<{ id
     description: "",
     country: "",
     minOrder: "",
+    minOrderUnit: "kg",
     maturity: "",
     image: "",
     packaging: "",
     packagingSize: "",
+    shippingUnit: "",
+    containerSize: "",
     companyName: "",
     contactMethod: "",
     contactInfo: "",
@@ -103,10 +106,13 @@ export default function EditarPublicacionPage({ params }: { params: Promise<{ id
             description: cleanDescription,
             country: p.country || "",
             minOrder: p.min_order || "",
+            minOrderUnit: p.min_order_unit || "kg",
             maturity: p.maturity || "",
             image: p.image || "",
             packaging: p.packaging || "",
             packagingSize: p.packaging_size?.toString() || "",
+            shippingUnit: p.shipping_unit_type || "",
+            containerSize: p.container_size || "",
             companyName: finalCompanyName,
             contactMethod: p.contact_method || "",
             contactInfo: p.contact_info || "",
@@ -114,6 +120,7 @@ export default function EditarPublicacionPage({ params }: { params: Promise<{ id
             phoneNumber: p.phone_number || "",
             certifications: p.certifications || "",
             incoterm: extractedIncoterm,
+            saleMethod: p.shipping_unit_type === "FCL" ? "fcl" : "standard",
           })
           setImagePreview(p.image || "")
           setIsPriceOnRequest(p.price === "Por Cotizar")
@@ -201,7 +208,12 @@ export default function EditarPublicacionPage({ params }: { params: Promise<{ id
           quantity: formData.quantity,
           description: formData.description,
           country: formData.country,
-          min_order: formData.minOrder,
+          min_order: formData.shippingUnit === "FCL"
+            ? `${formData.minOrder || 1} Contenedor(es)`
+            : formData.shippingUnit === "custom"
+              ? `${formData.minOrder} ${formData.minOrderUnit}`
+              : formData.minOrder,
+          min_order_unit: formData.minOrderUnit,
           packaging: formData.packaging,
           packaging_size: parseInt(formData.packagingSize) || 0,
           image: formData.image,
@@ -212,6 +224,8 @@ export default function EditarPublicacionPage({ params }: { params: Promise<{ id
           certifications: formData.certifications,
           company_name: formData.companyName,
           incoterm: formData.incoterm,
+          shipping_unit_type: formData.shippingUnit || null,
+          container_size: formData.containerSize || null,
         })
       })
 
@@ -471,15 +485,57 @@ export default function EditarPublicacionPage({ params }: { params: Promise<{ id
                 <label className="block text-sm font-medium mb-2">
                   Pedido Mínimo <span className="text-red-500">*</span>
                 </label>
-                <Input
-                  type="text"
-                  name="minOrder"
-                  value={formData.minOrder}
-                  onChange={handleInputChange}
-                  placeholder="Ej: 100 kg"
-                  disabled={isLoading}
-                  required
-                />
+                {formData.packaging === "Contenedores" ? (
+                  <div className="flex gap-2">
+                    <Input
+                      type="number"
+                      name="minOrder"
+                      value={formData.minOrder || "1"}
+                      onChange={handleInputChange}
+                      min="1"
+                      className="w-full"
+                      disabled={isLoading}
+                      required
+                    />
+                    <span className="flex items-center px-3 bg-primary/10 border border-primary/20 rounded-md font-semibold text-primary text-sm whitespace-nowrap">
+                      Contenedor(es)
+                    </span>
+                  </div>
+                ) : formData.shippingUnit === "custom" ? (
+                  <div className="flex gap-2">
+                    <Input
+                      type="number"
+                      name="minOrder"
+                      value={formData.minOrder}
+                      onChange={handleInputChange}
+                      placeholder="Ej: 5"
+                      min="1"
+                      className="w-full"
+                      disabled={isLoading}
+                      required
+                    />
+                    <select
+                      name="minOrderUnit"
+                      value={formData.minOrderUnit}
+                      onChange={handleInputChange}
+                      className="px-3 py-2 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary bg-background text-sm"
+                      disabled={isLoading}
+                    >
+                      <option value="TM">TM</option>
+                      <option value="Contenedores">Contenedores</option>
+                    </select>
+                  </div>
+                ) : (
+                  <Input
+                    type="text"
+                    name="minOrder"
+                    value={formData.minOrder}
+                    onChange={handleInputChange}
+                    placeholder="Ej: 100 kg"
+                    disabled={isLoading}
+                    required
+                  />
+                )}
               </div>
             </div>
 
@@ -501,51 +557,173 @@ export default function EditarPublicacionPage({ params }: { params: Promise<{ id
                   <option value="Maduro">Maduro</option>
                 </select>
               </div>
-              <div>
-                <label className="block text-sm font-medium mb-2">
-                  Tipo de Embalaje <span className="text-red-500">*</span>
+
+              {/* ── Elección de Método de Venta ── */}
+              <div className="md:col-span-2">
+                <label className="block text-sm font-semibold mb-3">
+                  ¿Cómo vendes este producto? <span className="text-red-500">*</span>
                 </label>
-                <select
-                  name="packaging"
-                  value={formData.packaging}
-                  onChange={handleInputChange}
-                  className="w-full px-3 py-2 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary bg-background"
-                  disabled={isLoading}
-                  required
-                >
-                  <option value="">Selecciona un tipo de embalaje</option>
-                  <option value="Sacos">Sacos</option>
-                  <option value="Cajas">Cajas</option>
-                  <option value="Bolsas">Bolsas</option>
-                  <option value="Contenedores">Contenedores</option>
-                  <option value="Pallets">Pallets</option>
-                  <option value="Barriles">Barriles</option>
-                  <option value="Canastillas">Canastillas</option>
-                  <option value="Empaques Frescos">Empaques Frescos</option>
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-2">
-                  Tamaño del Embalaje <span className="text-red-500">*</span>
-                </label>
-                <div className="flex gap-2">
-                  <Input
-                    type="number"
-                    name="packagingSize"
-                    value={formData.packagingSize}
-                    onChange={handleInputChange}
-                    placeholder="Ej: 50, 25, 100"
-                    className="w-full"
-                    min="1"
-                    disabled={isLoading}
-                    required
-                  />
-                  <span className="flex items-center px-3 bg-primary/10 border border-primary/20 rounded-md font-semibold text-primary">
-                    kg
-                  </span>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setFormData(prev => ({ 
+                      ...prev, 
+                      saleMethod: "standard", 
+                      packaging: prev.packaging === "Contenedores" ? "" : prev.packaging, 
+                      shippingUnit: "", 
+                      containerSize: "", 
+                      minOrderUnit: prev.minOrderUnit === "Contenedores" ? "kg" : prev.minOrderUnit
+                    }))}
+                    className={`flex items-center gap-3 p-3 rounded-xl border-2 transition-all text-left ${
+                      formData.saleMethod === "standard"
+                        ? "border-primary bg-primary/5 ring-1 ring-primary/20"
+                        : "border-border hover:border-primary/30 bg-background"
+                    }`}
+                  >
+                    <div className={`w-10 h-10 rounded-lg flex items-center justify-center text-xl ${formData.saleMethod === "standard" ? "bg-primary text-white" : "bg-muted text-muted-foreground"}`}>
+                      📦
+                    </div>
+                    <div>
+                      <p className="font-bold text-sm">Carga General / Sacos</p>
+                      <p className="text-xs text-muted-foreground">Venta por sacos, cajas o bultos</p>
+                    </div>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setFormData(prev => ({ 
+                      ...prev, 
+                      saleMethod: "fcl", 
+                      packaging: "Contenedores", 
+                      shippingUnit: "FCL", 
+                      containerSize: prev.containerSize || "20ST", 
+                      minOrderUnit: "Contenedores",
+                      minOrder: prev.minOrder || "1",
+                      packagingSize: prev.packagingSize || "21000"
+                    }))}
+                    className={`flex items-center gap-3 p-3 rounded-xl border-2 transition-all text-left ${
+                      formData.saleMethod === "fcl"
+                        ? "border-primary bg-primary/5 ring-1 ring-primary/20"
+                        : "border-border hover:border-primary/30 bg-background"
+                    }`}
+                  >
+                    <div className={`w-10 h-10 rounded-lg flex items-center justify-center text-xl ${formData.saleMethod === "fcl" ? "bg-primary text-white" : "bg-muted text-muted-foreground"}`}>
+                      🚢
+                    </div>
+                    <div>
+                      <p className="font-bold text-sm">Venta por Contenedor</p>
+                      <p className="text-xs text-muted-foreground">Exportación FCL (Full Container)</p>
+                    </div>
+                  </button>
                 </div>
               </div>
             </div>
+
+            <div className={`grid grid-cols-1 md:grid-cols-2 gap-6 pt-2 ${formData.saleMethod === "fcl" ? "animate-in fade-in slide-in-from-top-4 duration-500" : ""}`}>
+              {formData.saleMethod === "standard" ? (
+                <>
+                  <div>
+                    <label className="block text-sm font-medium mb-2">
+                      Tipo de Embalaje <span className="text-red-500">*</span>
+                    </label>
+                    <select
+                      name="packaging"
+                      value={formData.packaging}
+                      onChange={handleInputChange}
+                      className="w-full px-3 py-2 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary bg-background"
+                      disabled={isLoading}
+                      required
+                    >
+                      <option value="">Selecciona un tipo de embalaje</option>
+                      <option value="Sacos">Sacos</option>
+                      <option value="Cajas">Cajas</option>
+                      <option value="Bolsas">Bolsas</option>
+                      <option value="Pallets">Pallets</option>
+                      <option value="Barriles">Barriles</option>
+                      <option value="Canastillas">Canastillas</option>
+                      <option value="Empaques Frescos">Empaques Frescos</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-2">
+                      Tamaño del Embalaje <span className="text-red-500">*</span>
+                    </label>
+                    <div className="flex gap-2">
+                      <Input
+                        type="number"
+                        name="packagingSize"
+                        value={formData.packagingSize}
+                        onChange={handleInputChange}
+                        placeholder="Ej: 50, 25, 100"
+                        className="w-full"
+                        min="1"
+                        disabled={isLoading}
+                        required
+                      />
+                      <span className="flex items-center px-3 bg-primary/10 border border-primary/20 rounded-md font-semibold text-primary">
+                        kg
+                      </span>
+                    </div>
+                  </div>
+                </>
+              ) : (
+                <div className="md:col-span-2 space-y-4">
+                  <div className="flex items-center justify-between">
+                    <label className="block text-sm font-semibold">
+                      Opciones de Contenedor FCL
+                    </label>
+                    <span className="flex items-center gap-1.5 text-xs text-primary bg-primary/10 border border-primary/20 px-2.5 py-1 rounded-full font-medium">
+                      💡 El comprador verá que vendes por contenedor completo
+                    </span>
+                  </div>
+                  
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <button
+                      type="button"
+                      onClick={() => setFormData(prev => ({ ...prev, containerSize: "20ST", packagingSize: "21000" }))}
+                      className={`relative flex flex-col items-center gap-2 rounded-xl border-2 p-5 text-center transition-all ${
+                        formData.containerSize === "20ST"
+                          ? "border-primary bg-primary/10 shadow-sm"
+                          : "border-border hover:border-primary/40 bg-background"
+                      }`}
+                    >
+                      <span className="text-3xl">🚢</span>
+                      <div>
+                        <p className="font-bold">20&apos; Standard</p>
+                        <p className="text-xs text-muted-foreground">Capacidad aprox. 21,000 kg</p>
+                      </div>
+                      {formData.containerSize === "20ST" && (
+                        <div className="absolute top-2 right-2 w-5 h-5 rounded-full bg-primary flex items-center justify-center">
+                          <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>
+                        </div>
+                      )}
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => setFormData(prev => ({ ...prev, containerSize: "40HC", packagingSize: "26000" }))}
+                      className={`relative flex flex-col items-center gap-2 rounded-xl border-2 p-5 text-center transition-all ${
+                        formData.containerSize === "40HC"
+                          ? "border-primary bg-primary/10 shadow-sm"
+                          : "border-border hover:border-primary/40 bg-background"
+                      }`}
+                    >
+                      <span className="text-3xl">🏗️</span>
+                      <div>
+                        <p className="font-bold">40&apos; High Cube</p>
+                        <p className="text-xs text-muted-foreground">Capacidad aprox. 26,000 kg</p>
+                      </div>
+                      {formData.containerSize === "40HC" && (
+                        <div className="absolute top-2 right-2 w-5 h-5 rounded-full bg-primary flex items-center justify-center">
+                          <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>
+                        </div>
+                      )}
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+
 
             {/* Incoterm Field */}
             <div>

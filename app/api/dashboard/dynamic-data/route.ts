@@ -120,7 +120,7 @@ export async function GET() {
             { data: sellerOrders },
             { data: buyerOrders }
         ] = await Promise.all([
-            supabaseAdmin.from("users").select("full_name, company_name").eq("id", userId).single(),
+            supabaseAdmin.from("users").select("full_name, company_name, plan_type, plan_expires_at").eq("id", userId).single(),
             supabaseAdmin.from("user_products").select("id, title, views, category").eq("user_id", userId),
             supabaseAdmin.from("quotations").select("id, status, created_at, updated_at, buyer_name, product_id, target_price, quantity").eq("seller_id", userId),
             supabaseAdmin.from("quotations").select("id, status, created_at, updated_at, product_title, product_id").eq("buyer_id", userId),
@@ -129,6 +129,23 @@ export async function GET() {
         ])
 
         const companyName = profile?.company_name || profile?.full_name || "Usuario"
+
+        // Auto-downgrade if Pro plan expired
+        let planType: string = profile?.plan_type || "gratis"
+        let planExpiresAt: string | null = profile?.plan_expires_at || null
+
+        if (planType === "pro" && planExpiresAt && new Date(planExpiresAt) < new Date()) {
+            // Downgrade to gratis
+            await supabaseAdmin
+                .from("users")
+                .update({ plan_type: "gratis", plan_expires_at: null })
+                .eq("id", userId)
+            planType = "gratis"
+            planExpiresAt = null
+        }
+
+        const isPro = planType === "pro"
+        const publicationLimit = isPro ? 10 : 3
 
         // Date reference for 7 day window
         const sevenDaysAgo = new Date()
@@ -317,6 +334,10 @@ export async function GET() {
         // Return unified structure
         return NextResponse.json({
             companyName,
+            planType,
+            isPro,
+            publicationLimit,
+            planExpiresAt,
             activityType,
             seller: {
                 quotes_received_7d: sellerQuotes7d,

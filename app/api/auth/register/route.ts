@@ -85,6 +85,7 @@ export async function POST(request: NextRequest) {
       provider_countries: [providerCountry1, providerCountry2, providerCountry3].filter(Boolean),
       has_export_certificates: hasExportCertificates === true,
       annual_volume: volumeRange || null,
+      plan_type: 'gratis'
     })
 
     if (profileError) {

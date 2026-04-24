@@ -15,6 +15,7 @@ export async function PUT(request: Request) {
             description,
             country,
             min_order,
+            min_order_unit,
             packaging,
             packaging_size,
             image,
@@ -24,7 +25,9 @@ export async function PUT(request: Request) {
             phone_number,
             certifications,
             company_name,
-            incoterm
+            incoterm,
+            shipping_unit_type,
+            container_size,
         } = body
 
         if (!id) {
@@ -52,6 +55,7 @@ export async function PUT(request: Request) {
         if (description !== undefined) updateData.description = fullDescription
         if (country !== undefined) updateData.country = country
         if (min_order !== undefined) updateData.min_order = min_order
+        if (min_order_unit !== undefined) updateData.min_order_unit = min_order_unit
         if (packaging !== undefined) updateData.packaging = packaging
         if (packaging_size !== undefined) updateData.packaging_size = packaging_size
         if (image !== undefined) updateData.image = image
@@ -60,6 +64,8 @@ export async function PUT(request: Request) {
         if (country_code !== undefined) updateData.country_code = country_code
         if (phone_number !== undefined) updateData.phone_number = phone_number
         if (certifications !== undefined) updateData.certifications = certifications
+        if (shipping_unit_type !== undefined) updateData.shipping_unit_type = shipping_unit_type
+        if (container_size !== undefined) updateData.container_size = container_size
 
         const { data, error } = await supabaseAdmin
             .from("user_products")

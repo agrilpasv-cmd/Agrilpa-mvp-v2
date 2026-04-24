@@ -60,10 +60,13 @@ export default function NuevaPublicacionPage() {
     description: "",
     country: "",
     minOrder: "",
+    minOrderUnit: "kg",
     maturity: "",
     image: "",
     packaging: "",
     packagingSize: "",
+    shippingUnit: "",
+    containerSize: "",
     companyName: "",
     contactMethod: "",
     contactInfo: "",
@@ -71,6 +74,7 @@ export default function NuevaPublicacionPage() {
     phoneNumber: "",
     certifications: "",
     incoterm: "A definir con el comprador",
+    saleMethod: "standard", // "standard" or "fcl"
   })
   const [isPriceOnRequest, setIsPriceOnRequest] = useState(false)
   const [certInput, setCertInput] = useState("")
@@ -166,6 +170,7 @@ export default function NuevaPublicacionPage() {
       { key: "quantity", label: "Cantidad Disponible" },
       { key: "description", label: "Descripción del Producto" },
       { key: "country", label: "País de Origen" },
+      { key: "maturity", label: "Tipo de Maduración" },
       { key: "minOrder", label: "Pedido Mínimo" },
       { key: "packaging", label: "Tipo de Embalaje" },
       { key: "packagingSize", label: "Tamaño del Embalaje" },
@@ -240,7 +245,14 @@ export default function NuevaPublicacionPage() {
           userId,
           ...formData,
           price: isPriceOnRequest ? "Por Cotizar" : formData.price,
-          // For WhatsApp, send country code and phone number separately
+          // Compose minOrder with unit if custom or FCL
+          minOrder: formData.shippingUnit === "FCL"
+            ? `${formData.minOrder || 1} Contenedor(es)`
+            : formData.shippingUnit === "custom"
+              ? `${formData.minOrder} ${formData.minOrderUnit}`
+              : formData.minOrder,
+          shippingUnitType: formData.shippingUnit,
+          containerSize: formData.containerSize || null,
           // For WhatsApp, send country code and phone number separately
           ...(formData.contactMethod === "WhatsApp" && {
             countryCode: formData.countryCode,
@@ -474,66 +486,155 @@ export default function NuevaPublicacionPage() {
                 <select
                   id="country"
                   name="country"
-                  value={formData.country === "" || ["El Salvador", "Honduras", "Guatemala", "Nicaragua", "Costa Rica", "Panamá", "México", "Colombia", "Ecuador", "Perú", "Otro"].includes(formData.country) ? formData.country : "Otro"}
-                  onChange={(e) => {
-                    if (e.target.value === "Otro") {
-                      setFormData(prev => ({ ...prev, country: "Otro" }))
-                    } else {
-                      setFormData(prev => ({ ...prev, country: e.target.value }))
-                    }
-                  }}
+                  value={formData.country}
+                  onChange={handleInputChange}
                   className="w-full px-3 py-2 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary bg-background"
                   disabled={isLoading}
                   required
                 >
                   <option value="">Selecciona un país</option>
-                  <option value="El Salvador">El Salvador</option>
-                  <option value="Honduras">Honduras</option>
-                  <option value="Guatemala">Guatemala</option>
-                  <option value="Nicaragua">Nicaragua</option>
-                  <option value="Costa Rica">Costa Rica</option>
-                  <option value="Panamá">Panamá</option>
-                  <option value="México">México</option>
-                  <option value="Colombia">Colombia</option>
-                  <option value="Ecuador">Ecuador</option>
-                  <option value="Perú">Perú</option>
-                  <option value="Otro">Otro...</option>
+                  <optgroup label="Centroamérica">
+                    <option value="El Salvador">El Salvador</option>
+                    <option value="Guatemala">Guatemala</option>
+                    <option value="Honduras">Honduras</option>
+                    <option value="Nicaragua">Nicaragua</option>
+                    <option value="Costa Rica">Costa Rica</option>
+                    <option value="Panamá">Panamá</option>
+                    <option value="Belice">Belice</option>
+                  </optgroup>
+                  <optgroup label="Norteamérica">
+                    <option value="México">México</option>
+                    <option value="Estados Unidos">Estados Unidos</option>
+                    <option value="Canadá">Canadá</option>
+                  </optgroup>
+                  <optgroup label="Sudamérica">
+                    <option value="Argentina">Argentina</option>
+                    <option value="Bolivia">Bolivia</option>
+                    <option value="Brasil">Brasil</option>
+                    <option value="Chile">Chile</option>
+                    <option value="Colombia">Colombia</option>
+                    <option value="Ecuador">Ecuador</option>
+                    <option value="Paraguay">Paraguay</option>
+                    <option value="Perú">Perú</option>
+                    <option value="Uruguay">Uruguay</option>
+                    <option value="Venezuela">Venezuela</option>
+                    <option value="Guyana">Guyana</option>
+                    <option value="Surinam">Surinam</option>
+                  </optgroup>
+                  <optgroup label="El Caribe">
+                    <option value="Cuba">Cuba</option>
+                    <option value="República Dominicana">República Dominicana</option>
+                    <option value="Jamaica">Jamaica</option>
+                    <option value="Haití">Haití</option>
+                    <option value="Trinidad y Tobago">Trinidad y Tobago</option>
+                    <option value="Puerto Rico">Puerto Rico</option>
+                  </optgroup>
+                  <optgroup label="Europa">
+                    <option value="España">España</option>
+                    <option value="Francia">Francia</option>
+                    <option value="Alemania">Alemania</option>
+                    <option value="Italia">Italia</option>
+                    <option value="Portugal">Portugal</option>
+                    <option value="Países Bajos">Países Bajos</option>
+                    <option value="Bélgica">Bélgica</option>
+                    <option value="Polonia">Polonia</option>
+                    <option value="Reino Unido">Reino Unido</option>
+                  </optgroup>
+                  <optgroup label="Asia">
+                    <option value="China">China</option>
+                    <option value="India">India</option>
+                    <option value="Japón">Japón</option>
+                    <option value="Corea del Sur">Corea del Sur</option>
+                    <option value="Tailandia">Tailandia</option>
+                    <option value="Vietnam">Vietnam</option>
+                    <option value="Indonesia">Indonesia</option>
+                    <option value="Filipinas">Filipinas</option>
+                    <option value="Malasia">Malasia</option>
+                    <option value="Turquía">Turquía</option>
+                  </optgroup>
+                  <optgroup label="África">
+                    <option value="Sudáfrica">Sudáfrica</option>
+                    <option value="Nigeria">Nigeria</option>
+                    <option value="Kenia">Kenia</option>
+                    <option value="Etiopía">Etiopía</option>
+                    <option value="Ghana">Ghana</option>
+                    <option value="Costa de Marfil">Costa de Marfil</option>
+                    <option value="Tanzania">Tanzania</option>
+                    <option value="Uganda">Uganda</option>
+                    <option value="Marruecos">Marruecos</option>
+                    <option value="Egipto">Egipto</option>
+                  </optgroup>
+                  <optgroup label="Oceanía">
+                    <option value="Australia">Australia</option>
+                    <option value="Nueva Zelanda">Nueva Zelanda</option>
+                  </optgroup>
                 </select>
-                {(formData.country === "Otro" || (formData.country !== "" && !["El Salvador", "Honduras", "Guatemala", "Nicaragua", "Costa Rica", "Panamá", "México", "Colombia", "Ecuador", "Perú"].includes(formData.country))) && (
-                  <Input
-                    id="country-custom"
-                    type="text"
-                    name="country"
-                    value={formData.country === "Otro" ? "" : formData.country}
-                    onChange={handleInputChange}
-                    placeholder="Escribe el nombre del país"
-                    className="mt-2"
-                    disabled={isLoading}
-                    required
-                  />
-                )}
               </div>
               <div>
                 <label htmlFor="minOrder" className="block text-sm font-medium mb-2">
                   Pedido Mínimo <span className="text-red-500">*</span>
                 </label>
-                <Input
-                  id="minOrder"
-                  type="text"
-                  name="minOrder"
-                  value={formData.minOrder}
-                  onChange={handleInputChange}
-                  placeholder="Ej: 100 kg"
-                  disabled={isLoading}
-                  required
-                />
+                {formData.packaging === "Contenedores" ? (
+                  <div className="flex gap-2">
+                    <Input
+                      id="minOrder"
+                      type="number"
+                      name="minOrder"
+                      value={formData.minOrder || "1"}
+                      onChange={handleInputChange}
+                      min="1"
+                      className="w-full"
+                      disabled={isLoading}
+                      required
+                    />
+                    <span className="flex items-center px-3 bg-primary/10 border border-primary/20 rounded-md font-semibold text-primary text-sm whitespace-nowrap">
+                      Contenedor(es)
+                    </span>
+                  </div>
+                ) : formData.shippingUnit === "custom" ? (
+                  <div className="flex gap-2">
+                    <Input
+                      id="minOrder"
+                      type="number"
+                      name="minOrder"
+                      value={formData.minOrder}
+                      onChange={handleInputChange}
+                      placeholder="Ej: 5"
+                      min="1"
+                      className="w-full"
+                      disabled={isLoading}
+                      required
+                    />
+                    <select
+                      name="minOrderUnit"
+                      value={formData.minOrderUnit}
+                      onChange={handleInputChange}
+                      className="px-3 py-2 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary bg-background text-sm"
+                      disabled={isLoading}
+                    >
+                      <option value="TM">TM</option>
+                      <option value="Contenedores">Contenedores</option>
+                    </select>
+                  </div>
+                ) : (
+                  <Input
+                    id="minOrder"
+                    type="text"
+                    name="minOrder"
+                    value={formData.minOrder}
+                    onChange={handleInputChange}
+                    placeholder="Ej: 100 kg"
+                    disabled={isLoading}
+                    required
+                  />
+                )}
               </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
-                <label htmlFor="maturity" className="block text-sm font-medium mb-2">
-                  Tipo de Maduración <span className="text-xs text-muted-foreground">(Opcional)</span>
+                <label className="block text-sm font-medium mb-2">
+                  Tipo de Maduración <span className="text-red-500">*</span>
                 </label>
                 <select
                   id="maturity"
@@ -542,60 +643,186 @@ export default function NuevaPublicacionPage() {
                   onChange={handleInputChange}
                   className="w-full px-3 py-2 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary bg-background"
                   disabled={isLoading}
+                  required
                 >
-                  <option value="">Sin especificar</option>
+                  <option value="">Selecciona una opción</option>
+                  <option value="No aplica">No aplica</option>
                   <option value="Verde">Verde</option>
                   <option value="Semi-maduro">Semi-maduro</option>
                   <option value="Maduro">Maduro</option>
+                  <option value="Sobre-maduro">Sobre-maduro</option>
                 </select>
               </div>
-              <div>
-                <label htmlFor="packaging" className="block text-sm font-medium mb-2">
-                  Tipo de Embalaje <span className="text-red-500">*</span>
+
+              {/* ── Elección de Método de Venta ── */}
+              <div className="md:col-span-2">
+                <label className="block text-sm font-semibold mb-3">
+                  ¿Cómo vendes este producto? <span className="text-red-500">*</span>
                 </label>
-                <select
-                  id="packaging"
-                  name="packaging"
-                  value={formData.packaging}
-                  onChange={handleInputChange}
-                  className="w-full px-3 py-2 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary bg-background"
-                  disabled={isLoading}
-                  required
-                >
-                  <option value="">Selecciona un tipo de embalaje</option>
-                  <option value="Sacos">Sacos</option>
-                  <option value="Cajas">Cajas</option>
-                  <option value="Bolsas">Bolsas</option>
-                  <option value="Contenedores">Contenedores</option>
-                  <option value="Pallets">Pallets</option>
-                  <option value="Barriles">Barriles</option>
-                  <option value="Canastillas">Canastillas</option>
-                  <option value="Empaques Frescos">Empaques Frescos</option>
-                </select>
-              </div>
-              <div>
-                <label htmlFor="packagingSize" className="block text-sm font-medium mb-2">
-                  Tamaño del Embalaje <span className="text-red-500">*</span>
-                </label>
-                <div className="flex gap-2">
-                  <Input
-                    id="packagingSize"
-                    type="number"
-                    name="packagingSize"
-                    value={formData.packagingSize}
-                    onChange={handleInputChange}
-                    placeholder="Ej: 50, 25, 100"
-                    className="w-full"
-                    min="1"
-                    disabled={isLoading}
-                    required
-                  />
-                  <span className="flex items-center px-3 bg-primary/10 border border-primary/20 rounded-md font-semibold text-primary">
-                    kg
-                  </span>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setFormData(prev => ({ 
+                      ...prev, 
+                      saleMethod: "standard", 
+                      packaging: "", 
+                      shippingUnit: "", 
+                      containerSize: "", 
+                      minOrderUnit: "kg",
+                      minOrder: "" 
+                    }))}
+                    className={`flex items-center gap-3 p-3 rounded-xl border-2 transition-all text-left ${
+                      formData.saleMethod === "standard"
+                        ? "border-primary bg-primary/5 ring-1 ring-primary/20"
+                        : "border-border hover:border-primary/30 bg-background"
+                    }`}
+                  >
+                    <div className={`w-10 h-10 rounded-lg flex items-center justify-center text-xl ${formData.saleMethod === "standard" ? "bg-primary text-white" : "bg-muted text-muted-foreground"}`}>
+                      📦
+                    </div>
+                    <div>
+                      <p className="font-bold text-sm">Carga General / Sacos</p>
+                      <p className="text-xs text-muted-foreground">Venta por sacos, cajas o bultos</p>
+                    </div>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setFormData(prev => ({ 
+                      ...prev, 
+                      saleMethod: "fcl", 
+                      packaging: "Contenedores", 
+                      shippingUnit: "FCL", 
+                      containerSize: "20ST", 
+                      minOrderUnit: "Contenedores",
+                      minOrder: "1",
+                      packagingSize: "21000"
+                    }))}
+                    className={`flex items-center gap-3 p-3 rounded-xl border-2 transition-all text-left ${
+                      formData.saleMethod === "fcl"
+                        ? "border-primary bg-primary/5 ring-1 ring-primary/20"
+                        : "border-border hover:border-primary/30 bg-background"
+                    }`}
+                  >
+                    <div className={`w-10 h-10 rounded-lg flex items-center justify-center text-xl ${formData.saleMethod === "fcl" ? "bg-primary text-white" : "bg-muted text-muted-foreground"}`}>
+                      🚢
+                    </div>
+                    <div>
+                      <p className="font-bold text-sm">Venta por Contenedor</p>
+                      <p className="text-xs text-muted-foreground">Exportación FCL (Full Container)</p>
+                    </div>
+                  </button>
                 </div>
               </div>
             </div>
+
+            <div className={`grid grid-cols-1 md:grid-cols-2 gap-6 pt-2 ${formData.saleMethod === "fcl" ? "animate-in fade-in slide-in-from-top-4 duration-500" : ""}`}>
+              {formData.saleMethod === "standard" ? (
+                <>
+                  <div>
+                    <label htmlFor="packaging" className="block text-sm font-medium mb-2">
+                      Tipo de Embalaje <span className="text-red-500">*</span>
+                    </label>
+                    <select
+                      id="packaging"
+                      name="packaging"
+                      value={formData.packaging}
+                      onChange={handleInputChange}
+                      className="w-full px-3 py-2 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary bg-background"
+                      disabled={isLoading}
+                      required
+                    >
+                      <option value="">Selecciona un tipo de embalaje</option>
+                      <option value="Sacos">Sacos</option>
+                      <option value="Cajas">Cajas</option>
+                      <option value="Bolsas">Bolsas</option>
+                      <option value="Pallets">Pallets</option>
+                      <option value="Barriles">Barriles</option>
+                      <option value="Canastillas">Canastillas</option>
+                      <option value="Empaques Frescos">Empaques Frescos</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label htmlFor="packagingSize" className="block text-sm font-medium mb-2">
+                      Tamaño del Embalaje <span className="text-red-500">*</span>
+                    </label>
+                    <div className="flex gap-2">
+                      <Input
+                        id="packagingSize"
+                        type="number"
+                        name="packagingSize"
+                        value={formData.packagingSize}
+                        onChange={handleInputChange}
+                        placeholder="Ej: 50, 25, 100"
+                        className="w-full"
+                        min="1"
+                        disabled={isLoading}
+                        required
+                      />
+                      <span className="flex items-center px-3 bg-primary/10 border border-primary/20 rounded-md font-semibold text-primary">
+                        kg
+                      </span>
+                    </div>
+                  </div>
+                </>
+              ) : (
+                <div className="md:col-span-2 space-y-4">
+                  <div className="flex items-center justify-between">
+                    <label className="block text-sm font-semibold">
+                      Opciones de Contenedor FCL
+                    </label>
+                    <span className="flex items-center gap-1.5 text-xs text-primary bg-primary/10 border border-primary/20 px-2.5 py-1 rounded-full font-medium">
+                      💡 El comprador verá que vendes por contenedor completo
+                    </span>
+                  </div>
+                  
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <button
+                      type="button"
+                      onClick={() => setFormData(prev => ({ ...prev, containerSize: "20ST", packagingSize: "21000" }))}
+                      className={`relative flex flex-col items-center gap-2 rounded-xl border-2 p-5 text-center transition-all ${
+                        formData.containerSize === "20ST"
+                          ? "border-primary bg-primary/10 shadow-sm"
+                          : "border-border hover:border-primary/40 bg-background"
+                      }`}
+                    >
+                      <span className="text-3xl">🚢</span>
+                      <div>
+                        <p className="font-bold">20&apos; Standard</p>
+                        <p className="text-xs text-muted-foreground">Capacidad aprox. 21,000 kg</p>
+                      </div>
+                      {formData.containerSize === "20ST" && (
+                        <div className="absolute top-2 right-2 w-5 h-5 rounded-full bg-primary flex items-center justify-center">
+                          <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>
+                        </div>
+                      )}
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => setFormData(prev => ({ ...prev, containerSize: "40HC", packagingSize: "26000" }))}
+                      className={`relative flex flex-col items-center gap-2 rounded-xl border-2 p-5 text-center transition-all ${
+                        formData.containerSize === "40HC"
+                          ? "border-primary bg-primary/10 shadow-sm"
+                          : "border-border hover:border-primary/40 bg-background"
+                      }`}
+                    >
+                      <span className="text-3xl">🏗️</span>
+                      <div>
+                        <p className="font-bold">40&apos; High Cube</p>
+                        <p className="text-xs text-muted-foreground">Capacidad aprox. 26,000 kg</p>
+                      </div>
+                      {formData.containerSize === "40HC" && (
+                        <div className="absolute top-2 right-2 w-5 h-5 rounded-full bg-primary flex items-center justify-center">
+                          <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>
+                        </div>
+                      )}
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+
 
             {/* Incoterm Field */}
             <div>

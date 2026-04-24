@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Plus, Trash2, Edit2, Eye, Loader2, CheckCircle, XCircle } from "lucide-react"
+import { Plus, Trash2, Edit2, Eye, Loader2, CheckCircle, XCircle, Crown, Star } from "lucide-react"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -45,9 +45,19 @@ export default function PublicacionesPage() {
 
   // Custom hook for sidebar updates
   const { refreshCounts } = useDashboard()
+  const [publicationLimit, setPublicationLimit] = useState<number>(3)
+  const [isPro, setIsPro] = useState(false)
 
   useEffect(() => {
     fetchMyProducts()
+    // Fetch plan info
+    fetch("/api/dashboard/dynamic-data")
+      .then(r => r.ok ? r.json() : null)
+      .then(data => {
+        if (data?.publicationLimit) setPublicationLimit(data.publicationLimit)
+        if (data?.isPro) setIsPro(data.isPro)
+      })
+      .catch(() => {})
   }, [])
 
   const fetchMyProducts = async () => {
@@ -137,15 +147,27 @@ export default function PublicacionesPage() {
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-3xl font-bold text-foreground">Mis Publicaciones</h1>
-          <p className="text-muted-foreground mt-1">Gestiona tus anuncios ({publications.length}/3)</p>
+          <div className="flex items-center gap-2 mt-1">
+            <p className="text-muted-foreground">Gestiona tus anuncios ({publications.length}/{publicationLimit})</p>
+            {isPro && (
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-bold bg-amber-100 text-amber-700 border border-amber-200">
+                <Crown className="w-3 h-3" />PRO
+              </span>
+            )}
+          </div>
         </div>
-        {publications.length >= 3 ? (
+        {publications.length >= publicationLimit ? (
           <div className="flex flex-col items-end gap-1">
             <Button disabled className="gap-2 opacity-50 cursor-not-allowed">
               <Plus className="w-4 h-4" />
               Límite Alcanzado
             </Button>
-            <span className="text-xs text-red-500 font-medium">Máximo 3 publicaciones permitidas</span>
+            <span className="text-xs text-red-500 font-medium">
+              {isPro
+                ? `Máximo ${publicationLimit} publicaciones (Plan Pro)`
+                : `Máximo ${publicationLimit} publicaciones. Actualiza a Pro para llegar a 10`
+              }
+            </span>
           </div>
         ) : (
           <Button onClick={() => router.push("/dashboard/mis-publicaciones/nueva")} className="gap-2">

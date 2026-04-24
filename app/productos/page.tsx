@@ -51,7 +51,7 @@ export default function ProductosPage() {
   const [searchTerm, setSearchTerm] = useState("")
   const [selectedCategory, setSelectedCategory] = useState("todos")
   const [showFilters, setShowFilters] = useState(false)
-  const [priceRange, setPriceRange] = useState<[number, number]>([0, 10000000])
+  const [priceRange, setPriceRange] = useState<[number, number]>([0, 500])
   const [verifiedOnly, setVerifiedOnly] = useState(false)
   const [minRating, setMinRating] = useState(0)
   const [selectedCountry, setSelectedCountry] = useState("todos")
@@ -127,7 +127,7 @@ export default function ProductosPage() {
     const matchesCategory = selectedCategory === "todos" || product.category === selectedCategory
 
     const priceValue = Number.parseFloat(product.price?.replace(/[^\d.]/g, "") || "0")
-    const matchesPrice = priceValue >= priceRange[0] && priceValue <= priceRange[1]
+    const matchesPrice = product.price === "Por Cotizar" || (priceValue >= priceRange[0] && priceValue <= priceRange[1])
 
     const matchesVerified = !verifiedOnly || product.verified
     const matchesRating = (product.rating || 0) >= minRating
@@ -150,7 +150,7 @@ export default function ProductosPage() {
   const handleResetFilters = () => {
     setSearchTerm("")
     setSelectedCategory("todos")
-    setPriceRange([0, 10000000])
+    setPriceRange([0, 500])
     setVerifiedOnly(false)
     setMinRating(0)
     setSelectedCountry("todos")
@@ -257,7 +257,7 @@ export default function ProductosPage() {
             {(verifiedOnly ||
               minRating > 0 ||
               priceRange[0] > 0 ||
-              priceRange[1] < 10000000 ||
+              priceRange[1] < 500 ||
               selectedCountry !== "todos" ||
               searchContent !== "") && (
                 <button
@@ -274,30 +274,39 @@ export default function ProductosPage() {
           {showFilters && (
             <div className="mb-8 p-6 bg-card border border-border rounded-lg">
               <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-                {/* Price Range Filter */}
                 <div>
                   <label className="block text-sm font-semibold text-foreground mb-3">Rango de Precio ($/kg)</label>
-                  <div className="space-y-2">
-                    <input
-                      type="range"
-                      min="0"
-                      max="10000000"
-                      step="1"
-                      value={priceRange[0]}
-                      onChange={(e) => setPriceRange([Number.parseFloat(e.target.value), priceRange[1]])}
-                      className="w-full"
-                    />
-                    <input
-                      type="range"
-                      min="0"
-                      max="10000000"
-                      step="1"
-                      value={priceRange[1]}
-                      onChange={(e) => setPriceRange([priceRange[0], Number.parseFloat(e.target.value)])}
-                      className="w-full"
-                    />
-                    <p className="text-xs text-muted-foreground">
-                      ${priceRange[0].toFixed(2)} - ${priceRange[1].toFixed(2)}
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs text-muted-foreground w-8">Min</span>
+                      <input
+                        type="range"
+                        min="0"
+                        max="500"
+                        step="0.5"
+                        value={priceRange[0]}
+                        onChange={(e) => setPriceRange([Number.parseFloat(e.target.value), priceRange[1]])}
+                        className="w-full accent-primary"
+                      />
+                      <span className="text-xs font-semibold w-14 text-right">${priceRange[0].toFixed(2)}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs text-muted-foreground w-8">Max</span>
+                      <input
+                        type="range"
+                        min="0"
+                        max="500"
+                        step="0.5"
+                        value={priceRange[1]}
+                        onChange={(e) => setPriceRange([priceRange[0], Number.parseFloat(e.target.value)])}
+                        className="w-full accent-primary"
+                      />
+                      <span className="text-xs font-semibold w-14 text-right">
+                        {priceRange[1] >= 500 ? "$500+" : `$${priceRange[1].toFixed(2)}`}
+                      </span>
+                    </div>
+                    <p className="text-xs text-muted-foreground pt-1">
+                      Mostrando: <strong>${priceRange[0].toFixed(2)}</strong> – <strong>{priceRange[1] >= 500 ? "$500+" : `$${priceRange[1].toFixed(2)}`}</strong> /kg
                     </p>
                   </div>
                 </div>

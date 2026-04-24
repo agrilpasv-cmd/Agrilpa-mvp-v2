@@ -12,6 +12,7 @@ import {
   Users,
   Shield,
   Home,
+  Crown,
   Star,
   Mail,
   DollarSign,
@@ -26,6 +27,7 @@ import {
   UserMinus,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { Toaster } from "@/components/ui/toaster"
 
 export default function AdminLayout({
   children,
@@ -40,6 +42,7 @@ export default function AdminLayout({
     { href: "/", label: "Inicio", icon: Home },
     { href: "/admin", label: "Dashboard", icon: LayoutDashboard },
     { href: "/admin/usuarios", label: "Gestión de Usuarios", icon: Users },
+    { href: "/admin/membresias", label: "Membresías", icon: Crown },
     { href: "/admin/cotizaciones", label: "Cotizaciones", icon: ClipboardList },
     { href: "/admin/contactar", label: "Contactar", icon: MousePointer2 },
     { href: "/admin/publicaciones", label: "Publicaciones", icon: Package },
@@ -86,6 +89,7 @@ export default function AdminLayout({
   }
 
   return (
+    <>
     <div className="min-h-screen bg-background">
       {/* Navbar */}
       <nav className="sticky top-0 z-50 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -170,5 +174,7 @@ export default function AdminLayout({
         <main className="flex-1 overflow-auto">{children}</main>
       </div>
     </div>
+    <Toaster />
+    </>
   )
 }
