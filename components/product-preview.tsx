@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react"
 import { motion } from "framer-motion"
-import { ArrowRight, MapPin } from "lucide-react"
+import { ArrowRight, MapPin, ShieldCheck } from "lucide-react"
 import { Card } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
 import Link from "next/link"
@@ -14,6 +14,7 @@ interface UserProduct {
   description: string
   country: string
   image?: string
+  seller_is_pro?: boolean
 }
 
 const containerVariants = {
@@ -128,9 +129,17 @@ export function ProductPreview() {
 
                     <div className="p-5 flex flex-col gap-2 flex-1">
                       <div>
-                        <h3 className="font-bold text-base text-foreground leading-snug line-clamp-1">
-                          {product.title}
-                        </h3>
+                        <div className="flex items-start justify-between gap-2">
+                          <h3 className="font-bold text-base text-foreground leading-snug line-clamp-1">
+                            {product.title}
+                          </h3>
+                          {product.seller_is_pro && (
+                            <div className="flex items-center gap-1 text-[10px] font-bold text-primary bg-primary/10 border border-primary/20 px-2 py-0.5 rounded-full shrink-0">
+                              <ShieldCheck className="w-3 h-3" />
+                              Verificado
+                            </div>
+                          )}
+                        </div>
                         <span className="text-xs font-semibold text-primary bg-primary/10 px-2 py-0.5 rounded-full inline-block mt-1">
                           {product.category}
                         </span>

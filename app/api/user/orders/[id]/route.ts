@@ -81,9 +81,18 @@ export async function GET(
         // Fetch Seller Data
         const { data: sellerProfile } = await supabaseAdmin
             .from("users")
-            .select("full_name, company_name, phone_number")
+            .select("full_name, company_name, phone_number, id")
             .eq("id", finalData.seller_id)
             .single()
+
+        // Check if reviewed
+        const { data: reviewData } = await supabaseAdmin
+            .from("product_reviews")
+            .select("id")
+            .eq("purchase_id", finalData.id)
+            .maybeSingle()
+            
+        const isReviewed = !!reviewData
 
         // Format data for frontend
         const formattedOrder = origin === 'orders' ? {
@@ -123,6 +132,8 @@ export async function GET(
             certifications: finalData.certifications || "En proceso",
             seller_contact_method: finalData.seller_contact_method || "Plataforma Agrilpa",
             seller_contact_info: finalData.seller_contact_info || "",
+            is_reviewed: isReviewed,
+            seller_id: finalData.seller_id,
             tracking_history: finalData.tracking || [
                 {
                     fecha: finalData.created_at,
@@ -167,6 +178,8 @@ export async function GET(
             certifications: "Verificada",
             seller_contact_method: "Plataforma Agrilpa",
             seller_contact_info: "",
+            is_reviewed: isReviewed,
+            seller_id: finalData.seller_id,
             tracking_history: finalData.tracking || [
                 {
                     fecha: finalData.created_at,

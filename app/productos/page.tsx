@@ -4,7 +4,7 @@ import { notFound, useRouter, useParams } from "next/navigation"
 import { useState, useEffect } from "react"
 import Link from "next/link"
 import { Card } from "@/components/ui/card"
-import { Search, Filter, Star, MapPin, MessageCircle, X, AlertCircle } from "lucide-react"
+import { Search, Filter, Star, MapPin, MessageCircle, X, AlertCircle, ShieldCheck, Ship } from "lucide-react"
 import { allProducts } from "@/lib/products-data"
 import { createClient } from "@/lib/supabase/client"
 import { PRODUCT_CATEGORIES } from "@/lib/constants"
@@ -35,6 +35,9 @@ interface UserProduct {
   company_name?: string
   contact_method?: string
   contact_info?: string
+  seller_is_pro?: boolean
+  shipping_unit_type?: string
+  container_size?: string
 }
 
 // Helper for accent-insensitive search
@@ -56,6 +59,7 @@ export default function ProductosPage() {
   const [minRating, setMinRating] = useState(0)
   const [selectedCountry, setSelectedCountry] = useState("todos")
   const [searchContent, setSearchContent] = useState("")
+  const [containerFilter, setContainerFilter] = useState("todos")
   const [userProducts, setUserProducts] = useState<UserProduct[]>([])
   const [staticVisibility, setStaticVisibility] = useState<Record<number, boolean>>({})
   const [isLoading, setIsLoading] = useState(true)
@@ -87,28 +91,39 @@ export default function ProductosPage() {
   // Filter static products by visibility
   const visibleStaticProducts = allProducts.filter((product) => staticVisibility[product.id] !== false)
 
+  // Map user products and sort Pro sellers first
+  const mappedUserProducts = userProducts.map((up) => ({
+    id: up.id,
+    slug: up.id,
+    name: up.title,
+    category: up.category,
+    price: up.price,
+    quantity: up.quantity,
+    description: up.description,
+    seller: up.company_name || "Productor Local",
+    location: up.country,
+    image: up.image || "/placeholder.svg",
+    verified: up.seller_is_pro || false,
+    rating: up.rating || 0,
+    reviews: up.reviews || 0,
+    minOrder: up.min_order,
+    country: up.country,
+    isUserProduct: true,
+    contactMethod: up.contact_method,
+    contactInfo: up.contact_info,
+    sellerIsPro: up.seller_is_pro || false,
+    shippingUnitType: up.shipping_unit_type || null,
+    containerSize: up.container_size || null,
+  }))
+
+  // Priority Positioning: Pro sellers first, then static, then free
+  const proUserProducts = mappedUserProducts.filter(p => p.sellerIsPro)
+  const freeUserProducts = mappedUserProducts.filter(p => !p.sellerIsPro)
+
   const allProductsToDisplay = [
+    ...proUserProducts,
     ...visibleStaticProducts,
-    ...userProducts.map((up) => ({
-      id: up.id,
-      slug: up.id, // Use ID as slug for user products
-      name: up.title,
-      category: up.category,
-      price: up.price,
-      quantity: up.quantity,
-      description: up.description,
-      seller: up.company_name || "Productor Local",
-      location: up.country,
-      image: up.image || "/placeholder.svg",
-      verified: false,
-      rating: 4.5, // Default rating for new products
-      reviews: 0,
-      minOrder: up.min_order,
-      country: up.country,
-      isUserProduct: true,
-      contactMethod: up.contact_method,
-      contactInfo: up.contact_info,
-    })),
+    ...freeUserProducts,
   ]
 
   const filteredProducts = allProductsToDisplay.filter((product) => {
@@ -126,13 +141,27 @@ export default function ProductosPage() {
 
     const matchesCategory = selectedCategory === "todos" || product.category === selectedCategory
 
+    // Price filter (if value is 500, treat it as infinity)
     const priceValue = Number.parseFloat(product.price?.replace(/[^\d.]/g, "") || "0")
-    const matchesPrice = product.price === "Por Cotizar" || (priceValue >= priceRange[0] && priceValue <= priceRange[1])
+    const isMaxPrice = priceRange[1] >= 500
+    const matchesPrice = product.price === "Por Cotizar" || (priceValue >= priceRange[0] && (isMaxPrice || priceValue <= priceRange[1]))
 
-    const matchesVerified = !verifiedOnly || product.verified
+    const matchesVerified = !verifiedOnly || product.verified || (product as any).sellerIsPro
     const matchesRating = (product.rating || 0) >= minRating
 
     const matchesCountry = selectedCountry === "todos" || product.country === selectedCountry
+
+    // Container capacity filter
+    const prodShipping = (product as any).shippingUnitType
+    const prodContainer = (product as any).containerSize
+    let matchesContainer = true
+    if (containerFilter === "fcl_20") {
+      matchesContainer = prodShipping === "FCL" && prodContainer === "20ST"
+    } else if (containerFilter === "fcl_40") {
+      matchesContainer = prodShipping === "FCL" && prodContainer === "40HC"
+    } else if (containerFilter === "lcl") {
+      matchesContainer = prodShipping === "LCL"
+    }
 
     const passes = (
       matchesSearch &&
@@ -141,7 +170,8 @@ export default function ProductosPage() {
       matchesPrice &&
       matchesVerified &&
       matchesRating &&
-      matchesCountry
+      matchesCountry &&
+      matchesContainer
     )
 
     return passes
@@ -155,6 +185,7 @@ export default function ProductosPage() {
     setMinRating(0)
     setSelectedCountry("todos")
     setSearchContent("")
+    setContainerFilter("todos")
   }
 
   const fetchUserProducts = async () => {
@@ -259,7 +290,10 @@ export default function ProductosPage() {
               priceRange[0] > 0 ||
               priceRange[1] < 500 ||
               selectedCountry !== "todos" ||
-              searchContent !== "") && (
+              searchContent !== "" ||
+              containerFilter !== "todos" ||
+              searchTerm !== "" ||
+              selectedCategory !== "todos") && (
                 <button
                   onClick={handleResetFilters}
                   className="flex items-center gap-2 px-4 py-2 rounded-lg text-primary hover:bg-primary/10 transition-colors"
@@ -354,6 +388,50 @@ export default function ProductosPage() {
                   />
                 </div>
               </div>
+
+              {/* Second row: Pro-specific filters */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6 pt-6 border-t border-border">
+                {/* Verified Sellers Filter */}
+                <div>
+                  <label className="block text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
+                    <ShieldCheck className="w-4 h-4 text-primary" />
+                    Vendedores Verificados
+                  </label>
+                  <label className="flex items-center gap-3 cursor-pointer group">
+                    <div className="relative">
+                      <input
+                        type="checkbox"
+                        checked={verifiedOnly}
+                        onChange={(e) => setVerifiedOnly(e.target.checked)}
+                        className="sr-only peer"
+                      />
+                      <div className="w-10 h-5 bg-muted rounded-full peer-checked:bg-amber-500 transition-colors" />
+                      <div className="absolute left-0.5 top-0.5 w-4 h-4 bg-white rounded-full shadow-sm peer-checked:translate-x-5 transition-transform" />
+                    </div>
+                    <span className="text-sm text-muted-foreground group-hover:text-foreground transition-colors">
+                      Solo mostrar vendedores verificados Pro
+                    </span>
+                  </label>
+                </div>
+
+                {/* Container Capacity Filter */}
+                <div>
+                  <label className="block text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
+                    <Ship className="w-4 h-4 text-blue-500" />
+                    Capacidad de Contenedores
+                  </label>
+                  <select
+                    value={containerFilter}
+                    onChange={(e) => setContainerFilter(e.target.value)}
+                    className="w-full px-3 py-2 rounded-lg border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                  >
+                    <option value="todos">Todos los tipos</option>
+                    <option value="fcl_20">🚢 FCL 20&apos; Standard (~21 TM)</option>
+                    <option value="fcl_40">🚢 FCL 40&apos; High Cube (~26 TM)</option>
+                    <option value="lcl">📦 Carga Consolidada (LCL)</option>
+                  </select>
+                </div>
+              </div>
             </div>
           )}
 
@@ -412,9 +490,10 @@ export default function ProductosPage() {
                             {product.category}
                           </span>
                         </div>
-                        {product.verified && (
-                          <div className="text-xs font-bold text-green-600 bg-green-100 px-2 py-1 rounded">
-                            ✓ Verificado
+                        {(product.verified || (product as any).sellerIsPro) && (
+                          <div className="flex items-center gap-1 text-xs font-bold text-primary bg-primary/10 border border-primary/20 px-2.5 py-1 rounded-full">
+                            <ShieldCheck className="w-3.5 h-3.5" />
+                            Verificado
                           </div>
                         )}
                       </div>

@@ -10,7 +10,8 @@ import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
 import {
   User, Mail, Phone, Building2, Globe, MapPin, FileText,
   Edit2, Save, X, Loader, CheckCircle2, AlertCircle,
-  Package, ShoppingCart, Star, TrendingUp, Calendar, Link as LinkIcon, Camera
+  Package, ShoppingCart, Star, TrendingUp, Calendar, Link as LinkIcon, Camera,
+  ShieldCheck, Ship, Award, Trash2, Upload
 } from "lucide-react"
 
 type Status = { type: "success" | "error"; message: string } | null
@@ -35,6 +36,10 @@ export default function ProfilePage() {
     bio: "",
   })
   const [memberSince, setMemberSince] = useState("")
+  const [isPro, setIsPro] = useState(false)
+  const [exportHistory, setExportHistory] = useState<any[]>([])
+  const [exportForm, setExportForm] = useState({ url: "", type: "container_photo", label: "" })
+  const [uploadingExport, setUploadingExport] = useState(false)
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -62,6 +67,15 @@ export default function ProfilePage() {
               setMemberSince(
                 date.toLocaleDateString("es-ES", { month: "long", year: "numeric" })
               )
+            }
+
+            // Check Pro status
+            if (data.user.plan_type === "pro") {
+              const isExpired = data.user.plan_expires_at && new Date(data.user.plan_expires_at) < new Date()
+              setIsPro(!isExpired)
+            }
+            if (data.user.export_history) {
+              setExportHistory(data.user.export_history)
             }
           }
         }
@@ -506,6 +520,169 @@ export default function ProfilePage() {
             )}
           </div>
         </CardContent>
+      </Card>
+
+      {/* ── Export History (Pro Only) ───────────────────────────── */}
+      <Card className={!isPro ? "opacity-60" : ""}>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Ship className="w-5 h-5 text-primary" />
+            Historial de Exportación
+            {isPro ? (
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-primary/10 border border-primary/20 text-primary rounded-full text-[10px] font-bold">
+                <ShieldCheck className="w-3 h-3" />
+                PRO
+              </span>
+            ) : (
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-muted text-muted-foreground rounded-full text-[10px] font-bold">
+                🔒 Requiere Plan Pro
+              </span>
+            )}
+          </CardTitle>
+          <CardDescription>
+            {isPro
+              ? "Sube fotos de tus contenedores y certificados de calidad para mostrarlos en tu perfil público."
+              : "Actualiza a Plan Pro para desbloquear esta función exclusiva."}
+          </CardDescription>
+        </CardHeader>
+        {isPro && (
+          <CardContent className="space-y-6">
+            {/* Upload Form */}
+            <div className="bg-primary/5 border border-primary/20 rounded-lg p-4 space-y-4">
+              <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
+                <Upload className="w-4 h-4 text-primary" />
+                Agregar nuevo elemento
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                <div className="space-y-1">
+                  <Label htmlFor="export-type" className="text-xs">Tipo</Label>
+                  <select
+                    id="export-type"
+                    value={exportForm.type}
+                    onChange={(e) => setExportForm(prev => ({ ...prev, type: e.target.value }))}
+                    className="w-full px-3 py-2 text-sm border border-border rounded-lg bg-background focus:outline-none focus:ring-2 focus:ring-primary/40"
+                  >
+                    <option value="container_photo">📦 Foto de Contenedor</option>
+                    <option value="certificate">🏅 Certificado de Calidad</option>
+                  </select>
+                </div>
+                <div className="space-y-1">
+                  <Label htmlFor="export-label" className="text-xs">Descripción</Label>
+                  <Input
+                    id="export-label"
+                    placeholder={exportForm.type === "certificate" ? "Ej: Global GAP, Orgánico USDA" : "Ej: Contenedor FCL a USA"}
+                    value={exportForm.label}
+                    onChange={(e) => setExportForm(prev => ({ ...prev, label: e.target.value }))}
+                  />
+                </div>
+                <div className="space-y-1">
+                  <Label htmlFor="export-url" className="text-xs">URL de la imagen/documento</Label>
+                  <Input
+                    id="export-url"
+                    placeholder="https://..."
+                    value={exportForm.url}
+                    onChange={(e) => setExportForm(prev => ({ ...prev, url: e.target.value }))}
+                  />
+                </div>
+              </div>
+              <Button
+                onClick={async () => {
+                  if (!exportForm.url || !exportForm.label) return
+                  setUploadingExport(true)
+                  try {
+                    const res = await fetch("/api/user/upload-export-history", {
+                      method: "POST",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify(exportForm)
+                    })
+                    const data = await res.json()
+                    if (data.success) {
+                      setExportHistory(data.export_history)
+                      setExportForm({ url: "", type: "container_photo", label: "" })
+                      setSaveStatus({ type: "success", message: "¡Elemento agregado al historial de exportación!" })
+                    } else {
+                      setSaveStatus({ type: "error", message: data.error || "Error al agregar" })
+                    }
+                  } catch {
+                    setSaveStatus({ type: "error", message: "Error de conexión" })
+                  } finally {
+                    setUploadingExport(false)
+                  }
+                }}
+                disabled={uploadingExport || !exportForm.url || !exportForm.label}
+                className="gap-2"
+                size="sm"
+              >
+                {uploadingExport ? (
+                  <><Loader className="w-4 h-4 animate-spin" /> Guardando...</>
+                ) : (
+                  <><Upload className="w-4 h-4" /> Agregar</>
+                )}
+              </Button>
+            </div>
+
+            {/* Existing Items */}
+            {exportHistory.length > 0 ? (
+              <div className="space-y-3">
+                <h3 className="text-sm font-semibold text-foreground">Elementos actuales ({exportHistory.length})</h3>
+                {exportHistory.map((item: any, index: number) => (
+                  <div key={index} className="flex items-center gap-3 p-3 border border-border rounded-lg bg-background">
+                    <div className="shrink-0">
+                      {item.type === "certificate" ? (
+                        <Award className="w-5 h-5 text-green-500" />
+                      ) : (
+                        <Ship className="w-5 h-5 text-blue-500" />
+                      )}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-foreground truncate">{item.label}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {item.type === "certificate" ? "Certificado" : "Foto de contenedor"}
+                        {item.uploaded_at && ` • ${new Date(item.uploaded_at).toLocaleDateString("es-ES")}`}
+                      </p>
+                    </div>
+                    <a
+                      href={item.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-xs text-primary hover:underline shrink-0"
+                    >
+                      Ver
+                    </a>
+                    <button
+                      onClick={async () => {
+                        try {
+                          const res = await fetch("/api/user/delete-export-history", {
+                            method: "POST",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify({ index })
+                          })
+                          const data = await res.json()
+                          if (data.success) {
+                            setExportHistory(data.export_history)
+                            setSaveStatus({ type: "success", message: "Elemento eliminado" })
+                          }
+                        } catch {
+                          setSaveStatus({ type: "error", message: "Error al eliminar" })
+                        }
+                      }}
+                      className="p-1.5 text-red-500 hover:bg-red-50 rounded-md transition-colors shrink-0"
+                      title="Eliminar"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-8 text-muted-foreground">
+                <Ship className="w-10 h-10 mx-auto mb-3 opacity-30" />
+                <p className="text-sm">No tienes elementos en tu historial de exportación.</p>
+                <p className="text-xs mt-1">Agrega fotos de contenedores o certificados para mostrarlos en tu perfil público.</p>
+              </div>
+            )}
+          </CardContent>
+        )}
       </Card>
     </div>
   )

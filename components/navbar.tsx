@@ -117,6 +117,7 @@ export function Navbar() {
   const navLinks = [
     { href: "/como-funciona", label: "Cómo funciona" },
     { href: "/productos", label: "Productos" },
+    { href: "/mercado", label: "Mercado" },
   ]
 
   const contactLink = { href: "/contacto", label: "Contáctenos" }

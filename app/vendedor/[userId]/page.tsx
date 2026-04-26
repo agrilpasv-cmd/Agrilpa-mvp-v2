@@ -5,11 +5,18 @@ import { useParams, useRouter } from "next/navigation"
 import Link from "next/link"
 import {
   Building2, MapPin, Globe, Calendar, Package, ChevronLeft,
-  Star, ExternalLink, ArrowRight, Loader
+  Star, ExternalLink, ArrowRight, Loader, ShieldCheck, Award, Ship
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
+
+interface ExportHistoryItem {
+  url: string
+  type: "container_photo" | "certificate"
+  label: string
+  uploaded_at: string
+}
 
 interface PublicProfile {
   id: string
@@ -21,6 +28,8 @@ interface PublicProfile {
   address: string
   created_at: string
   avatar_url?: string
+  is_pro?: boolean
+  export_history?: ExportHistoryItem[]
 }
 
 interface Product {
@@ -162,6 +171,16 @@ export default function VendedorPage() {
                 {displayName}
               </h1>
 
+              {/* Verified Pro Badge */}
+              {profile.is_pro && (
+                <div className="flex items-center gap-2 mt-2">
+                  <div className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-primary/10 border border-primary/20 text-primary rounded-full shadow-sm">
+                    <ShieldCheck className="w-4 h-4" />
+                    <span className="text-xs font-bold">Vendedor Verificado</span>
+                  </div>
+                </div>
+              )}
+
               <div className="flex flex-wrap items-center gap-3 mt-3">
                 {profile.country && (
                   <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-primary/10 text-primary rounded-full text-xs font-medium">
@@ -231,6 +250,81 @@ export default function VendedorPage() {
           </Card>
         )}
 
+        {/* ── Export History (Pro Only) ──────────────────────── */}
+        {profile.is_pro && profile.export_history && profile.export_history.length > 0 && (
+          <div>
+            <h2 className="text-2xl font-bold text-foreground flex items-center gap-2 mb-6">
+              <Ship className="w-6 h-6 text-primary" />
+              Historial de Exportación
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-primary/10 border border-primary/20 text-primary rounded-full text-[10px] font-bold">
+                <ShieldCheck className="w-3 h-3" />
+                PRO
+              </span>
+            </h2>
+
+            {/* Certificates */}
+            {profile.export_history.filter(item => item.type === "certificate").length > 0 && (
+              <div className="mb-6">
+                <h3 className="text-sm font-semibold text-muted-foreground mb-3 flex items-center gap-2">
+                  <Award className="w-4 h-4" />
+                  Certificaciones de Calidad
+                </h3>
+                <div className="flex flex-wrap gap-2">
+                  {profile.export_history.filter(item => item.type === "certificate").map((item, idx) => (
+                    <a
+                      key={`cert-${idx}`}
+                      href={item.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-2 px-4 py-2 bg-green-50 border border-green-200 text-green-700 rounded-full text-sm font-medium hover:bg-green-100 transition-colors"
+                    >
+                      <Award className="w-4 h-4 text-green-500" />
+                      {item.label}
+                      <ExternalLink className="w-3 h-3" />
+                    </a>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Container Photos */}
+            {profile.export_history.filter(item => item.type === "container_photo").length > 0 && (
+              <div>
+                <h3 className="text-sm font-semibold text-muted-foreground mb-3 flex items-center gap-2">
+                  <Ship className="w-4 h-4" />
+                  Fotos de Contenedores / Exportaciones
+                </h3>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {profile.export_history.filter(item => item.type === "container_photo").map((item, idx) => (
+                    <a
+                      key={`photo-${idx}`}
+                      href={item.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="group relative block rounded-xl overflow-hidden border border-border hover:border-primary/50 hover:shadow-lg transition-all"
+                    >
+                      <div className="aspect-video bg-muted">
+                        <img
+                          src={item.url}
+                          alt={item.label}
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                        />
+                      </div>
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                      <div className="absolute bottom-0 left-0 right-0 p-3 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <p className="text-white text-sm font-medium truncate">{item.label}</p>
+                        <p className="text-white/70 text-xs">
+                          {new Date(item.uploaded_at).toLocaleDateString("es-ES", { day: "numeric", month: "short", year: "numeric" })}
+                        </p>
+                      </div>
+                    </a>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
         {/* Products */}
         <div>
           <div className="flex items-center justify-between mb-6">
@@ -287,7 +381,7 @@ export default function VendedorPage() {
                         </span>
                         <div className="flex items-center gap-1 text-xs text-muted-foreground">
                           <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
-                          4.5
+                          {product.rating || 0}
                         </div>
                       </div>
                     </div>

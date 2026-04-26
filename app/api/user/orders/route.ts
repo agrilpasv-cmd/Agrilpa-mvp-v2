@@ -98,6 +98,27 @@ export async function GET() {
             });
         }
 
+        // 6. Fetch reviews made by this buyer to mark which purchases/orders are already reviewed
+        const purchaseIds = Array.from(new Set([
+            ...(orders || []).map(o => o.id),
+            ...(purchases || []).map(p => p.id)
+        ]));
+
+        let reviewedPurchases: Record<string, boolean> = {};
+        if (purchaseIds.length > 0) {
+            const { data: reviews } = await supabaseAdmin
+                .from("product_reviews")
+                .select("purchase_id")
+                .eq("buyer_id", userId)
+                .in("purchase_id", purchaseIds);
+
+            reviews?.forEach(r => {
+                if (r.purchase_id) {
+                    reviewedPurchases[r.purchase_id] = true;
+                }
+            });
+        }
+
         const mappedOrders = (orders || []).map(order => {
             const seller = sellerProfiles[order.seller_id];
             return {
@@ -109,7 +130,8 @@ export async function GET() {
                 price_usd: typeof order.total_price === 'string' ? parseFloat(order.total_price) : (order.total_price || 0),
                 product_slug: order.product_id,
                 product_image: order.product_image || productImages[order.product_id] || null,
-                origin_table: 'orders'
+                origin_table: 'orders',
+                is_reviewed: !!reviewedPurchases[order.id]
             };
         });
 
@@ -122,7 +144,8 @@ export async function GET() {
                 seller_company: seller?.company_name || "Empresa Verificada",
                 full_name: seller?.company_name || seller?.full_name || "Vendedor Agrilpa",
                 product_image: purchase.product_image || (pSlug ? productImages[pSlug] : null) || null,
-                origin_table: 'purchases'
+                origin_table: 'purchases',
+                is_reviewed: !!reviewedPurchases[purchase.id]
             };
         });
 

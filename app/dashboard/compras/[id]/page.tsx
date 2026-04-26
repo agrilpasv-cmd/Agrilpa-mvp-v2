@@ -6,7 +6,7 @@ import Image from "next/image"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { ArrowLeft, Download, Printer, Loader, Eye, Check } from "lucide-react"
+import { ArrowLeft, Download, Printer, Loader, Eye, Check, Star } from "lucide-react"
 import { allProducts } from "@/lib/products-data"
 import { useEffect, useState } from "react"
 import { format } from "date-fns"
@@ -23,6 +23,7 @@ import {
     AlertDialogHeader,
     AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
+import { Textarea } from "@/components/ui/textarea"
 
 export default function CompraDetailPage() {
     const params = useParams()
@@ -34,6 +35,13 @@ export default function CompraDetailPage() {
     const [error, setError] = useState(false)
     const [isUpdating, setIsUpdating] = useState(false)
     const [showConfirmDialog, setShowConfirmDialog] = useState(false)
+    
+    // Reseñas state
+    const [showReviewDialog, setShowReviewDialog] = useState(false)
+    const [rating, setRating] = useState(0)
+    const [hoverRating, setHoverRating] = useState(0)
+    const [reviewComment, setReviewComment] = useState("")
+    const [isSubmittingReview, setIsSubmittingReview] = useState(false)
     const { refreshCounts } = useDashboard()
 
     const handleConfirmDelivery = async () => {
@@ -75,6 +83,42 @@ export default function CompraDetailPage() {
             toast.error("Error al procesar la confirmación")
         } finally {
             setIsUpdating(false)
+        }
+    }
+
+    const handleSubmitReview = async () => {
+        if (rating === 0) {
+            toast.error("Por favor, selecciona una calificación (estrellas)")
+            return
+        }
+
+        setIsSubmittingReview(true)
+        try {
+            const response = await fetch('/api/reviews/create', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    product_id: pedido.slug,
+                    seller_id: pedido.seller_id,
+                    purchase_id: orderId,
+                    rating,
+                    comment: reviewComment
+                })
+            })
+            
+            const data = await response.json()
+            if (response.ok) {
+                toast.success("¡Reseña enviada exitosamente!")
+                setShowReviewDialog(false)
+                setPedido((prev: any) => ({ ...prev, is_reviewed: true }))
+            } else {
+                toast.error(data.error || "Error al enviar reseña")
+            }
+        } catch (err) {
+            console.error("Error submitting review", err)
+            toast.error("Hubo un error al procesar tu reseña")
+        } finally {
+            setIsSubmittingReview(false)
         }
     }
 
@@ -129,6 +173,8 @@ export default function CompraDetailPage() {
                             company: order.seller_company,
                             phone: order.seller_phone
                         },
+                        seller_id: order.seller_id,
+                        is_reviewed: order.is_reviewed,
                         tracking: (Array.isArray(order.tracking_history) ? order.tracking_history : []).map((t: any) => ({
                             fecha: format(new Date(t.fecha), "dd/MM/yyyy HH:mm", { locale: es }),
                             estado: t.estado,
@@ -292,11 +338,93 @@ export default function CompraDetailPage() {
                                     </AlertDialogContent>
                                 </AlertDialog>
                                 {pedido.estado === "Entregado" && (
-                                    <div className="flex items-center gap-2 text-green-600 bg-white px-4 py-3 rounded-lg border border-green-200 shadow-sm">
-                                        <Check className="w-6 h-6" />
-                                        <span className="font-bold">Entrega Confirmada</span>
-                                    </div>
+                                    <>
+                                        <div className="flex items-center gap-2 text-green-600 bg-white px-4 py-3 rounded-lg border border-green-200 shadow-sm">
+                                            <Check className="w-6 h-6" />
+                                            <span className="font-bold">Entrega Confirmada</span>
+                                        </div>
+                                        
+                                        {!pedido.is_reviewed && (
+                                            <Button
+                                                onClick={() => setShowReviewDialog(true)}
+                                                className="w-full mt-2 bg-yellow-500 hover:bg-yellow-600 text-white font-bold h-12 shadow-md hover:shadow-yellow-500/20 transition-all border-none flex items-center justify-center gap-2"
+                                            >
+                                                <Star className="w-5 h-5 fill-current" />
+                                                Calificar Compra
+                                            </Button>
+                                        )}
+                                        {pedido.is_reviewed && (
+                                            <div className="flex items-center gap-2 mt-2 text-yellow-600 bg-yellow-50 px-4 py-3 rounded-lg border border-yellow-200 shadow-sm">
+                                                <Star className="w-5 h-5 fill-current" />
+                                                <span className="font-semibold text-sm">Reseña Publicada</span>
+                                            </div>
+                                        )}
+                                    </>
                                 )}
+
+                                {/* Modal para Calificar */}
+                                <AlertDialog open={showReviewDialog} onOpenChange={setShowReviewDialog}>
+                                    <AlertDialogContent className="sm:max-w-[425px]">
+                                        <AlertDialogHeader>
+                                            <AlertDialogTitle className="text-center text-xl flex items-center justify-center gap-2">
+                                                <Star className="w-6 h-6 text-yellow-500 fill-yellow-500" />
+                                                Calificar tu experiencia
+                                            </AlertDialogTitle>
+                                            <AlertDialogDescription className="text-center">
+                                                ¿Cómo calificarías al vendedor y la calidad de este producto? Tu opinión ayuda a otros compradores.
+                                            </AlertDialogDescription>
+                                        </AlertDialogHeader>
+                                        <div className="py-4 space-y-6">
+                                            <div className="flex flex-col items-center gap-2">
+                                                <p className="text-sm font-semibold">Tu puntuación</p>
+                                                <div className="flex gap-1">
+                                                    {[1, 2, 3, 4, 5].map((star) => (
+                                                        <button
+                                                            key={star}
+                                                            type="button"
+                                                            className="p-1 transition-transform hover:scale-110 focus:outline-none"
+                                                            onMouseEnter={() => setHoverRating(star)}
+                                                            onMouseLeave={() => setHoverRating(0)}
+                                                            onClick={() => setRating(star)}
+                                                        >
+                                                            <Star 
+                                                                className={`w-10 h-10 ${
+                                                                    (hoverRating || rating) >= star 
+                                                                        ? "text-yellow-400 fill-yellow-400" 
+                                                                        : "text-slate-200"
+                                                                } transition-colors duration-200`} 
+                                                            />
+                                                        </button>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                            <div className="space-y-2">
+                                                <label className="text-sm font-semibold">Reseña (Opcional)</label>
+                                                <Textarea 
+                                                    placeholder="Escribe aquí tu opinión sobre el producto y la atención del vendedor..."
+                                                    className="resize-none h-24"
+                                                    value={reviewComment}
+                                                    onChange={(e) => setReviewComment(e.target.value)}
+                                                />
+                                            </div>
+                                        </div>
+                                        <AlertDialogFooter className="sm:justify-between gap-3 flex-row">
+                                            <AlertDialogCancel className="mt-0 w-full">
+                                                Cancelar
+                                            </AlertDialogCancel>
+                                            <AlertDialogAction
+                                                onClick={(e) => {
+                                                    e.preventDefault();
+                                                    handleSubmitReview();
+                                                }}
+                                                disabled={rating === 0 || isSubmittingReview}
+                                                className="w-full bg-primary text-white"
+                                            >
+                                                {isSubmittingReview ? <Loader className="w-4 h-4 animate-spin" /> : "Publicar Reseña"}
+                                            </AlertDialogAction>
+                                        </AlertDialogFooter>
+                                    </AlertDialogContent>
+                                </AlertDialog>
                             </div>
                         </CardContent>
                     </Card>

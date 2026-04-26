@@ -15,9 +15,11 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import { ChatOverlay } from "@/components/chat-overlay"
-import { Star, MapPin, MessageCircle, Check, ChevronLeft, FileText, ShoppingCart, Copy, Calendar, Package, Loader, AlertCircle, ArrowRight } from "lucide-react"
+import { Star, MapPin, MessageCircle, Check, ChevronLeft, FileText, ShoppingCart, Copy, Calendar, Package, Loader, AlertCircle, ArrowRight, ShieldCheck } from "lucide-react"
 import { getProductBySlug, getProductsByCategory, allProducts } from "@/lib/products-data"
 import { createClient } from "@/lib/supabase/client"
+import { format } from "date-fns"
+import { es } from "date-fns/locale"
 
 // Helper function to check if a string is a valid UUID or numeric ID
 const isValidId = (str: string): boolean => {
@@ -120,7 +122,8 @@ export default function ProductPage() {
              verified: false,
              contactMethod: p.contact_method,
              contactInfo: p.contact_info,
-             vendorId: p.user_id
+             vendorId: p.user_id,
+             sellerIsPro: p.seller_is_pro || false
           }))
           setDynamicRelatedProducts(transformed.filter((p: any) => p.id !== slug))
         }
@@ -182,11 +185,12 @@ export default function ProductPage() {
               fullDescription: data.product.description,
               price: data.product.price,
               minOrder: data.product.min_order,
-              rating: 4.5,
-              reviews: 0,
+              rating: data.product.rating || 0,
+              reviews: data.product.reviews || 0,
+              reviewsData: data.product.reviews_data || [],
               views: data.product.views || 0,
               image: data.product.image || "/placeholder.svg",
-              verified: false,
+              verified: data.product.seller_is_pro || false,
               slug: data.product.id,
               packaging: data.product.packaging,
               packagingSize: `${data.product.packaging_size} kg`,
@@ -212,7 +216,8 @@ export default function ProductPage() {
                       : "Cantidad Personalizada" 
                 }] : []),
               ],
-              certifications: data.product.certifications || null
+              certifications: data.product.certifications || null,
+              sellerIsPro: data.product.seller_is_pro || false
             }
             setUserProduct(transformed)
           } else {
@@ -588,10 +593,10 @@ export default function ProductPage() {
                     {product.category}
                   </span>
                 </div>
-                {product.verified && (
-                  <div className="bg-green-100 text-green-700 px-4 py-2 rounded-lg flex items-center gap-2">
-                    <Check className="w-4 h-4" />
-                    Verificado
+                {(product.verified || (product as any).sellerIsPro) && (
+                  <div className="bg-primary/10 border border-primary/20 text-primary px-4 py-2 rounded-full flex items-center gap-2 shadow-sm">
+                    <ShieldCheck className="w-4 h-4" />
+                    <span className="font-bold text-sm">Vendedor Verificado</span>
                   </div>
                 )}
               </div>
@@ -820,6 +825,49 @@ export default function ProductPage() {
             </div>
           </div>
         )}
+
+        {/* Reseñas Section */}
+        <div className="mb-16">
+          <h2 className="text-2xl font-bold text-foreground mb-6">Reseñas de Compradores</h2>
+          {product.reviewsData && product.reviewsData.length > 0 ? (
+            <div className="space-y-4">
+              {product.reviewsData.map((review: any) => (
+                <Card key={review.id} className="p-6 bg-card border border-border shadow-sm">
+                  <div className="flex flex-col sm:flex-row justify-between items-start gap-4">
+                    <div className="flex items-center gap-4">
+                      <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center font-bold text-primary">
+                        {review.buyer_name ? review.buyer_name.substring(0, 2).toUpperCase() : "US"}
+                      </div>
+                      <div>
+                        <p className="font-semibold text-foreground">{review.buyer_name || "Comprador Anónimo"}</p>
+                        <div className="flex items-center gap-1 mt-1">
+                          {[1, 2, 3, 4, 5].map((star) => (
+                            <Star 
+                              key={star} 
+                              className={`w-4 h-4 ${star <= review.rating ? "fill-yellow-400 text-yellow-400" : "text-muted-foreground"}`} 
+                            />
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                    <span className="text-sm text-muted-foreground">
+                      {format(new Date(review.created_at), "d 'de' MMMM, yyyy", { locale: es })}
+                    </span>
+                  </div>
+                  {review.comment && (
+                    <p className="mt-4 text-muted-foreground italic">"{review.comment}"</p>
+                  )}
+                </Card>
+              ))}
+            </div>
+          ) : (
+            <Card className="p-8 text-center bg-card border border-border">
+              <Star className="w-12 h-12 text-muted-foreground mx-auto mb-3 opacity-20" />
+              <p className="text-muted-foreground text-lg">Este producto aún no tiene reseñas.</p>
+              <p className="text-sm text-muted-foreground mt-1">Las reseñas son dejadas por compradores verificados después de recibir su pedido.</p>
+            </Card>
+          )}
+        </div>
 
         {relatedProducts.length > 0 && (
           <div>

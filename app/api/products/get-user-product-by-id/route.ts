@@ -50,11 +50,64 @@ export async function GET(request: NextRequest) {
              revalidatePath('/dashboard/mis-publicaciones')
         }
 
+        // Check if seller is Pro
+        let sellerIsPro = false
+        if (data.user_id) {
+            const { data: sellerProfile } = await supabase
+                .from("users")
+                .select("plan_type, plan_expires_at")
+                .eq("id", data.user_id)
+                .single()
+
+            if (sellerProfile?.plan_type === "pro") {
+                if (sellerProfile.plan_expires_at) {
+                    sellerIsPro = new Date(sellerProfile.plan_expires_at) > new Date()
+                } else {
+                    sellerIsPro = true
+                }
+            }
+        }
+
+        // Fetch product reviews
+        const { data: reviewsData } = await supabase
+            .from("product_reviews")
+            .select(`
+                id, 
+                rating, 
+                comment, 
+                created_at,
+                buyer:buyer_id (full_name, company_name)
+            `)
+            .eq("product_id", productId)
+            .order("created_at", { ascending: false })
+            
+        let averageRating = 5.0
+        let reviewCount = 0
+        let formattedReviews: any[] = []
+
+        if (reviewsData && reviewsData.length > 0) {
+            reviewCount = reviewsData.length
+            const totalRating = reviewsData.reduce((acc, r) => acc + r.rating, 0)
+            averageRating = totalRating / reviewCount
+            
+            formattedReviews = reviewsData.map((r: any) => ({
+                id: r.id,
+                rating: r.rating,
+                comment: r.comment,
+                created_at: r.created_at,
+                reviewer_name: r.buyer?.full_name || r.buyer?.company_name || "Comprador Verificado"
+            }))
+        }
+
         // Return data with incremented view count for immediate UI update
         return NextResponse.json({
             product: {
                 ...data,
-                views: currentViews + 1
+                views: currentViews + 1,
+                seller_is_pro: sellerIsPro,
+                rating: Number(averageRating.toFixed(1)),
+                reviews: reviewCount,
+                reviews_data: formattedReviews
             }
         }, { status: 200 })
     } catch (error) {
