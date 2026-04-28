@@ -40,7 +40,12 @@ export async function GET() {
         // 2. Fetch from 'orders' (Quotations accepted)
         const { data: orders, error: ordersError } = await supabaseAdmin
             .from("orders")
-            .select("*")
+            .select(`
+                *,
+                quotations:quotation_id (
+                    container_size
+                )
+            `)
             .eq("buyer_id", userId)
 
         // 3. Fetch from 'purchases' (Direct buys)
@@ -121,6 +126,7 @@ export async function GET() {
 
         const mappedOrders = (orders || []).map(order => {
             const seller = sellerProfiles[order.seller_id];
+            const containerSize = order.quotations?.container_size || order.packaging_size;
             return {
                 ...order,
                 seller_name: seller?.full_name || "Vendedor Agrilpa",
@@ -131,7 +137,8 @@ export async function GET() {
                 product_slug: order.product_id,
                 product_image: order.product_image || productImages[order.product_id] || null,
                 origin_table: 'orders',
-                is_reviewed: !!reviewedPurchases[order.id]
+                is_reviewed: !!reviewedPurchases[order.id],
+                container_size: containerSize
             };
         });
 

@@ -51,7 +51,7 @@ export async function GET() {
             admin.from("quotations").select("status").eq("seller_id", userId),
         ])
 
-        const ventas = salesData?.filter(o => o.status?.toLowerCase() === "pending").length || 0
+        const ventas = salesData?.filter(o => o.status?.toLowerCase() === "pendiente" || o.status?.toLowerCase() === "pending").length || 0
         const cotizaciones = quotesData?.filter(q => q.status?.toLowerCase() === "pending").length || 0
 
         return NextResponse.json({

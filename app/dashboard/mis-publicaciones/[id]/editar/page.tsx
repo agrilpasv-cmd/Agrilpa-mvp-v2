@@ -27,6 +27,8 @@ export default function EditarPublicacionPage({ params }: { params: Promise<{ id
     minOrderUnit: "kg",
     maturity: "",
     image: "",
+    image2: "",
+    image3: "",
     packaging: "",
     packagingSize: "",
     shippingUnit: "",
@@ -43,6 +45,8 @@ export default function EditarPublicacionPage({ params }: { params: Promise<{ id
   const [certInput, setCertInput] = useState("")
   const [statusMessage, setStatusMessage] = useState<{ type: 'success' | 'error' | 'loading' | null, text: string }>({ type: null, text: "" })
   const [imagePreview, setImagePreview] = useState<string>("")
+  const [imagePreview2, setImagePreview2] = useState<string>("")
+  const [imagePreview3, setImagePreview3] = useState<string>("")
 
   // Load existing product data
   useEffect(() => {
@@ -109,6 +113,8 @@ export default function EditarPublicacionPage({ params }: { params: Promise<{ id
             minOrderUnit: p.min_order_unit || "kg",
             maturity: p.maturity || "",
             image: p.image || "",
+            image2: p.image2 || "",
+            image3: p.image3 || "",
             packaging: p.packaging || "",
             packagingSize: p.packaging_size?.toString() || "",
             shippingUnit: p.shipping_unit_type || "",
@@ -123,6 +129,8 @@ export default function EditarPublicacionPage({ params }: { params: Promise<{ id
             saleMethod: p.shipping_unit_type === "FCL" ? "fcl" : "standard",
           })
           setImagePreview(p.image || "")
+          setImagePreview2(p.image2 || "")
+          setImagePreview3(p.image3 || "")
           setIsPriceOnRequest(p.price === "Por Cotizar")
         } else {
           setStatusMessage({ type: 'error', text: "Producto no encontrado" })
@@ -146,7 +154,7 @@ export default function EditarPublicacionPage({ params }: { params: Promise<{ id
     }))
   }
 
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>, imageKey: "image" | "image2" | "image3") => {
     const file = e.target.files?.[0]
     if (file) {
       if (file.size > 5 * 1024 * 1024) { // 5MB limit
@@ -160,10 +168,12 @@ export default function EditarPublicacionPage({ params }: { params: Promise<{ id
       const reader = new FileReader()
       reader.onload = (event) => {
         const result = event.target?.result as string
-        setImagePreview(result)
+        if (imageKey === "image") setImagePreview(result)
+        if (imageKey === "image2") setImagePreview2(result)
+        if (imageKey === "image3") setImagePreview3(result)
         setFormData((prev) => ({
           ...prev,
-          image: result,
+          [imageKey]: result,
         }))
       }
       reader.readAsDataURL(file)
@@ -193,6 +203,11 @@ export default function EditarPublicacionPage({ params }: { params: Promise<{ id
       return
     }
 
+    if (formData.description.length < 50) {
+      setStatusMessage({ type: 'error', text: `La descripción debe tener al menos 50 caracteres. Faltan ${50 - formData.description.length}.` })
+      return
+    }
+
     setIsLoading(true)
     setStatusMessage({ type: 'loading', text: "Guardando cambios..." })
 
@@ -217,6 +232,8 @@ export default function EditarPublicacionPage({ params }: { params: Promise<{ id
           packaging: formData.packaging,
           packaging_size: parseInt(formData.packagingSize) || 0,
           image: formData.image,
+          image2: formData.image2,
+          image3: formData.image3,
           contact_method: formData.contactMethod,
           contact_info: formData.contactInfo,
           country_code: formData.countryCode,
@@ -286,44 +303,70 @@ export default function EditarPublicacionPage({ params }: { params: Promise<{ id
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
-              <label className="block text-sm font-medium mb-2">Foto del Producto</label>
-              <div className="flex gap-4">
-                <div className="flex-1">
+              <label className="block text-sm font-medium mb-2">Fotos del Producto (Hasta 3 imágenes, mínimo 1 requerida)</label>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                {/* Image 1 (Required) */}
+                <div className="flex flex-col gap-2">
                   <div className="flex items-center justify-center w-full">
                     <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-border rounded-lg cursor-pointer hover:bg-muted/50 transition-colors">
                       <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                        <svg
-                          className="w-8 h-8 mb-2 text-muted-foreground"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
+                        <svg className="w-8 h-8 mb-2 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                         </svg>
-                        <p className="mb-2 text-sm text-muted-foreground">
-                          <span className="font-semibold">Haz clic para cambiar la imagen</span>
-                        </p>
-                        <p className="text-xs text-muted-foreground">PNG, JPG, GIF (máx. 2MB)</p>
+                        <p className="mb-2 text-sm text-muted-foreground font-semibold">Foto Principal *</p>
                       </div>
-                      <input
-                        type="file"
-                        accept="image/*"
-                        onChange={handleImageUpload}
-                        className="hidden"
-                        disabled={isLoading}
-                      />
+                      <input type="file" accept="image/*" onChange={(e) => handleImageUpload(e, "image")} className="hidden" disabled={isLoading} />
                     </label>
                   </div>
+                  {imagePreview && (
+                    <div className="w-full h-32 rounded-md overflow-hidden border border-border relative">
+                      <img src={imagePreview} alt="Preview 1" className="w-full h-full object-cover" />
+                      <button type="button" onClick={() => {setImagePreview(""); setFormData(p => ({...p, image: ""}))}} className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1"><X className="w-4 h-4"/></button>
+                    </div>
+                  )}
                 </div>
-                {imagePreview && (
-                  <div className="w-32 h-32 rounded-md overflow-hidden border border-border">
-                    <img
-                      src={imagePreview || "/placeholder.svg"}
-                      alt="Preview"
-                      className="w-full h-full object-cover"
-                    />
+
+                {/* Image 2 (Optional) */}
+                <div className="flex flex-col gap-2">
+                  <div className="flex items-center justify-center w-full">
+                    <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-border rounded-lg cursor-pointer hover:bg-muted/50 transition-colors">
+                      <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                        <svg className="w-8 h-8 mb-2 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                        </svg>
+                        <p className="mb-2 text-sm text-muted-foreground font-semibold">Foto Adicional</p>
+                      </div>
+                      <input type="file" accept="image/*" onChange={(e) => handleImageUpload(e, "image2")} className="hidden" disabled={isLoading} />
+                    </label>
                   </div>
-                )}
+                  {imagePreview2 && (
+                    <div className="w-full h-32 rounded-md overflow-hidden border border-border relative">
+                      <img src={imagePreview2} alt="Preview 2" className="w-full h-full object-cover" />
+                      <button type="button" onClick={() => {setImagePreview2(""); setFormData(p => ({...p, image2: ""}))}} className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1"><X className="w-4 h-4"/></button>
+                    </div>
+                  )}
+                </div>
+
+                {/* Image 3 (Optional) */}
+                <div className="flex flex-col gap-2">
+                  <div className="flex items-center justify-center w-full">
+                    <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-border rounded-lg cursor-pointer hover:bg-muted/50 transition-colors">
+                      <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                        <svg className="w-8 h-8 mb-2 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                        </svg>
+                        <p className="mb-2 text-sm text-muted-foreground font-semibold">Foto Adicional</p>
+                      </div>
+                      <input type="file" accept="image/*" onChange={(e) => handleImageUpload(e, "image3")} className="hidden" disabled={isLoading} />
+                    </label>
+                  </div>
+                  {imagePreview3 && (
+                    <div className="w-full h-32 rounded-md overflow-hidden border border-border relative">
+                      <img src={imagePreview3} alt="Preview 3" className="w-full h-full object-cover" />
+                      <button type="button" onClick={() => {setImagePreview3(""); setFormData(p => ({...p, image3: ""}))}} className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1"><X className="w-4 h-4"/></button>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
 
@@ -443,43 +486,85 @@ export default function EditarPublicacionPage({ params }: { params: Promise<{ id
                 </label>
                 <select
                   name="country"
-                  value={formData.country === "" || ["El Salvador", "Honduras", "Guatemala", "Nicaragua", "Costa Rica", "Panamá", "México", "Colombia", "Ecuador", "Perú", "Otro"].includes(formData.country) ? formData.country : "Otro"}
-                  onChange={(e) => {
-                    if (e.target.value === "Otro") {
-                      setFormData(prev => ({ ...prev, country: "Otro" }))
-                    } else {
-                      setFormData(prev => ({ ...prev, country: e.target.value }))
-                    }
-                  }}
+                  value={formData.country}
+                  onChange={handleInputChange}
                   className="w-full px-3 py-2 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary bg-background"
                   disabled={isLoading}
                   required
                 >
                   <option value="">Selecciona un país</option>
-                  <option value="El Salvador">El Salvador</option>
-                  <option value="Honduras">Honduras</option>
-                  <option value="Guatemala">Guatemala</option>
-                  <option value="Nicaragua">Nicaragua</option>
-                  <option value="Costa Rica">Costa Rica</option>
-                  <option value="Panamá">Panamá</option>
-                  <option value="México">México</option>
-                  <option value="Colombia">Colombia</option>
-                  <option value="Ecuador">Ecuador</option>
-                  <option value="Perú">Perú</option>
-                  <option value="Otro">Otro...</option>
+                  <optgroup label="Centroamérica">
+                    <option value="El Salvador">El Salvador</option>
+                    <option value="Guatemala">Guatemala</option>
+                    <option value="Honduras">Honduras</option>
+                    <option value="Nicaragua">Nicaragua</option>
+                    <option value="Costa Rica">Costa Rica</option>
+                    <option value="Panamá">Panamá</option>
+                    <option value="Belice">Belice</option>
+                  </optgroup>
+                  <optgroup label="Norteamérica">
+                    <option value="México">México</option>
+                    <option value="Estados Unidos">Estados Unidos</option>
+                    <option value="Canadá">Canadá</option>
+                  </optgroup>
+                  <optgroup label="Sudamérica">
+                    <option value="Argentina">Argentina</option>
+                    <option value="Bolivia">Bolivia</option>
+                    <option value="Brasil">Brasil</option>
+                    <option value="Chile">Chile</option>
+                    <option value="Colombia">Colombia</option>
+                    <option value="Ecuador">Ecuador</option>
+                    <option value="Paraguay">Paraguay</option>
+                    <option value="Perú">Perú</option>
+                    <option value="Uruguay">Uruguay</option>
+                    <option value="Venezuela">Venezuela</option>
+                    <option value="Guyana">Guyana</option>
+                    <option value="Surinam">Surinam</option>
+                  </optgroup>
+                  <optgroup label="El Caribe">
+                    <option value="Cuba">Cuba</option>
+                    <option value="República Dominicana">República Dominicana</option>
+                    <option value="Jamaica">Jamaica</option>
+                    <option value="Haití">Haití</option>
+                    <option value="Trinidad y Tobago">Trinidad y Tobago</option>
+                    <option value="Puerto Rico">Puerto Rico</option>
+                  </optgroup>
+                  <optgroup label="Europa">
+                    <option value="España">España</option>
+                    <option value="Francia">Francia</option>
+                    <option value="Alemania">Alemania</option>
+                    <option value="Italia">Italia</option>
+                    <option value="Portugal">Portugal</option>
+                    <option value="Países Bajos">Países Bajos</option>
+                    <option value="Bélgica">Bélgica</option>
+                    <option value="Polonia">Polonia</option>
+                    <option value="Reino Unido">Reino Unido</option>
+                  </optgroup>
+                  <optgroup label="Asia">
+                    <option value="China">China</option>
+                    <option value="India">India</option>
+                    <option value="Japón">Japón</option>
+                    <option value="Corea del Sur">Corea del Sur</option>
+                    <option value="Tailandia">Tailandia</option>
+                    <option value="Vietnam">Vietnam</option>
+                    <option value="Indonesia">Indonesia</option>
+                    <option value="Filipinas">Filipinas</option>
+                    <option value="Malasia">Malasia</option>
+                    <option value="Turquía">Turquía</option>
+                  </optgroup>
+                  <optgroup label="África">
+                    <option value="Sudáfrica">Sudáfrica</option>
+                    <option value="Nigeria">Nigeria</option>
+                    <option value="Kenia">Kenia</option>
+                    <option value="Etiopía">Etiopía</option>
+                    <option value="Ghana">Ghana</option>
+                    <option value="Costa de Marfil">Costa de Marfil</option>
+                    <option value="Tanzania">Tanzania</option>
+                    <option value="Uganda">Uganda</option>
+                    <option value="Marruecos">Marruecos</option>
+                    <option value="Egipto">Egipto</option>
+                  </optgroup>
                 </select>
-                {(formData.country === "Otro" || (formData.country !== "" && !["El Salvador", "Honduras", "Guatemala", "Nicaragua", "Costa Rica", "Panamá", "México", "Colombia", "Ecuador", "Perú"].includes(formData.country))) && (
-                  <Input
-                    type="text"
-                    name="country"
-                    value={formData.country === "Otro" ? "" : formData.country}
-                    onChange={handleInputChange}
-                    placeholder="Escribe el nombre del país"
-                    className="mt-2"
-                    disabled={isLoading}
-                    required
-                  />
-                )}
               </div>
               <div>
                 <label className="block text-sm font-medium mb-2">
@@ -757,9 +842,14 @@ export default function EditarPublicacionPage({ params }: { params: Promise<{ id
             </div>
 
             <div>
-              <label className="block text-sm font-medium mb-2">
-                Descripción del Producto <span className="text-red-500">*</span>
-              </label>
+              <div className="flex items-center justify-between mb-2">
+                <label className="block text-sm font-medium">
+                  Descripción del Producto <span className="text-red-500">*</span>
+                </label>
+                <span className={`text-xs font-medium ${formData.description.length < 50 ? 'text-red-500' : 'text-green-600'}`}>
+                  {formData.description.length} / 50 caracteres mínimo
+                </span>
+              </div>
               <Textarea
                 name="description"
                 value={formData.description}
@@ -769,7 +859,11 @@ export default function EditarPublicacionPage({ params }: { params: Promise<{ id
                 className="w-full"
                 disabled={isLoading}
                 required
+                minLength={50}
               />
+              {formData.description.length > 0 && formData.description.length < 50 && (
+                <p className="text-red-500 text-xs mt-1">La descripción debe tener al menos 50 caracteres. Te faltan {50 - formData.description.length}.</p>
+              )}
             </div>
 
             <div>

@@ -48,7 +48,12 @@ export async function GET(
 
         const { data: order, error: orderError } = await supabaseAdmin
             .from("orders")
-            .select("*")
+            .select(`
+                *,
+                quotations:quotation_id (
+                    container_size
+                )
+            `)
             .eq("id", id)
             .single()
 
@@ -134,6 +139,7 @@ export async function GET(
             seller_contact_info: finalData.seller_contact_info || "",
             is_reviewed: isReviewed,
             seller_id: finalData.seller_id,
+            container_size: finalData.quotations?.container_size || finalData.packaging_size,
             tracking_history: finalData.tracking || [
                 {
                     fecha: finalData.created_at,

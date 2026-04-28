@@ -60,15 +60,19 @@ export async function POST(request: Request) {
         // If accepted, create a record in the new 'orders' table (Unified Sales source)
         let orderCreated = null
         if (status === "accepted") {
-            // 0. Fetch the actual product to get accurate details
-            const { data: productData } = await supabaseAdmin
+            // Get product info for the order
+            const { data: productData, error: productError } = await supabaseAdmin
                 .from("user_products")
-                .select("slug, name, image, vendor_id, id, category, country, maturity, packaging, packaging_size, certifications, contact_method, contact_info, price")
+                .select("title, image, user_id, id, category, country, maturity, packaging, packaging_size, certifications, contact_method, contact_info, price")
                 .eq("id", quotation.product_id)
                 .single()
+                
+            if (productError) {
+                console.error("[update-status] Error fetching product:", productError)
+            }
 
-            const actualSellerId = productData?.vendor_id || quotation.seller_id
-            const actualName = productData?.name || quotation.product_title
+            const actualSellerId = productData?.user_id || quotation.seller_id
+            const actualName = productData?.title || quotation.product_title
             const actualImage = productData?.image || quotation.product_image
 
             // 1. Create Order record
@@ -181,12 +185,16 @@ CREATE POLICY "Service role has full access to orders" ON orders FOR ALL USING (
         if (status === "accepted" || status === "rejected") {
             try {
                 if (quotation.email && quotation.buyer_name) {
-                    sendQuotationStatusEmail({
+                    console.log("[Quotation Update] Sending email to buyer:", quotation.email)
+                    const emailResult = await sendQuotationStatusEmail({
                         buyerEmail: quotation.email,
                         buyerName: quotation.buyer_name,
                         productName: quotation.product_title || "Producto",
                         status: status as 'accepted' | 'rejected',
-                    }).catch(err => console.error("[Email] Background quotation email failed:", err))
+                    })
+                    console.log("[Quotation Update] Email send result:", emailResult)
+                } else {
+                    console.warn("[Quotation Update] No buyer email found in quotation:", quotation.id)
                 }
             } catch (emailErr) {
                 console.error("[Email] Error sending quotation status email:", emailErr)

@@ -39,23 +39,41 @@ export async function GET() {
 
         const { data: orders, error: ordersError } = await supabaseAdmin
             .from("orders")
-            .select("*")
+            .select(`
+                *,
+                quotations:quotation_id (
+                    container_size
+                )
+            `)
             .eq("seller_id", userId)
-            .order("created_at", { ascending: false })
 
-        if (ordersError) {
-            console.error("[API/seller/orders] Error fetching orders:", ordersError)
-
-            // If the table doesn't exist yet, return empty for now
-            if (ordersError.message.includes("relation \"orders\" does not exist")) {
-                console.warn("Orders table not yet created.")
-                return NextResponse.json({ orders: [] }, { status: 200 })
-            }
-
+        if (ordersError && !ordersError.message.includes("relation \"orders\" does not exist")) {
+            console.error("[API/seller/orders] Orders error:", ordersError)
             return NextResponse.json({ error: ordersError.message }, { status: 500 })
         }
 
-        return NextResponse.json({ orders: orders || [] }, { status: 200 })
+        // Map orders
+        const mappedOrders = (orders || []).map(order => {
+            const containerSize = order.quotations?.container_size || order.packaging_size;
+            return {
+                ...order,
+                buyer_name: order.buyer_name || order.full_name || "Comprador Agrilpa",
+                quantity: order.quantity || order.quantity_kg,
+                total_price: order.total_price || order.price_usd,
+                product_name: order.product_name || order.product_title || "Producto",
+                product_slug: order.product_id,
+                product_image: order.product_image || null,
+                is_read_seller: order.is_read_seller ?? true,
+                origin_table: "orders",
+                container_size: containerSize
+            }
+        });
+
+        const allOrders = mappedOrders.sort((a, b) => 
+            new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+        );
+
+        return NextResponse.json({ orders: allOrders }, { status: 200 })
 
     } catch (error: any) {
         console.error("[API/seller/orders] Catch error:", error)

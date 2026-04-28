@@ -42,9 +42,9 @@ interface QuotationDetail {
     notes: string
     target_price: number | null
     incoterm: string | null
-    currency: string
     status: string
     created_at: string
+    container_size?: string | null
 }
 
 export default function QuotationDetailPage({ params }: { params: Promise<{ id: string }> }) {
@@ -234,7 +234,11 @@ export default function QuotationDetailPage({ params }: { params: Promise<{ id: 
                                         <div className="grid grid-cols-2 gap-4">
                                             <div className="bg-primary/10 p-4 rounded-lg">
                                                 <p className="text-xs text-muted-foreground uppercase tracking-wide">Cantidad Solicitada</p>
-                                                <p className="text-2xl font-bold text-primary">{quotation.quantity.toLocaleString()} kg</p>
+                                                <p className="text-2xl font-bold text-primary">
+                                                    {quotation.container_size 
+                                                        ? `${quotation.quantity} Contenedor(es) ${quotation.container_size}`
+                                                        : `${quotation.quantity.toLocaleString()} kg`}
+                                                </p>
                                             </div>
                                             <div className="flex items-center">
                                                 <Button
@@ -352,7 +356,11 @@ export default function QuotationDetailPage({ params }: { params: Promise<{ id: 
                                 <div className="space-y-3">
                                     <div className="flex justify-between items-center text-sm">
                                         <span className="text-muted-foreground">Cantidad:</span>
-                                        <span className="font-semibold">{quotation.quantity.toLocaleString()} kg</span>
+                                        <span className="font-semibold">
+                                            {quotation.container_size 
+                                                ? `${quotation.quantity} Contenedor(es) ${quotation.container_size}`
+                                                : `${quotation.quantity.toLocaleString()} kg`}
+                                        </span>
                                     </div>
                                     <div className="flex justify-between items-center text-sm">
                                         <span className="text-muted-foreground">Precio sugerido:</span>

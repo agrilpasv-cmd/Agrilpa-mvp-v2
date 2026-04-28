@@ -45,7 +45,9 @@ export default function VentasPage() {
                         fullId: order.id,
                         producto: order.product_name,
                         cliente: order.buyer_name,
-                        cantidad: `${order.quantity} kg`,
+                        cantidad: order.container_size 
+                            ? `${order.quantity} Cont. ${order.container_size}`
+                            : `${order.quantity} kg`,
                         estado: order.status || "Pendiente",
                         fecha: order.created_at,
                         total: order.total_price > 0

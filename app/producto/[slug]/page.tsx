@@ -15,7 +15,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import { ChatOverlay } from "@/components/chat-overlay"
-import { Star, MapPin, MessageCircle, Check, ChevronLeft, FileText, ShoppingCart, Copy, Calendar, Package, Loader, AlertCircle, ArrowRight, ShieldCheck } from "lucide-react"
+import { Star, MapPin, MessageCircle, Check, ChevronLeft, FileText, ShoppingCart, Copy, Calendar, Package, Loader, AlertCircle, ArrowRight, ShieldCheck, X } from "lucide-react"
 import { getProductBySlug, getProductsByCategory, allProducts } from "@/lib/products-data"
 import { createClient } from "@/lib/supabase/client"
 import { format } from "date-fns"
@@ -47,7 +47,7 @@ export default function ProductPage() {
             if (resData.user) {
               setQuotationForm(prev => ({
                 ...prev,
-                buyerName: resData.user.full_name || "",
+                buyerName: resData.user.company_name || resData.user.full_name || "",
                 email: resData.user.email || "",
                 phoneNumber: resData.user.phone || "",
                 countryCode: resData.user.country_code || ""
@@ -90,6 +90,8 @@ export default function ProductPage() {
     currency: "USD",
     containerSize: ""
   })
+  const [selectedImage, setSelectedImage] = useState<string | null>(null)
+  const [isZoomOpen, setIsZoomOpen] = useState(false)
 
   // Fetch user product if slug is a UUID
   useEffect(() => {
@@ -190,6 +192,8 @@ export default function ProductPage() {
               reviewsData: data.product.reviews_data || [],
               views: data.product.views || 0,
               image: data.product.image || "/placeholder.svg",
+              image2: data.product.image2,
+              image3: data.product.image3,
               verified: data.product.seller_is_pro || false,
               slug: data.product.id,
               packaging: data.product.packaging,
@@ -574,14 +578,47 @@ export default function ProductPage() {
         </Link>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-16">
-          <div className="lg:col-span-1">
-            <div className="bg-gradient-to-br from-primary/5 to-primary/10 rounded-lg overflow-hidden h-96 flex items-center justify-center">
+          <div className="lg:col-span-1 space-y-4">
+            <div 
+              className="bg-gradient-to-br from-primary/5 to-primary/10 rounded-lg overflow-hidden h-96 flex items-center justify-center relative cursor-zoom-in group"
+              onClick={() => setIsZoomOpen(true)}
+            >
               <img
-                src={product.image || "/placeholder.svg"}
+                src={selectedImage || product.image || "/placeholder.svg"}
                 alt={product.name}
-                className="w-full h-full object-cover"
+                className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
               />
+              <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100">
+                <span className="bg-white/90 text-primary px-3 py-1 rounded-full text-xs font-bold shadow-sm">Click para ampliar</span>
+              </div>
             </div>
+            
+            {(product.image2 || product.image3) && (
+              <div className="grid grid-cols-3 gap-2">
+                <div 
+                  className={`aspect-square rounded-md overflow-hidden border-2 cursor-pointer ${selectedImage === product.image || !selectedImage ? 'border-primary' : 'border-transparent'}`}
+                  onClick={() => setSelectedImage(product.image)}
+                >
+                  <img src={product.image || "/placeholder.svg"} className="w-full h-full object-cover" />
+                </div>
+                {product.image2 && (
+                  <div 
+                    className={`aspect-square rounded-md overflow-hidden border-2 cursor-pointer ${selectedImage === product.image2 ? 'border-primary' : 'border-transparent'}`}
+                    onClick={() => setSelectedImage(product.image2)}
+                  >
+                    <img src={product.image2} className="w-full h-full object-cover" />
+                  </div>
+                )}
+                {product.image3 && (
+                  <div 
+                    className={`aspect-square rounded-md overflow-hidden border-2 cursor-pointer ${selectedImage === product.image3 ? 'border-primary' : 'border-transparent'}`}
+                    onClick={() => setSelectedImage(product.image3)}
+                  >
+                    <img src={product.image3} className="w-full h-full object-cover" />
+                  </div>
+                )}
+              </div>
+            )}
           </div>
 
           <div className="lg:col-span-2 space-y-6">
@@ -1140,6 +1177,8 @@ export default function ProductPage() {
                       placeholder="Tu nombre o nombre de tu empresa"
                       value={quotationForm.buyerName}
                       onChange={(e) => setQuotationForm({ ...quotationForm, buyerName: e.target.value })}
+                      readOnly={!!quotationForm.buyerName}
+                      className={quotationForm.buyerName ? "bg-muted cursor-not-allowed" : ""}
                     />
                   </div>
 
@@ -1239,22 +1278,81 @@ export default function ProductPage() {
                         ) : (
                           <>
                             <option value="">Selecciona un país</option>
-                        <option value="Estados Unidos">Estados Unidos</option>
-                        <option value="Canadá">Canadá</option>
-                        <option value="México">México</option>
-                        <option value="El Salvador">El Salvador</option>
-                        <option value="Guatemala">Guatemala</option>
-                        <option value="Honduras">Honduras</option>
-                        <option value="Nicaragua">Nicaragua</option>
-                        <option value="Costa Rica">Costa Rica</option>
-                        <option value="Panamá">Panamá</option>
-                        <option value="Colombia">Colombia</option>
-                        <option value="Perú">Perú</option>
-                        <option value="Ecuador">Ecuador</option>
-                        <option value="Unión Europea">Unión Europea</option>
-                        <option value="Reino Unido">Reino Unido</option>
-                        <option value="Japón">Japón</option>
-                        <option value="China">China</option>
+                        <optgroup label="Centroamérica">
+                          <option value="El Salvador">El Salvador</option>
+                          <option value="Guatemala">Guatemala</option>
+                          <option value="Honduras">Honduras</option>
+                          <option value="Nicaragua">Nicaragua</option>
+                          <option value="Costa Rica">Costa Rica</option>
+                          <option value="Panamá">Panamá</option>
+                          <option value="Belice">Belice</option>
+                        </optgroup>
+                        <optgroup label="Norteamérica">
+                          <option value="México">México</option>
+                          <option value="Estados Unidos">Estados Unidos</option>
+                          <option value="Canadá">Canadá</option>
+                        </optgroup>
+                        <optgroup label="Sudamérica">
+                          <option value="Argentina">Argentina</option>
+                          <option value="Bolivia">Bolivia</option>
+                          <option value="Brasil">Brasil</option>
+                          <option value="Chile">Chile</option>
+                          <option value="Colombia">Colombia</option>
+                          <option value="Ecuador">Ecuador</option>
+                          <option value="Paraguay">Paraguay</option>
+                          <option value="Perú">Perú</option>
+                          <option value="Uruguay">Uruguay</option>
+                          <option value="Venezuela">Venezuela</option>
+                          <option value="Guyana">Guyana</option>
+                          <option value="Surinam">Surinam</option>
+                        </optgroup>
+                        <optgroup label="El Caribe">
+                          <option value="Cuba">Cuba</option>
+                          <option value="República Dominicana">República Dominicana</option>
+                          <option value="Jamaica">Jamaica</option>
+                          <option value="Haití">Haití</option>
+                          <option value="Trinidad y Tobago">Trinidad y Tobago</option>
+                          <option value="Puerto Rico">Puerto Rico</option>
+                        </optgroup>
+                        <optgroup label="Europa">
+                          <option value="España">España</option>
+                          <option value="Francia">Francia</option>
+                          <option value="Alemania">Alemania</option>
+                          <option value="Italia">Italia</option>
+                          <option value="Portugal">Portugal</option>
+                          <option value="Países Bajos">Países Bajos</option>
+                          <option value="Bélgica">Bélgica</option>
+                          <option value="Polonia">Polonia</option>
+                          <option value="Reino Unido">Reino Unido</option>
+                        </optgroup>
+                        <optgroup label="Asia">
+                          <option value="China">China</option>
+                          <option value="India">India</option>
+                          <option value="Japón">Japón</option>
+                          <option value="Corea del Sur">Corea del Sur</option>
+                          <option value="Tailandia">Tailandia</option>
+                          <option value="Vietnam">Vietnam</option>
+                          <option value="Indonesia">Indonesia</option>
+                          <option value="Filipinas">Filipinas</option>
+                          <option value="Malasia">Malasia</option>
+                          <option value="Turquía">Turquía</option>
+                        </optgroup>
+                        <optgroup label="África">
+                          <option value="Sudáfrica">Sudáfrica</option>
+                          <option value="Nigeria">Nigeria</option>
+                          <option value="Kenia">Kenia</option>
+                          <option value="Etiopía">Etiopía</option>
+                          <option value="Ghana">Ghana</option>
+                          <option value="Costa de Marfil">Costa de Marfil</option>
+                          <option value="Tanzania">Tanzania</option>
+                          <option value="Uganda">Uganda</option>
+                          <option value="Marruecos">Marruecos</option>
+                          <option value="Egipto">Egipto</option>
+                        </optgroup>
+                        <optgroup label="Oceanía">
+                          <option value="Australia">Australia</option>
+                          <option value="Nueva Zelanda">Nueva Zelanda</option>
+                        </optgroup>
                         <option value="Otro">Otro</option>
                           </>
                         )}
@@ -1273,22 +1371,81 @@ export default function ProductPage() {
                         className="w-full px-3 py-2 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary bg-background h-10 mb-4"
                       >
                         <option value="">Selecciona un país</option>
-                        <option value="Estados Unidos">Estados Unidos</option>
-                        <option value="Canadá">Canadá</option>
-                        <option value="México">México</option>
-                        <option value="El Salvador">El Salvador</option>
-                        <option value="Guatemala">Guatemala</option>
-                        <option value="Honduras">Honduras</option>
-                        <option value="Nicaragua">Nicaragua</option>
-                        <option value="Costa Rica">Costa Rica</option>
-                        <option value="Panamá">Panamá</option>
-                        <option value="Colombia">Colombia</option>
-                        <option value="Perú">Perú</option>
-                        <option value="Ecuador">Ecuador</option>
-                        <option value="Unión Europea">Unión Europea</option>
-                        <option value="Reino Unido">Reino Unido</option>
-                        <option value="Japón">Japón</option>
-                        <option value="China">China</option>
+                        <optgroup label="Centroamérica">
+                          <option value="El Salvador">El Salvador</option>
+                          <option value="Guatemala">Guatemala</option>
+                          <option value="Honduras">Honduras</option>
+                          <option value="Nicaragua">Nicaragua</option>
+                          <option value="Costa Rica">Costa Rica</option>
+                          <option value="Panamá">Panamá</option>
+                          <option value="Belice">Belice</option>
+                        </optgroup>
+                        <optgroup label="Norteamérica">
+                          <option value="México">México</option>
+                          <option value="Estados Unidos">Estados Unidos</option>
+                          <option value="Canadá">Canadá</option>
+                        </optgroup>
+                        <optgroup label="Sudamérica">
+                          <option value="Argentina">Argentina</option>
+                          <option value="Bolivia">Bolivia</option>
+                          <option value="Brasil">Brasil</option>
+                          <option value="Chile">Chile</option>
+                          <option value="Colombia">Colombia</option>
+                          <option value="Ecuador">Ecuador</option>
+                          <option value="Paraguay">Paraguay</option>
+                          <option value="Perú">Perú</option>
+                          <option value="Uruguay">Uruguay</option>
+                          <option value="Venezuela">Venezuela</option>
+                          <option value="Guyana">Guyana</option>
+                          <option value="Surinam">Surinam</option>
+                        </optgroup>
+                        <optgroup label="El Caribe">
+                          <option value="Cuba">Cuba</option>
+                          <option value="República Dominicana">República Dominicana</option>
+                          <option value="Jamaica">Jamaica</option>
+                          <option value="Haití">Haití</option>
+                          <option value="Trinidad y Tobago">Trinidad y Tobago</option>
+                          <option value="Puerto Rico">Puerto Rico</option>
+                        </optgroup>
+                        <optgroup label="Europa">
+                          <option value="España">España</option>
+                          <option value="Francia">Francia</option>
+                          <option value="Alemania">Alemania</option>
+                          <option value="Italia">Italia</option>
+                          <option value="Portugal">Portugal</option>
+                          <option value="Países Bajos">Países Bajos</option>
+                          <option value="Bélgica">Bélgica</option>
+                          <option value="Polonia">Polonia</option>
+                          <option value="Reino Unido">Reino Unido</option>
+                        </optgroup>
+                        <optgroup label="Asia">
+                          <option value="China">China</option>
+                          <option value="India">India</option>
+                          <option value="Japón">Japón</option>
+                          <option value="Corea del Sur">Corea del Sur</option>
+                          <option value="Tailandia">Tailandia</option>
+                          <option value="Vietnam">Vietnam</option>
+                          <option value="Indonesia">Indonesia</option>
+                          <option value="Filipinas">Filipinas</option>
+                          <option value="Malasia">Malasia</option>
+                          <option value="Turquía">Turquía</option>
+                        </optgroup>
+                        <optgroup label="África">
+                          <option value="Sudáfrica">Sudáfrica</option>
+                          <option value="Nigeria">Nigeria</option>
+                          <option value="Kenia">Kenia</option>
+                          <option value="Etiopía">Etiopía</option>
+                          <option value="Ghana">Ghana</option>
+                          <option value="Costa de Marfil">Costa de Marfil</option>
+                          <option value="Tanzania">Tanzania</option>
+                          <option value="Uganda">Uganda</option>
+                          <option value="Marruecos">Marruecos</option>
+                          <option value="Egipto">Egipto</option>
+                        </optgroup>
+                        <optgroup label="Oceanía">
+                          <option value="Australia">Australia</option>
+                          <option value="Nueva Zelanda">Nueva Zelanda</option>
+                        </optgroup>
                         <option value="Otro">Otro</option>
                       </select>
                     </div>
@@ -1442,6 +1599,30 @@ export default function ProductPage() {
               onClick={() => router.push("/auth")}
             >
               Registrarse
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Image Zoom Dialog - Ultra Large */}
+      <Dialog open={isZoomOpen} onOpenChange={setIsZoomOpen}>
+        <DialogContent className="max-w-[98vw] h-[98vh] p-0 overflow-hidden bg-black/95 border-none flex flex-col">
+          <div className="relative flex-1 w-full h-full overflow-auto flex items-center justify-center p-4 custom-scrollbar">
+            <img
+              src={selectedImage || product.image || "/placeholder.svg"}
+              alt={product.name}
+              className="min-w-[100%] md:min-w-[150%] h-auto object-contain cursor-zoom-out"
+              onClick={() => setIsZoomOpen(false)}
+            />
+          </div>
+          <div className="absolute top-4 right-4 z-50">
+            <Button 
+              variant="outline" 
+              size="icon" 
+              className="rounded-full bg-white/10 border-white/20 text-white hover:bg-white/20"
+              onClick={() => setIsZoomOpen(false)}
+            >
+              <X className="w-6 h-6" />
             </Button>
           </div>
         </DialogContent>

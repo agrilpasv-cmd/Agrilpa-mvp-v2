@@ -39,6 +39,7 @@ interface Quotation {
   notes: string
   status: string
   created_at: string
+  container_size?: string | null
 }
 
 export default function CotizacionesPage() {
@@ -322,7 +323,11 @@ export default function CotizacionesPage() {
                         </div>
                         <div className="min-w-0">
                           <p className="font-bold text-base text-foreground line-clamp-1 group-hover:text-primary transition-colors">{quotation.product_title}</p>
-                          <p className="text-sm text-muted-foreground mt-1">{quotation.quantity} kg</p>
+                          <p className="text-sm text-muted-foreground mt-1">
+                            {quotation.container_size 
+                                ? `${quotation.quantity} Cont. ${quotation.container_size}`
+                                : `${quotation.quantity} kg`}
+                          </p>
                         </div>
                       </div>
 

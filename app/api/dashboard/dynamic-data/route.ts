@@ -166,7 +166,7 @@ export async function GET() {
         // 5. Build Aggregated Payload
 
         // -- Seller KPIs --
-        const sellerQuotes7d = sellerQuotes?.filter(q => q.created_at >= sevenDaysAgoIso).length || 0
+        const sellerQuotesTotal = sellerQuotes?.length || 0
         const sellerQuotesPending = sellerQuotes?.filter(q => q.status === "pending").length || 0
         const sellerOrdersConfirmed = sellerOrders?.filter(q => q.status === "Entregado" || q.status === "En Tránsito").length || 0 // Assuming logic based on prior mocked data
 
@@ -340,7 +340,7 @@ export async function GET() {
             planExpiresAt,
             activityType,
             seller: {
-                quotes_received_7d: sellerQuotes7d,
+                quotes_received_7d: sellerQuotesTotal,
                 quotes_pending: sellerQuotesPending,
                 orders_confirmed: sellerOrdersConfirmed,
                 valor_negociacion: `$${valorNegociacion.toLocaleString()}`,

@@ -27,6 +27,8 @@ export async function POST(request: NextRequest) {
       packaging,
       packagingSize,
       image,
+      image2,
+      image3,
       companyName,
       contactMethod,
       contactInfo,
@@ -48,7 +50,10 @@ export async function POST(request: NextRequest) {
       !companyName ||
       !contactMethod
     ) {
-      return NextResponse.json({ error: "Faltan campos requeridos" }, { status: 400 })
+    }
+
+    if (description.length < 50) {
+      return NextResponse.json({ error: "La descripción del producto debe tener al menos 50 caracteres." }, { status: 400 })
     }
 
     // Validate contact information based on method
@@ -110,6 +115,8 @@ export async function POST(request: NextRequest) {
           packaging,
           packaging_size: packagingSize,
           image: image || null,
+          image2: image2 || null,
+          image3: image3 || null,
           contact_method: contactMethod,
           contact_info: contactInfo,
           certifications: body.certifications || null,

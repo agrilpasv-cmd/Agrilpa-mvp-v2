@@ -38,6 +38,19 @@ export async function POST(request: Request) {
                 .eq("is_read_buyer", false)
 
             if (sellerError || buyerError) throw (sellerError || buyerError)
+
+            // Purchases table
+            await supabaseAdmin
+                .from("purchases")
+                .update({ is_read_seller: true })
+                .eq("seller_id", user.id)
+                .eq("is_read_seller", false)
+
+            await supabaseAdmin
+                .from("purchases")
+                .update({ is_read: true })
+                .eq("user_id", user.id)
+                .eq("is_read", false)
         } else if (ids && Array.isArray(ids)) {
             // Mark specific IDs as read. We check both roles for each ID to be safe
             const { error: sellerError } = await supabaseAdmin
@@ -53,6 +66,19 @@ export async function POST(request: Request) {
                 .eq("buyer_id", user.id)
 
             if (sellerError || buyerError) throw (sellerError || buyerError)
+
+            // Purchases table
+            await supabaseAdmin
+                .from("purchases")
+                .update({ is_read_seller: true })
+                .in("id", ids)
+                .eq("seller_id", user.id)
+
+            await supabaseAdmin
+                .from("purchases")
+                .update({ is_read: true })
+                .in("id", ids)
+                .eq("user_id", user.id)
         } else {
             return NextResponse.json({ error: "Invalid request" }, { status: 400 })
         }

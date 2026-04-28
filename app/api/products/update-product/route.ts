@@ -19,6 +19,8 @@ export async function PUT(request: Request) {
             packaging,
             packaging_size,
             image,
+            image2,
+            image3,
             contact_method,
             contact_info,
             country_code,
@@ -59,6 +61,8 @@ export async function PUT(request: Request) {
         if (packaging !== undefined) updateData.packaging = packaging
         if (packaging_size !== undefined) updateData.packaging_size = packaging_size
         if (image !== undefined) updateData.image = image
+        if (image2 !== undefined) updateData.image2 = image2
+        if (image3 !== undefined) updateData.image3 = image3
         if (contact_method !== undefined) updateData.contact_method = contact_method
         if (contact_info !== undefined) updateData.contact_info = contact_info
         if (country_code !== undefined) updateData.country_code = country_code

@@ -104,6 +104,7 @@ ALTER TABLE quotations ADD COLUMN IF NOT EXISTS target_price NUMERIC;
 ALTER TABLE quotations ADD COLUMN IF NOT EXISTS incoterm TEXT;
 ALTER TABLE quotations ADD COLUMN IF NOT EXISTS currency TEXT DEFAULT 'USD';
 ALTER TABLE quotations ADD COLUMN IF NOT EXISTS buyer_id UUID;
+ALTER TABLE quotations ADD COLUMN IF NOT EXISTS container_size TEXT;
 
 -- Notifica a PostgREST del cambio
 NOTIFY pgrst, 'reload schema';
@@ -135,6 +136,7 @@ CREATE TABLE quotations (
     incoterm TEXT,
     currency TEXT DEFAULT 'USD',
     is_read BOOLEAN DEFAULT false,
+    container_size TEXT,
     status TEXT DEFAULT 'pending',
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
@@ -162,7 +164,8 @@ CREATE POLICY "Service role can manage quotations" ON quotations FOR ALL USING (
                 .single()
 
             if (seller?.email) {
-                sendNewQuotationNotification({
+                console.log("[Quotation Create] Sending email to seller:", seller.email)
+                const emailResult = await sendNewQuotationNotification({
                     sellerEmail: seller.email,
                     sellerName: seller.company_name || seller.full_name || "Vendedor",
                     buyerName: buyerName,
@@ -170,7 +173,10 @@ CREATE POLICY "Service role can manage quotations" ON quotations FOR ALL USING (
                     quantity: parseInt(quantity),
                     targetPrice: targetPrice ? parseFloat(targetPrice) : undefined,
                     location: destinationCountry,
-                }).catch(err => console.error("[Email] Background quotation email failed:", err))
+                })
+                console.log("[Quotation Create] Email send result:", emailResult)
+            } else {
+                console.warn("[Quotation Create] No email found for seller ID:", sellerId)
             }
         } catch (emailErr) {
             console.error("[Email] Error fetching seller for quotation notification:", emailErr)

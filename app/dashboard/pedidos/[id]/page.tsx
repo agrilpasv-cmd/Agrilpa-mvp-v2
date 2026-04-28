@@ -47,7 +47,9 @@ export default function OrderDetailPage() {
             slug: order.product_slug,
             image: order.product_image,
             cliente: order.full_name,
-            cantidad: `${order.quantity_kg} kg`,
+            cantidad: order.container_size 
+                ? `${order.quantity_kg} Cont. ${order.container_size}`
+                : `${order.quantity_kg} kg`,
             estado: order.status || "Preparación",
             fecha: format(new Date(order.created_at), "dd 'de' MMMM, yyyy", { locale: es }),
             total: new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(order.price_usd),

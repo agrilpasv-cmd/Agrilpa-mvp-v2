@@ -49,7 +49,9 @@ export default function PedidosPage() {
             fullId: order.id,
             producto: order.product_name,
             cliente: order.full_name, // Or produce logic if we had seller info
-            cantidad: `${order.quantity_kg} kg`,
+            cantidad: order.container_size 
+                ? `${order.quantity_kg} Cont. ${order.container_size}`
+                : `${order.quantity_kg} kg`,
             estado: order.status || "Preparación", // Default status if null
             fecha: order.created_at,
             total: new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(order.price_usd),
