@@ -33,6 +33,16 @@ export async function POST(request: Request) {
       plan_expires_at: planType === "pro" ? planExpiresAt : null,
     }
 
+    const { data: user, error: userError } = await adminClient
+      .from("users")
+      .select("email, full_name")
+      .eq("id", userId)
+      .single()
+
+    if (userError || !user) {
+      console.error("[Agrilpa] User not found for email notification:", userError)
+    }
+
     const { error } = await adminClient
       .from("users")
       .update(updatePayload)
@@ -41,6 +51,16 @@ export async function POST(request: Request) {
     if (error) {
       console.error("[Agrilpa] Error updating plan:", error)
       return NextResponse.json({ error: error.message }, { status: 500 })
+    }
+
+    // Send email if upgraded to Pro
+    if (planType === "pro" && user?.email) {
+      const { sendProMembershipEmail } = await import("@/lib/email")
+      await sendProMembershipEmail({
+        recipientEmail: user.email,
+        recipientName: user.full_name || "Usuario",
+        expiryDate: planExpiresAt,
+      })
     }
 
     return NextResponse.json({ success: true, planType, planExpiresAt })

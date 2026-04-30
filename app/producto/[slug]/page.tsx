@@ -320,6 +320,15 @@ export default function ProductPage() {
     if (!product) return
 
     try {
+      const supabase = createClient()
+      const { data: { session } } = await supabase.auth.getSession()
+
+      if (!session?.user?.id) {
+        setAuthDialogAction("contactar al vendedor")
+        setIsAuthDialogOpen(true)
+        return
+      }
+
       console.log(`[v0] Tracking click: ${type}`, {
         productId: product.id,
         sellerId: (product as any).vendorId
@@ -327,14 +336,17 @@ export default function ProductPage() {
 
       const response = await fetch("/api/products/track-contact-click", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${session.access_token}`,
+        },
         keepalive: true,
         body: JSON.stringify({
           productId: product.id,
           productTitle: product.name,
           sellerId: (product as any).vendorId,
           clickType: type,
-          userId: currentUserId
+          userId: session.user.id
         })
       })
 
@@ -447,7 +459,8 @@ export default function ProductPage() {
           notes: "",
           targetPrice: "",
           incoterm: "",
-          currency: "USD"
+          currency: "USD",
+          containerSize: ""
         })
       } else {
         console.error("Error Response:", result)

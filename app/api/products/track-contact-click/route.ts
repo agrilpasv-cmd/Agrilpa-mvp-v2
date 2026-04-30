@@ -7,6 +7,8 @@ export async function POST(request: Request) {
     try {
         const body = await request.json()
         const { productId, productTitle, sellerId, clickType, userId } = body
+        const authHeader = request.headers.get("authorization")
+        const token = authHeader?.startsWith("Bearer ") ? authHeader.slice(7) : null
         console.log("[Tracking API] Received click:", { productId, productTitle, sellerId, clickType, userId })
 
         const finalProductId = String(productId || "unknown")
@@ -22,6 +24,25 @@ export async function POST(request: Request) {
             process.env.SUPABASE_SERVICE_ROLE_KEY!,
         )
 
+        let authenticatedUserId: string | null = null
+        if (token) {
+            const supabaseAuth = createClient(
+                process.env.NEXT_PUBLIC_SUPABASE_URL!,
+                process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+            )
+            const { data: { user }, error: authError } = await supabaseAuth.auth.getUser(token)
+
+            if (authError || !user) {
+                return NextResponse.json({ error: "No autorizado" }, { status: 401 })
+            }
+
+            authenticatedUserId = user.id
+        }
+
+        if (!authenticatedUserId) {
+            return NextResponse.json({ error: "Debes iniciar sesion para contactar al vendedor" }, { status: 401 })
+        }
+
         console.log("[Tracking API] Inserting into Supabase...")
         const { data, error } = await supabaseAdmin
             .from("product_contact_clicks")
@@ -31,7 +52,7 @@ export async function POST(request: Request) {
                     product_title: productTitle || "Producto sin título",
                     seller_id: finalSellerId,
                     click_type: clickType,
-                    user_id: userId || null,
+                    user_id: authenticatedUserId,
                     created_at: new Date().toISOString()
                 }
             ])

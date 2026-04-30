@@ -13,7 +13,8 @@ import {
     Clock,
     User,
     ArrowUpRight,
-    ExternalLink
+    ExternalLink,
+    Trash2
 } from "lucide-react"
 import {
     Card,
@@ -25,7 +26,9 @@ import {
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
+import { Checkbox } from "@/components/ui/checkbox"
 import Link from "next/link"
+import { toast } from "sonner"
 
 interface ContactClick {
     id: string
@@ -34,6 +37,13 @@ interface ContactClick {
     seller_id: string
     click_type: string
     user_id: string | null
+    buyer_name: string | null
+    buyer_email: string | null
+    buyer_company: string | null
+    buyer_type: string | null
+    seller_name: string | null
+    seller_email: string | null
+    seller_company: string | null
     created_at: string
 }
 
@@ -43,14 +53,16 @@ export default function AdminContactClicksPage() {
     const [loading, setLoading] = useState(true)
     const [refreshing, setRefreshing] = useState(false)
     const [searchTerm, setSearchTerm] = useState("")
+    const [selectedIds, setSelectedIds] = useState<string[]>([])
+    const [typeFilter, setTypeFilter] = useState<string>("all")
 
     useEffect(() => {
         fetchClicks(true)
 
-        // Auto-refresh every 10 seconds
+        // Auto-refresh every 30 seconds
         const interval = setInterval(() => {
             fetchClicks(false)
-        }, 10000)
+        }, 30000)
 
         return () => clearInterval(interval)
     }, [])
@@ -74,9 +86,76 @@ export default function AdminContactClicksPage() {
         }
     }
 
+    const handleDelete = async (id: string) => {
+        if (!confirm("¿Estás seguro de que deseas eliminar este registro de contacto?")) return
+
+        try {
+            const response = await fetch(`/api/admin/contact-clicks?id=${id}`, {
+                method: "DELETE",
+            })
+
+            if (response.ok) {
+                setClicks(prev => prev.filter(c => c.id !== id))
+                setSelectedIds(prev => prev.filter(selectedId => selectedId !== id))
+                toast.success("Registro eliminado correctamente")
+            } else {
+                const data = await response.json()
+                toast.error(data.error || "Error al eliminar el registro")
+            }
+        } catch (error) {
+            console.error("Error deleting click:", error)
+            toast.error("Error de conexión al eliminar")
+        }
+    }
+
+    const handleBulkDelete = async () => {
+        if (selectedIds.length === 0) return
+        if (!confirm(`¿Estás seguro de que deseas eliminar los ${selectedIds.length} registros seleccionados?`)) return
+
+        try {
+            const response = await fetch(`/api/admin/contact-clicks?ids=${selectedIds.join(",")}`, {
+                method: "DELETE",
+            })
+
+            if (response.ok) {
+                setClicks(prev => prev.filter(c => !selectedIds.includes(c.id)))
+                setSelectedIds([])
+                toast.success(`${selectedIds.length} registros eliminados correctamente`)
+            } else {
+                const data = await response.json()
+                toast.error(data.error || "Error al eliminar los registros")
+            }
+        } catch (error) {
+            console.error("Error bulk deleting clicks:", error)
+            toast.error("Error de conexión al eliminar")
+        }
+    }
+
+    const toggleSelectAll = () => {
+        if (selectedIds.length === filteredClicks.length) {
+            setSelectedIds([])
+        } else {
+            setSelectedIds(filteredClicks.map(c => c.id))
+        }
+    }
+
+    const toggleSelect = (id: string) => {
+        setSelectedIds(prev =>
+            prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]
+        )
+    }
+
     const filteredClicks = clicks.filter(c => {
-        return c.product_title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            c.click_type?.toLowerCase().includes(searchTerm.toLowerCase())
+        const matchesSearch = c.product_title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            c.click_type?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            c.buyer_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            c.buyer_email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            c.seller_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            c.seller_email?.toLowerCase().includes(searchTerm.toLowerCase())
+        
+        const matchesType = typeFilter === "all" || c.click_type === typeFilter
+        
+        return matchesSearch && matchesType
     })
 
     const formatDate = (dateStr: string) => {
@@ -125,7 +204,10 @@ export default function AdminContactClicksPage() {
 
             {/* Stats Grid */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                <Card className="border-none shadow-sm bg-primary/5 border-l-4 border-l-primary">
+                <Card 
+                    className={`border-none shadow-sm cursor-pointer transition-all hover:scale-[1.02] active:scale-[0.98] ${typeFilter === 'all' ? 'bg-primary/10 ring-2 ring-primary border-l-4 border-l-primary' : 'bg-primary/5 border-l-4 border-l-primary'}`}
+                    onClick={() => setTypeFilter('all')}
+                >
                     <CardContent className="pt-6">
                         <div className="flex items-center justify-between">
                             <div>
@@ -139,7 +221,10 @@ export default function AdminContactClicksPage() {
                     </CardContent>
                 </Card>
 
-                <Card className="border-none shadow-sm bg-green-50/50 border-l-4 border-l-green-500">
+                <Card 
+                    className={`border-none shadow-sm cursor-pointer transition-all hover:scale-[1.02] active:scale-[0.98] ${typeFilter === 'whatsapp' ? 'bg-green-100 ring-2 ring-green-500 border-l-4 border-l-green-500' : 'bg-green-50/50 border-l-4 border-l-green-500'}`}
+                    onClick={() => setTypeFilter('whatsapp')}
+                >
                     <CardContent className="pt-6">
                         <div className="flex items-center justify-between">
                             <div>
@@ -153,7 +238,10 @@ export default function AdminContactClicksPage() {
                     </CardContent>
                 </Card>
 
-                <Card className="border-none shadow-sm bg-blue-50/50 border-l-4 border-l-blue-500">
+                <Card 
+                    className={`border-none shadow-sm cursor-pointer transition-all hover:scale-[1.02] active:scale-[0.98] ${typeFilter === 'email' ? 'bg-blue-100 ring-2 ring-blue-500 border-l-4 border-l-blue-500' : 'bg-blue-50/50 border-l-4 border-l-blue-500'}`}
+                    onClick={() => setTypeFilter('email')}
+                >
                     <CardContent className="pt-6">
                         <div className="flex items-center justify-between">
                             <div>
@@ -167,7 +255,10 @@ export default function AdminContactClicksPage() {
                     </CardContent>
                 </Card>
 
-                <Card className="border-none shadow-sm bg-orange-50/50 border-l-4 border-l-orange-500">
+                <Card 
+                    className={`border-none shadow-sm cursor-pointer transition-all hover:scale-[1.02] active:scale-[0.98] ${typeFilter === 'generic' ? 'bg-orange-100 ring-2 ring-orange-500 border-l-4 border-l-orange-500' : 'bg-orange-50/50 border-l-4 border-l-orange-500'}`}
+                    onClick={() => setTypeFilter('generic')}
+                >
                     <CardContent className="pt-6">
                         <div className="flex items-center justify-between">
                             <div>
@@ -191,51 +282,113 @@ export default function AdminContactClicksPage() {
                         <div className="relative flex-1 max-w-sm">
                             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                             <Input
-                                placeholder="Filtrar por producto o tipo..."
+                                placeholder="Filtrar por producto, usuario o tipo..."
                                 className="pl-9 h-11 bg-muted/30 border-transparent focus:bg-white focus:border-primary transition-all rounded-xl"
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
                             />
                         </div>
+                        {selectedIds.length > 0 && (
+                            <Button 
+                                variant="destructive" 
+                                size="sm" 
+                                className="rounded-xl gap-2 ml-4 animate-in slide-in-from-right-4 duration-300"
+                                onClick={handleBulkDelete}
+                            >
+                                <Trash2 className="w-4 h-4" />
+                                Borrar seleccionados ({selectedIds.length})
+                            </Button>
+                        )}
                     </div>
 
                     <Card className="border-none shadow-sm overflow-hidden rounded-2xl">
-                        <CardHeader className="bg-muted/30 border-b border-border">
+                        <CardHeader className="bg-muted/30 border-b border-border flex flex-row items-center justify-between">
                             <CardTitle className="text-sm font-bold flex items-center gap-2">
                                 <Clock className="w-4 h-4 text-primary" />
-                                Actividad Reciente
+                                Actividad Reciente {typeFilter !== 'all' && <Badge variant="outline" className="text-[10px] ml-2 uppercase tracking-widest">Filtro: {typeFilter}</Badge>}
                             </CardTitle>
+                            {filteredClicks.length > 0 && (
+                                <div className="flex items-center gap-2">
+                                    <span className="text-[10px] font-black uppercase text-muted-foreground">Seleccionar todo</span>
+                                    <Checkbox 
+                                        checked={selectedIds.length === filteredClicks.length && filteredClicks.length > 0}
+                                        onCheckedChange={toggleSelectAll}
+                                        className="rounded-md h-5 w-5 border-2"
+                                    />
+                                </div>
+                            )}
                         </CardHeader>
                         <div className="divide-y divide-border">
                             {filteredClicks.map((c) => (
-                                <div key={c.id} className="p-4 hover:bg-muted/20 transition-all flex items-center justify-between group">
-                                    <div className="flex items-center gap-4">
+                                <div key={c.id} className={`p-4 hover:bg-muted/20 transition-all flex items-start justify-between gap-4 group ${selectedIds.includes(c.id) ? 'bg-primary/5' : ''}`}>
+                                    <div className="flex items-start gap-4 min-w-0">
+                                        <div className="pt-2">
+                                            <Checkbox 
+                                                checked={selectedIds.includes(c.id)}
+                                                onCheckedChange={() => toggleSelect(c.id)}
+                                                className="rounded-md h-5 w-5 border-2"
+                                            />
+                                        </div>
                                         <div className={`p-2 rounded-xl border border-border bg-white shadow-sm group-hover:scale-110 transition-transform`}>
                                             {c.click_type === 'whatsapp' ? <MessageCircle className="w-5 h-5 text-green-600" /> :
                                                 c.click_type === 'email' ? <Mail className="w-5 h-5 text-blue-600" /> :
                                                     c.click_type === 'telegram' ? <Send className="w-5 h-5 text-sky-600" /> :
                                                         <MousePointer2 className="w-5 h-5 text-orange-500" />}
                                         </div>
-                                        <div>
+                                        <div className="min-w-0">
                                             <p className="font-bold text-foreground line-clamp-1">{c.product_title || "Producto desconocido"}</p>
                                             <div className="flex items-center gap-2 mt-1">
                                                 <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">{formatDate(c.created_at)}</span>
                                                 <span className="text-muted-foreground/30">•</span>
                                                 {getClickTypeBadge(c.click_type)}
                                             </div>
+                                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-3 text-xs">
+                                                <div className="bg-muted/30 rounded-lg p-2 border border-border/50">
+                                                    <p className="font-black uppercase tracking-widest text-[10px] text-muted-foreground flex items-center gap-1">
+                                                        <User className="w-3 h-3" />
+                                                        Usuario
+                                                    </p>
+                                                    <p className="font-bold text-foreground truncate">{c.buyer_company || c.buyer_name || "Usuario desconocido"}</p>
+                                                    <p className="text-muted-foreground truncate">{c.buyer_email || "Sin correo"}</p>
+                                                </div>
+                                                <div className="bg-muted/30 rounded-lg p-2 border border-border/50">
+                                                    <p className="font-black uppercase tracking-widest text-[10px] text-muted-foreground flex items-center gap-1">
+                                                        <Package className="w-3 h-3" />
+                                                        Vendedor
+                                                    </p>
+                                                    <p className="font-bold text-foreground truncate">{c.seller_company || c.seller_name || "Vendedor no vinculado"}</p>
+                                                    <p className="text-muted-foreground truncate">{c.seller_email || c.seller_id}</p>
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
-                                    <Button variant="ghost" size="icon" className="rounded-full hover:bg-primary/10 hover:text-primary transition-colors" asChild>
-                                        <Link href={`/producto/${c.product_id}`} target="_blank">
-                                            <ExternalLink className="w-4 h-4" />
-                                        </Link>
-                                    </Button>
+                                    <div className="flex flex-col gap-2">
+                                        <Button variant="ghost" size="icon" className="rounded-full hover:bg-primary/10 hover:text-primary transition-colors h-8 w-8" asChild title="Ver producto">
+                                            <Link href={`/producto/${c.product_id}`} target="_blank">
+                                                <ExternalLink className="w-4 h-4" />
+                                            </Link>
+                                        </Button>
+                                        <Button 
+                                            variant="ghost" 
+                                            size="icon" 
+                                            className="rounded-full hover:bg-red-100 hover:text-red-600 transition-colors h-8 w-8"
+                                            onClick={() => handleDelete(c.id)}
+                                            title="Eliminar registro"
+                                        >
+                                            <Trash2 className="w-4 h-4" />
+                                        </Button>
+                                    </div>
                                 </div>
                             ))}
 
                             {filteredClicks.length === 0 && (
                                 <div className="py-20 text-center">
                                     <p className="text-muted-foreground font-medium italic">No se han registrado clicks con estos criterios.</p>
+                                    {typeFilter !== 'all' && (
+                                        <Button variant="link" onClick={() => setTypeFilter('all')} className="mt-2 text-primary font-bold uppercase text-[10px] tracking-widest">
+                                            Ver todos los registros
+                                        </Button>
+                                    )}
                                 </div>
                             )}
                         </div>

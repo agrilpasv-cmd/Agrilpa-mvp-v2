@@ -8,16 +8,13 @@ import { AuthStorage } from "@/lib/auth-storage"
 const ADMIN_EMAIL = "agrilpasv@gmail.com"
 
 export default function DashboardPage() {
-  // Read from localStorage synchronously — no spinner on repeated visits
-  const localSession = AuthStorage.getSession()
-  const initialIsAdmin = localSession?.email === ADMIN_EMAIL
-
-  const [isAdmin, setIsAdmin] = useState(initialIsAdmin)
-  const [loading, setLoading] = useState(!localSession) // skip loading if we have local session
+  const [isAdmin, setIsAdmin] = useState(false)
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
+    const localSession = AuthStorage.getSession()
     if (localSession) {
-      // Already decided from local storage — verify in background silently
+      setIsAdmin(localSession.email === ADMIN_EMAIL)
       setLoading(false)
     }
 

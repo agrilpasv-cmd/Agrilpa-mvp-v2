@@ -20,6 +20,7 @@ import { Button } from "@/components/ui/button"
 
 interface UserProduct {
   id: string
+  user_id: string
   title: string
   category: string
   price: string
@@ -35,6 +36,8 @@ interface UserProduct {
   company_name?: string
   contact_method?: string
   contact_info?: string
+  rating?: number
+  reviews?: number
   seller_is_pro?: boolean
   shipping_unit_type?: string
   container_size?: string
@@ -64,6 +67,7 @@ export default function ProductosPage() {
   const [staticVisibility, setStaticVisibility] = useState<Record<number, boolean>>({})
   const [isLoading, setIsLoading] = useState(true)
   const [isAuthenticated, setIsAuthenticated] = useState(false)
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null)
   const [isAuthDialogOpen, setIsAuthDialogOpen] = useState(false)
 
   useEffect(() => {
@@ -75,6 +79,7 @@ export default function ProductosPage() {
   const checkAuth = async () => {
     const { data: { session } } = await supabase.auth.getSession()
     setIsAuthenticated(!!session)
+    setCurrentUserId(session?.user?.id || null)
   }
 
   const categories = [
@@ -111,6 +116,7 @@ export default function ProductosPage() {
     isUserProduct: true,
     contactMethod: up.contact_method,
     contactInfo: up.contact_info,
+    vendorId: up.user_id,
     sellerIsPro: up.seller_is_pro || false,
     shippingUnitType: up.shipping_unit_type || null,
     containerSize: up.container_size || null,
@@ -220,6 +226,13 @@ export default function ProductosPage() {
 
   const trackContactClick = async (product: any, type: string) => {
     try {
+      const { data: { session } } = await supabase.auth.getSession()
+
+      if (!session?.user?.id) {
+        setIsAuthDialogOpen(true)
+        return
+      }
+
       console.log(`[Agrilpa] Tracking click on list: ${type}`, {
         productId: product.id,
         sellerId: product.vendorId || product.id
@@ -227,14 +240,17 @@ export default function ProductosPage() {
 
       const response = await fetch("/api/products/track-contact-click", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${session.access_token}`,
+        },
         keepalive: true,
         body: JSON.stringify({
           productId: product.id,
           productTitle: product.name,
           sellerId: product.vendorId || product.id,
           clickType: type,
-          userId: null // We don't necessarily have it here, and it's optional
+          userId: session.user.id
         })
       })
 
@@ -491,9 +507,15 @@ export default function ProductosPage() {
                           </span>
                         </div>
                         {(product.verified || (product as any).sellerIsPro) && (
-                          <div className="flex items-center gap-1 text-xs font-bold text-primary bg-primary/10 border border-primary/20 px-2.5 py-1 rounded-full">
-                            <ShieldCheck className="w-3.5 h-3.5" />
-                            Verificado
+                          <div className="flex flex-col items-end gap-1.5">
+                            <div className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-emerald-700 bg-emerald-100 border border-emerald-200 px-2 py-0.5 rounded-md shadow-sm">
+                              <ShieldCheck className="w-3 h-3 text-emerald-600" />
+                              Verificado
+                            </div>
+                            <div className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-amber-700 bg-amber-100 border border-amber-200 px-2 py-0.5 rounded-md shadow-sm">
+                              <Star className="w-3 h-3 fill-amber-500 text-amber-500" />
+                              Destacado
+                            </div>
                           </div>
                         )}
                       </div>
@@ -547,7 +569,7 @@ export default function ProductosPage() {
                           e.preventDefault()
                           e.stopPropagation()
 
-                          if (!isAuthenticated) {
+                          if (!isAuthenticated || !currentUserId) {
                             setIsAuthDialogOpen(true)
                             return
                           }

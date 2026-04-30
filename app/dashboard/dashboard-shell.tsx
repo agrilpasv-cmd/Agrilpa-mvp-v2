@@ -24,10 +24,13 @@ import {
     Mail,
     DollarSign,
     MousePointer2,
+    Crown,
+    UserMinus,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { useDashboard } from "./context"
+import { AuthStorage } from "@/lib/auth-storage"
 
 export default function DashboardShell({
     children,
@@ -41,12 +44,18 @@ export default function DashboardShell({
     const { counts } = useDashboard()
 
     useEffect(() => {
+        // Fast sync from localStorage to avoid long waits
+        const localSession = AuthStorage.getSession()
+        if (localSession?.email === "agrilpasv@gmail.com") {
+            setIsAdmin(true)
+        }
+
         const checkUser = async () => {
             const { createBrowserClient } = await import("@/lib/supabase/client")
             const supabase = createBrowserClient()
             const { data: { user } } = await supabase.auth.getUser()
-            if (user && user.email === "agrilpasv@gmail.com") {
-                setIsAdmin(true)
+            if (user) {
+                setIsAdmin(user.email === "agrilpasv@gmail.com")
             }
         }
         checkUser()
@@ -56,6 +65,7 @@ export default function DashboardShell({
         { href: "/", label: "Inicio", icon: Home, notifications: 0 },
         { href: "/dashboard", label: "Admin Dashboard", icon: LayoutDashboard, notifications: 0 },
         { href: "/admin/usuarios", label: "Gestión de Usuarios", icon: Users, notifications: 0 },
+        { href: "/admin/membresias", label: "Membresías", icon: Crown, notifications: 0 },
         { href: "/admin/cotizaciones", label: "Cotizaciones", icon: ClipboardList, notifications: 0 },
         { href: "/admin/contactar", label: "Contactar", icon: MousePointer2, notifications: 0 },
         { href: "/admin/publicaciones", label: "Publicaciones", icon: Package, notifications: 0 },
@@ -66,6 +76,8 @@ export default function DashboardShell({
         { href: "/admin/logistica", label: "Logística", icon: Truck, notifications: 0 },
         { href: "/admin/compras", label: "Compras Globales", icon: ShoppingCart, notifications: 0 },
         { href: "/admin/contactanos", label: "Contáctanos", icon: MessageSquare, notifications: 0 },
+        { href: "/admin/newsletter", label: "Newsletter", icon: Mail, notifications: 0 },
+        { href: "/admin/bajas", label: "Reportes de Bajas", icon: UserMinus, notifications: 0 },
     ]
 
     const userMenuItems = [

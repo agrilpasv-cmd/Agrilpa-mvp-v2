@@ -11,6 +11,9 @@ interface Stats {
     totalUsers: number
     adminUsers: number
     regularUsers: number
+    proUsers: number
+    freeUsers: number
+    totalQuotations: number
 }
 
 export function AdminDashboard() {
@@ -18,6 +21,9 @@ export function AdminDashboard() {
         totalUsers: 0,
         adminUsers: 0,
         regularUsers: 0,
+        proUsers: 0,
+        freeUsers: 0,
+        totalQuotations: 0,
     })
     const [analyticsData, setAnalyticsData] = useState<any>(null)
     const [loading, setLoading] = useState(true)
@@ -54,6 +60,9 @@ export function AdminDashboard() {
                         totalUsers: data.totalUsers,
                         adminUsers: data.adminUsers,
                         regularUsers: data.regularUsers,
+                        proUsers: data.proUsers || 0,
+                        freeUsers: data.freeUsers || 0,
+                        totalQuotations: data.totalQuotations || 0,
                     })
                     if (data.detailedAnalytics) {
                         setAnalyticsData(data.detailedAnalytics)
@@ -118,12 +127,25 @@ export function AdminDashboard() {
                         </Card>
                     </Link>
 
+                    <Link href="/admin/membresias">
+                        <Card className="p-6 border-l-4 border-l-amber-500 cursor-pointer hover:shadow-lg hover:scale-[1.02] transition-all duration-200">
+                            <div className="flex items-center justify-between">
+                                <div>
+                                    <p className="text-sm text-muted-foreground mb-2">Membresías</p>
+                                    <p className="text-3xl font-bold text-foreground">{stats.proUsers}</p>
+                                    <p className="text-xs text-amber-600 mt-2">{stats.freeUsers} gratuitos</p>
+                                </div>
+                                <Crown className="w-12 h-12 text-amber-500/20" />
+                            </div>
+                        </Card>
+                    </Link>
+
                     <Link href="/admin/cotizaciones">
                         <Card className="p-6 border-l-4 border-l-primary cursor-pointer hover:shadow-lg hover:scale-[1.02] transition-all duration-200">
                             <div className="flex items-center justify-between">
                                 <div>
                                     <p className="text-sm text-muted-foreground mb-2">Cotizaciones</p>
-                                    <p className="text-3xl font-bold text-foreground">{stats.adminUsers}</p>
+                                    <p className="text-3xl font-bold text-foreground">{stats.totalQuotations}</p>
                                     <p className="text-xs text-blue-600 mt-2">Gestionar solicitudes</p>
                                 </div>
                                 <ClipboardList className="w-12 h-12 text-primary/20" />

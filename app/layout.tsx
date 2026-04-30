@@ -5,6 +5,7 @@ import { Analytics } from "@vercel/analytics/next"
 import { Footer } from "@/components/footer"
 import { FooterWrapper } from "@/components/footer-wrapper"
 import { NavbarWrapper } from "@/components/navbar-wrapper"
+import { Toaster } from "@/components/ui/sonner"
 import "./globals.css"
 
 const _geist = Geist({ subsets: ["latin"] })
@@ -41,6 +42,7 @@ export default function RootLayout({
       <body className={`font-sans antialiased`}>
         <NavbarWrapper />
         {children}
+        <Toaster />
         <FooterWrapper />
         <Analytics />
       </body>

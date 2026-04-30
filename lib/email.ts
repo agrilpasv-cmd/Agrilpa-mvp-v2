@@ -331,3 +331,65 @@ export async function sendWelcomeEmail({
         return { success: false, error: { message: err.message } }
     }
 }
+
+/**
+ * Notify user when their Pro membership is activated/updated
+ */
+export async function sendProMembershipEmail({
+    recipientEmail,
+    recipientName,
+    expiryDate,
+}: {
+    recipientEmail: string
+    recipientName: string
+    expiryDate: string | null
+}) {
+    try {
+        const resend = getResendClient()
+        
+        const formattedDate = expiryDate 
+            ? new Date(expiryDate).toLocaleDateString('es-ES', { day: '2-digit', month: 'long', year: 'numeric' })
+            : "Sin vencimiento"
+
+        const content = `
+            <p>Hola <strong>${recipientName}</strong>,</p>
+            <p style="font-size: 18px; color: ${THEME.primary}; font-weight: 600;">¡Felicidades, estás en otro nivel! 🚀</p>
+            
+            <p>Tu <strong>Membresía Pro</strong> en Agrilpa ha sido activada con éxito.</p>
+            
+            <div style="background-color: ${THEME.secondary}; padding: 25px; border-radius: 8px; margin: 20px 0; border: 1px solid ${THEME.border};">
+                <p style="margin: 0 0 15px 0; font-weight: 600; color: ${THEME.text};">Beneficios de tu plan Pro:</p>
+                <ul style="color: #4b5563; padding-left: 20px; margin: 0; text-align: left;">
+                    <li style="margin-bottom: 8px;">📦 <strong>Publica hasta 10 productos</strong> en el mercado global.</li>
+                    <li style="margin-bottom: 8px;">✨ <strong>Productos destacados:</strong> Tus anuncios aparecerán con prioridad.</li>
+                    <li style="margin-bottom: 8px;">🔍 <strong>Orden por relevancia:</strong> Aparece en las primeras posiciones de búsqueda.</li>
+                    <li style="margin-bottom: 8px;">✅ <strong>Perfil Verificado:</strong> Gana más confianza con tus clientes internacionales.</li>
+                    <li style="margin-bottom: 8px;">📊 <strong>Acceso prioritario</strong> a nuevas funciones y herramientas.</li>
+                </ul>
+                <div style="margin-top: 20px; padding-top: 15px; border-top: 1px dashed ${THEME.border};">
+                    <p style="margin: 0; font-size: 14px; color: #6b7280;">Vencimiento de membresía:</p>
+                    <p style="margin: 5px 0 0 0; font-weight: 700; color: ${THEME.primary};">${formattedDate}</p>
+                </div>
+            </div>
+            
+            <p>Compra y vende en <strong>Agrilpa</strong>, la plataforma agrícola del comercio global.</p>
+            <p>Estamos comprometidos con tu crecimiento internacional.</p>
+        `
+
+        const { data, error } = await resend.emails.send({
+            from: FROM_EMAIL,
+            to: recipientEmail,
+            subject: '🚀 ¡Tu Membresía Pro en Agrilpa está activa!',
+            html: getMinimalistTemplate('¡Bienvenido al nivel Pro!', content, { text: 'Ir a mi Dashboard', url: 'https://agrilpa.com/dashboard' }),
+        })
+
+        if (error) {
+            console.error('[Email] Error sending pro membership email:', error)
+            return { success: false, error }
+        }
+        return { success: true, data }
+    } catch (err: any) {
+        console.error('[Email] Failed to send pro membership email:', err)
+        return { success: false, error: { message: err.message } }
+    }
+}
