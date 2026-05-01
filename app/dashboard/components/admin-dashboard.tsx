@@ -3,9 +3,26 @@
 import { useEffect, useState, useRef, useCallback } from "react"
 import { Card } from "@/components/ui/card"
 import { Users, MessageSquare, Shield, Database, ClipboardList, Package, Settings } from "lucide-react"
+import dynamic from "next/dynamic"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
-import { AnalyticsDashboard } from "@/app/admin/components/analytics-dashboard"
+import { Loader2 } from "lucide-react"
+
+// Lazy load heavy analytics component
+const AnalyticsDashboard = dynamic(
+    () => import("@/app/admin/components/analytics-dashboard").then(mod => mod.AnalyticsDashboard),
+    {
+        ssr: false,
+        loading: () => (
+            <div className="h-[400px] flex items-center justify-center border rounded-xl bg-muted/10">
+                <div className="flex flex-col items-center gap-2">
+                    <Loader2 className="w-8 h-8 animate-spin text-primary/40" />
+                    <p className="text-sm text-muted-foreground">Cargando analíticas...</p>
+                </div>
+            </div>
+        )
+    }
+)
 
 interface Stats {
     totalUsers: number
@@ -41,8 +58,9 @@ export function AdminDashboard() {
         const controller = new AbortController()
         abortControllerRef.current = controller
 
+        const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent)
         try {
-            const response = await fetch(`/api/admin/stats?range=${fetchRange}&t=${Date.now()}`, {
+            const response = await fetch(`/api/admin/stats?range=${fetchRange}&mobile=${isMobile}&t=${Date.now()}`, {
                 cache: "no-store",
                 signal: controller.signal,
                 headers: {
@@ -82,8 +100,12 @@ export function AdminDashboard() {
 
     useEffect(() => {
         fetchData()
-        // Auto-refresh every 30 seconds for real-time analytics
-        const interval = setInterval(() => fetchData(), 30000)
+        
+        // Adjust refresh rate for mobile
+        const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent)
+        const intervalTime = isMobile ? 60000 : 30000 // 1min mobile, 30s desktop
+        
+        const interval = setInterval(() => fetchData(), intervalTime)
         return () => {
             clearInterval(interval)
             if (abortControllerRef.current) abortControllerRef.current.abort()

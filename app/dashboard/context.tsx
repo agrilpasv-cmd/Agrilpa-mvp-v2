@@ -35,23 +35,36 @@ export function DashboardProvider({ children }: { children: React.ReactNode }) {
     })
 
     const refreshCounts = useCallback(async () => {
+        const controller = new AbortController()
+        const timeoutId = setTimeout(() => controller.abort(), 10000) // 10s timeout
+
         try {
             const res = await fetch("/api/dashboard/sidebar-counts", {
-                cache: "no-cache", // Uses ETags — avoids full response if unchanged
+                cache: "no-cache",
+                signal: controller.signal
             })
+            clearTimeout(timeoutId)
             if (res.ok) {
                 const data = await res.json()
                 setCounts((prev) => ({ ...prev, ...data }))
             }
-        } catch (e) {
-            console.error("Error fetching sidebar counts", e)
+        } catch (e: any) {
+            if (e.name === 'AbortError') {
+                console.warn("[Agrilpa] Sidebar counts fetch timed out")
+            } else {
+                console.error("Error fetching sidebar counts", e)
+            }
         }
     }, [])
 
     useEffect(() => {
         refreshCounts()
-        // Poll every 60s — sidebar numbers don't change that fast
-        const interval = setInterval(refreshCounts, 60000)
+        
+        // Detect mobile to adjust polling
+        const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent)
+        const intervalTime = isMobile ? 120000 : 60000 // 2min on mobile, 1min on desktop
+        
+        const interval = setInterval(refreshCounts, intervalTime)
         return () => clearInterval(interval)
     }, [refreshCounts])
 

@@ -120,11 +120,31 @@ export function UserDashboard() {
     const [loading, setLoading] = useState(true)
 
     useEffect(() => {
-        fetch('/api/dashboard/dynamic-data', { cache: 'no-store' })
-            .then(r => r.ok ? r.json() : null)
+        const controller = new AbortController()
+        const timeoutId = setTimeout(() => controller.abort(), 15000) // 15s timeout
+
+        fetch('/api/dashboard/dynamic-data', { 
+            cache: 'no-store',
+            signal: controller.signal
+        })
+            .then(r => {
+                clearTimeout(timeoutId)
+                return r.ok ? r.json() : null
+            })
             .then(result => { if (result) setData(result) })
-            .catch(e => console.error("Dashboard fetch error:", e))
+            .catch(e => {
+                if (e.name === 'AbortError') {
+                    console.warn("[User] Dashboard fetch timed out")
+                } else {
+                    console.error("Dashboard fetch error:", e)
+                }
+            })
             .finally(() => setLoading(false))
+
+        return () => {
+            clearTimeout(timeoutId)
+            controller.abort()
+        }
     }, [])
 
     if (loading || !data) {

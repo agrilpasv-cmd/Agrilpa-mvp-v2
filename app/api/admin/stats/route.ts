@@ -119,23 +119,28 @@ export async function GET(request: Request) {
         else if (range === "1y") limitDate.setFullYear(limitDate.getFullYear() - 1)
         else limitDate.setDate(limitDate.getDate() - 7) // Default 7d
 
+        const isMobile = url.searchParams.get("mobile") === "true"
+
         // Get exact count first (bypasses default 1000-row limit)
         const { count: totalPageViews } = await supabaseAdmin
             .from("page_analytics")
             .select("*", { count: 'exact', head: true })
             .gte("created_at", limitDate.toISOString())
 
-        // Fetch ALL rows via pagination (Supabase default limit is 1000)
+        // Fetch rows via pagination with a cap to prevent mobile crashes and OOM
         let analyticsRows: any[] = []
         const PAGE_SIZE = 1000
+        const MAX_ROWS = isMobile ? 1500 : 5000 // Limit rows on mobile for performance
         let from = 0
-        while (true) {
+        
+        while (from < MAX_ROWS) {
             const { data: batch } = await supabaseAdmin
                 .from("page_analytics")
                 .select("path, country, referrer, user_agent, created_at")
                 .gte("created_at", limitDate.toISOString())
                 .order("created_at", { ascending: true })
                 .range(from, from + PAGE_SIZE - 1)
+            
             if (!batch || batch.length === 0) break
             analyticsRows = analyticsRows.concat(batch)
             if (batch.length < PAGE_SIZE) break

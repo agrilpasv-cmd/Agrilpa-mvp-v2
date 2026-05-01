@@ -17,7 +17,8 @@ import {
     Package,
     Calendar,
     DollarSign,
-    ExternalLink
+    ExternalLink,
+    Trash2
 } from "lucide-react"
 import {
     Card,
@@ -29,6 +30,8 @@ import {
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
+import { Checkbox } from "@/components/ui/checkbox"
+import { toast } from "sonner"
 import {
     Dialog,
     DialogContent,
@@ -59,6 +62,16 @@ interface Quotation {
     currency: string
     status: string
     created_at: string
+    seller?: {
+        company_name: string | null
+        full_name: string | null
+        email: string
+    }
+    buyer?: {
+        company_name: string | null
+        full_name: string | null
+        email: string
+    }
 }
 
 export default function AdminQuotationsPage() {
@@ -68,6 +81,7 @@ export default function AdminQuotationsPage() {
     const [searchTerm, setSearchTerm] = useState("")
     const [filterStatus, setFilterStatus] = useState("all")
     const [selectedQuotation, setSelectedQuotation] = useState<Quotation | null>(null)
+    const [selectedIds, setSelectedIds] = useState<string[]>([])
 
     useEffect(() => {
         fetchQuotations()
@@ -89,11 +103,72 @@ export default function AdminQuotationsPage() {
         }
     }
 
+    const handleDelete = async (id: string) => {
+        if (!confirm("¿Estás seguro de que deseas eliminar este registro de cotización?")) return
+
+        try {
+            const response = await fetch(`/api/admin/quotations?id=${id}`, {
+                method: "DELETE",
+            })
+
+            if (response.ok) {
+                setQuotations(prev => prev.filter(q => q.id !== id))
+                setSelectedIds(prev => prev.filter(selectedId => selectedId !== id))
+                toast.success("Registro eliminado correctamente")
+            } else {
+                const data = await response.json()
+                toast.error(data.error || "Error al eliminar el registro")
+            }
+        } catch (error) {
+            console.error("Error deleting quotation:", error)
+            toast.error("Error de conexión al eliminar")
+        }
+    }
+
+    const handleBulkDelete = async () => {
+        if (selectedIds.length === 0) return
+        if (!confirm(`¿Estás seguro de que deseas eliminar los ${selectedIds.length} registros seleccionados?`)) return
+
+        try {
+            const response = await fetch(`/api/admin/quotations?ids=${selectedIds.join(",")}`, {
+                method: "DELETE",
+            })
+
+            if (response.ok) {
+                setQuotations(prev => prev.filter(q => !selectedIds.includes(q.id)))
+                setSelectedIds([])
+                toast.success(`${selectedIds.length} registros eliminados correctamente`)
+            } else {
+                const data = await response.json()
+                toast.error(data.error || "Error al eliminar los registros")
+            }
+        } catch (error) {
+            console.error("Error bulk deleting quotations:", error)
+            toast.error("Error de conexión al eliminar")
+        }
+    }
+
+    const toggleSelectAll = () => {
+        if (selectedIds.length === filteredQuotations.length) {
+            setSelectedIds([])
+        } else {
+            setSelectedIds(filteredQuotations.map(q => q.id))
+        }
+    }
+
+    const toggleSelect = (id: string) => {
+        setSelectedIds(prev =>
+            prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]
+        )
+    }
+
     const filteredQuotations = quotations.filter(q => {
         const matchesSearch =
             q.buyer_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
             q.product_title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            q.destination_country?.toLowerCase().includes(searchTerm.toLowerCase())
+            q.destination_country?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            q.seller?.company_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            q.seller?.full_name?.toLowerCase().includes(searchTerm.toLowerCase())
 
         const matchesStatus = filterStatus === "all" || q.status === filterStatus
 
@@ -197,28 +272,23 @@ export default function AdminQuotationsPage() {
                 </Card>
             </div>
 
-            {/* Filters and Search */}
-            <div className="flex flex-col sm:flex-row gap-4 justify-between items-end bg-card p-4 rounded-xl border border-border shadow-sm">
-                <div className="w-full sm:max-w-md space-y-2">
-                    <label className="text-xs font-semibold uppercase text-muted-foreground ml-1">Buscar cotización</label>
-                    <div className="relative">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                        <Input
-                            placeholder="Comprador, producto o destino..."
-                            className="pl-9 h-11 bg-muted/50 border-transparent focus:bg-white focus:border-primary transition-all rounded-lg"
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                        />
-                    </div>
+            {/* Filters and Search - Replicated from Contactar style */}
+            <div className="flex items-center justify-between bg-card p-4 rounded-2xl border border-border shadow-sm">
+                <div className="relative flex-1 max-w-sm">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                    <Input
+                        placeholder="Buscar por comprador, vendedor, producto o destino..."
+                        className="pl-9 h-11 bg-muted/30 border-transparent focus:bg-white focus:border-primary transition-all rounded-xl"
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                    />
                 </div>
-
-                <div className="w-full sm:w-auto space-y-2">
-                    <label className="text-xs font-semibold uppercase text-muted-foreground ml-1">Estado</label>
-                    <div className="flex gap-2 p-1 bg-muted/50 rounded-lg">
+                <div className="flex items-center gap-3">
+                    <div className="hidden sm:flex gap-1 p-1 bg-muted/30 rounded-xl">
                         <Button
                             variant={filterStatus === "all" ? "default" : "ghost"}
                             size="sm"
-                            className="h-9 px-4 rounded-md text-xs font-semibold transition-all"
+                            className="h-8 px-3 rounded-lg text-[10px] font-bold uppercase tracking-wider"
                             onClick={() => setFilterStatus("all")}
                         >
                             Todos
@@ -226,31 +296,54 @@ export default function AdminQuotationsPage() {
                         <Button
                             variant={filterStatus === "pending" ? "default" : "ghost"}
                             size="sm"
-                            className="h-9 px-4 rounded-md text-xs font-semibold transition-all"
+                            className="h-8 px-3 rounded-lg text-[10px] font-bold uppercase tracking-wider"
                             onClick={() => setFilterStatus("pending")}
                         >
                             Pendientes
                         </Button>
-                        <Button
-                            variant={filterStatus === "replied" ? "default" : "ghost"}
-                            size="sm"
-                            className="h-9 px-4 rounded-md text-xs font-semibold transition-all"
-                            onClick={() => setFilterStatus("replied")}
-                        >
-                            Respondidas
-                        </Button>
                     </div>
+
+                    {selectedIds.length > 0 && (
+                        <Button 
+                            variant="destructive" 
+                            size="sm" 
+                            className="rounded-xl gap-2 animate-in slide-in-from-right-4 duration-300"
+                            onClick={handleBulkDelete}
+                        >
+                            <Trash2 className="w-4 h-4" />
+                            <span className="hidden sm:inline">Borrar seleccionados ({selectedIds.length})</span>
+                            <span className="sm:hidden">({selectedIds.length})</span>
+                        </Button>
+                    )}
                 </div>
             </div>
 
             {/* Quotations Table */}
-            <Card className="border-none shadow-sm overflow-hidden">
+            <Card className="border-none shadow-sm overflow-hidden rounded-2xl">
+                <CardHeader className="bg-muted/30 border-b border-border flex flex-row items-center justify-between px-6 py-4">
+                    <CardTitle className="text-sm font-bold flex items-center gap-2">
+                        <ClipboardList className="w-4 h-4 text-primary" />
+                        Listado de Cotizaciones {filterStatus !== 'all' && <Badge variant="outline" className="text-[10px] ml-2 uppercase tracking-widest">Filtro: {filterStatus}</Badge>}
+                    </CardTitle>
+                    {filteredQuotations.length > 0 && (
+                        <div className="flex items-center gap-2">
+                            <span className="text-[10px] font-black uppercase text-muted-foreground">Seleccionar todo</span>
+                            <Checkbox 
+                                checked={selectedIds.length === filteredQuotations.length && filteredQuotations.length > 0}
+                                onCheckedChange={toggleSelectAll}
+                                className="rounded-md h-5 w-5 border-2"
+                            />
+                        </div>
+                    )}
+                </CardHeader>
                 <div className="overflow-x-auto">
                     <table className="w-full text-sm text-left border-collapse">
                         <thead>
-                            <tr className="bg-muted/30 border-b border-border">
+                            <tr className="bg-muted/10 border-b border-border">
+                                <th className="px-6 py-4 w-10"></th>
                                 <th className="px-6 py-4 font-semibold text-muted-foreground uppercase tracking-wider text-[10px]">Fecha</th>
                                 <th className="px-6 py-4 font-semibold text-muted-foreground uppercase tracking-wider text-[10px]">Comprador</th>
+                                <th className="px-6 py-4 font-semibold text-muted-foreground uppercase tracking-wider text-[10px]">Vendedor</th>
                                 <th className="px-6 py-4 font-semibold text-muted-foreground uppercase tracking-wider text-[10px]">Producto</th>
                                 <th className="px-6 py-4 font-semibold text-muted-foreground uppercase tracking-wider text-[10px]">Cant. / Destino</th>
                                 <th className="px-6 py-4 font-semibold text-muted-foreground uppercase tracking-wider text-[10px]">Estado</th>
@@ -259,17 +352,39 @@ export default function AdminQuotationsPage() {
                         </thead>
                         <tbody className="divide-y divide-border">
                             {filteredQuotations.map((q) => (
-                                <tr key={q.id} className="hover:bg-muted/20 transition-colors group">
+                                <tr key={q.id} className={`hover:bg-muted/20 transition-colors group ${selectedIds.includes(q.id) ? 'bg-primary/5' : ''}`}>
+                                    <td className="px-6 py-4">
+                                        <Checkbox 
+                                            checked={selectedIds.includes(q.id)}
+                                            onCheckedChange={() => toggleSelect(q.id)}
+                                            className="rounded-md h-5 w-5 border-2"
+                                        />
+                                    </td>
                                     <td className="px-6 py-4 whitespace-nowrap text-muted-foreground font-medium">
                                         {formatDate(q.created_at)}
                                     </td>
                                     <td className="px-6 py-4">
                                         <div className="flex flex-col">
                                             <span className="font-bold text-foreground">{q.buyer_name}</span>
+                                            {q.buyer?.company_name && (
+                                                <span className="text-[10px] text-primary font-bold uppercase tracking-tight">
+                                                    Empresa: {q.buyer.company_name}
+                                                </span>
+                                            )}
                                             <div className="flex items-center gap-1 text-[11px] text-muted-foreground italic">
                                                 {q.contact_method === "WhatsApp" ? <Phone className="w-3 h-3" /> : <Mail className="w-3 h-3" />}
                                                 {q.phone_number || q.email || q.contact_method}
                                             </div>
+                                        </div>
+                                    </td>
+                                    <td className="px-6 py-4">
+                                        <div className="flex flex-col">
+                                            <span className="font-semibold text-foreground">
+                                                {q.seller?.company_name || q.seller?.full_name || "Vendedor"}
+                                            </span>
+                                            <span className="text-[11px] text-muted-foreground italic">
+                                                {q.seller?.email}
+                                            </span>
                                         </div>
                                     </td>
                                     <td className="px-6 py-4">
@@ -307,6 +422,14 @@ export default function AdminQuotationsPage() {
                                                     Detalles
                                                 </Button>
                                             </DialogTrigger>
+                                            <Button
+                                                variant="ghost"
+                                                size="sm"
+                                                className="h-9 w-9 p-0 rounded-md hover:bg-red-50 hover:text-red-600 transition-all ml-1"
+                                                onClick={() => handleDelete(q.id)}
+                                            >
+                                                <Trash2 className="w-4 h-4" />
+                                            </Button>
                                             <DialogContent className="max-w-3xl overflow-y-auto max-h-[90vh]">
                                                 <DialogHeader className="border-b pb-4 mb-4">
                                                     <div className="flex items-center justify-between mt-4">
@@ -375,27 +498,50 @@ export default function AdminQuotationsPage() {
                                                             </div>
                                                         </div>
 
-                                                        {/* Buyer & Notes */}
+                                                        {/* Buyer, Seller & Notes */}
                                                         <div className="space-y-6">
-                                                            <div className="space-y-4">
-                                                                <h4 className="font-bold text-sm uppercase tracking-wider text-muted-foreground">Datos del Comprador</h4>
-                                                                <div className="bg-card border border-border p-4 rounded-2xl shadow-sm">
-                                                                    <p className="font-bold text-lg mb-4">{selectedQuotation.buyer_name}</p>
-                                                                    <div className="space-y-3">
-                                                                        <div className="flex items-center gap-3 text-sm">
-                                                                            <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
-                                                                                <Mail className="w-4 h-4 text-primary" />
+                                                            <div className="grid grid-cols-1 gap-4">
+                                                                {/* Vendedor Info */}
+                                                                <div className="space-y-2">
+                                                                    <h4 className="font-bold text-sm uppercase tracking-wider text-muted-foreground">Vendedor (Recibe)</h4>
+                                                                    <div className="bg-muted/30 p-4 rounded-2xl border border-border">
+                                                                        <p className="font-bold text-base text-foreground">
+                                                                            {selectedQuotation.seller?.company_name || selectedQuotation.seller?.full_name || "Empresa no registrada"}
+                                                                        </p>
+                                                                        <p className="text-sm text-muted-foreground flex items-center gap-2 mt-1">
+                                                                            <Mail className="w-3.5 h-3.5" />
+                                                                            {selectedQuotation.seller?.email}
+                                                                        </p>
+                                                                    </div>
+                                                                </div>
+
+                                                                {/* Comprador Info */}
+                                                                <div className="space-y-2">
+                                                                    <h4 className="font-bold text-sm uppercase tracking-wider text-muted-foreground">Comprador (Solicita)</h4>
+                                                                    <div className="bg-card border border-border p-4 rounded-2xl shadow-sm relative overflow-hidden">
+                                                                        <div className="absolute top-0 right-0 w-16 h-16 bg-primary/5 rounded-bl-full -mr-4 -mt-4" />
+                                                                        <p className="font-bold text-lg mb-1">{selectedQuotation.buyer_name}</p>
+                                                                        {selectedQuotation.buyer?.company_name && (
+                                                                            <p className="text-xs font-bold text-primary uppercase mb-3 tracking-wide">
+                                                                                Empresa: {selectedQuotation.buyer.company_name}
+                                                                            </p>
+                                                                        )}
+                                                                        <div className="space-y-3 mt-4">
+                                                                            <div className="flex items-center gap-3 text-sm">
+                                                                                <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                                                                                    <Mail className="w-4 h-4 text-primary" />
+                                                                                </div>
+                                                                                <span className="font-medium">{selectedQuotation.email || "—"}</span>
                                                                             </div>
-                                                                            <span className="font-medium">{selectedQuotation.email || "—"}</span>
-                                                                        </div>
-                                                                        <div className="flex items-center gap-3 text-sm">
-                                                                            <div className="w-8 h-8 rounded-lg bg-green-50 flex items-center justify-center">
-                                                                                <Phone className="w-4 h-4 text-green-600" />
+                                                                            <div className="flex items-center gap-3 text-sm">
+                                                                                <div className="w-8 h-8 rounded-lg bg-green-50 flex items-center justify-center">
+                                                                                    <Phone className="w-4 h-4 text-green-600" />
+                                                                                </div>
+                                                                                <span className="font-medium">
+                                                                                    {selectedQuotation.country_code ? `+${selectedQuotation.country_code} ` : ""}
+                                                                                    {selectedQuotation.phone_number || "—"}
+                                                                                </span>
                                                                             </div>
-                                                                            <span className="font-medium">
-                                                                                {selectedQuotation.country_code ? `+${selectedQuotation.country_code} ` : ""}
-                                                                                {selectedQuotation.phone_number || "—"}
-                                                                            </span>
                                                                         </div>
                                                                     </div>
                                                                 </div>

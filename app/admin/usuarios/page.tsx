@@ -77,12 +77,16 @@ export default function AdminUsersPage() {
     }
   }, [])
 
-  useEffect(() => {
+    useEffect(() => {
     fetchUsers(true)
+
+    // Reduced polling frequency for mobile performance
+    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent)
+    const intervalTime = isMobile ? 60000 : 30000 // 1min mobile, 30s desktop
 
     const intervalId = setInterval(() => {
       fetchUsers(false)
-    }, 3000)
+    }, intervalTime)
 
     return () => clearInterval(intervalId)
   }, [fetchUsers])

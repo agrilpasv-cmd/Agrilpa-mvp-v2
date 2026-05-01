@@ -10,10 +10,14 @@ export async function GET() {
             process.env.SUPABASE_SERVICE_ROLE_KEY!,
         )
 
-        // Fetch all quotations
+        // Fetch all quotations with seller and buyer information
         const { data: quotations, error } = await supabaseAdmin
             .from("quotations")
-            .select("*")
+            .select(`
+                *,
+                seller:users!seller_id (company_name, full_name, email),
+                buyer:users!buyer_id (company_name, full_name, email)
+            `)
             .order("created_at", { ascending: false })
 
         if (error) {
@@ -59,6 +63,44 @@ export async function GET() {
 
     } catch (error: any) {
         console.error("[Admin Quotations API] Error:", error)
+        return NextResponse.json({ error: "Internal Server Error" }, { status: 500 })
+    }
+}
+
+export async function DELETE(request: Request) {
+    try {
+        const { searchParams } = new URL(request.url)
+        const id = searchParams.get("id")
+        const ids = searchParams.get("ids")
+
+        if (!id && !ids) {
+            return NextResponse.json({ error: "ID or IDs are required" }, { status: 400 })
+        }
+
+        const supabaseAdmin = createClient(
+            process.env.NEXT_PUBLIC_SUPABASE_URL!,
+            process.env.SUPABASE_SERVICE_ROLE_KEY!,
+        )
+
+        let query = supabaseAdmin.from("quotations").delete()
+
+        if (ids) {
+            const idList = ids.split(",")
+            query = query.in("id", idList)
+        } else {
+            query = query.eq("id", id)
+        }
+
+        const { error } = await query
+
+        if (error) {
+            console.error("Error deleting quotation(s):", error)
+            return NextResponse.json({ error: error.message }, { status: 500 })
+        }
+
+        return NextResponse.json({ success: true })
+    } catch (error: any) {
+        console.error("[Admin Quotations DELETE] Error:", error)
         return NextResponse.json({ error: "Internal Server Error" }, { status: 500 })
     }
 }
