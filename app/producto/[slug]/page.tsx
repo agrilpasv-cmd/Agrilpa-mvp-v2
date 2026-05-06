@@ -431,20 +431,6 @@ export default function ProductPage() {
     }
   }
 
-  const handleBuy = () => {
-    if (!currentUserId) {
-      setAuthDialogAction("comprar este producto")
-      setIsAuthDialogOpen(true)
-      return
-    }
-    
-    // Track initiation of purchase
-    trackActivity('click', `Inició proceso de compra: ${product.name}`, { productId: product.id })
-    
-    // Redirect to purchase flow
-    router.push(`/compra/${slug}`)
-  }
-
   if (!product) return null
 
   const specificContactButton = (className: string) => {
