@@ -14,6 +14,7 @@ interface DashboardContextType {
         mensajes: number
         perfil: number
         rastrear: number
+        contactanos: number
     }
     refreshCounts: () => Promise<void>
 }
@@ -31,7 +32,8 @@ export function DashboardProvider({ children }: { children: React.ReactNode }) {
         transacciones: 0,
         mensajes: 0,
         perfil: 0,
-        rastrear: 0
+        rastrear: 0,
+        contactanos: 0
     })
 
     const refreshCounts = useCallback(async () => {

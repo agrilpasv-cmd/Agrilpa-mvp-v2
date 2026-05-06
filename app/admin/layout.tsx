@@ -25,6 +25,7 @@ import {
   ClipboardList,
   MousePointer2,
   UserMinus,
+  Image as ImageIcon,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Toaster } from "@/components/ui/toaster"
@@ -41,6 +42,7 @@ export default function AdminLayout({
   const menuItems = [
     { href: "/", label: "Inicio", icon: Home },
     { href: "/admin", label: "Dashboard", icon: LayoutDashboard },
+    { href: "/admin/hero", label: "Hero", icon: ImageIcon },
     { href: "/admin/usuarios", label: "Gestión de Usuarios", icon: Users },
     { href: "/admin/membresias", label: "Membresías", icon: Crown },
     { href: "/admin/cotizaciones", label: "Cotizaciones", icon: ClipboardList },

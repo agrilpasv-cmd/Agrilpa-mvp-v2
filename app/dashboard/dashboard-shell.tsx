@@ -102,7 +102,7 @@ export default function DashboardShell({
         { href: "/admin/financiamiento", label: "Financiamiento", icon: DollarSign, notifications: 0 },
         { href: "/admin/logistica", label: "Logística", icon: Truck, notifications: 0 },
         { href: "/admin/compras", label: "Compras Globales", icon: ShoppingCart, notifications: 0 },
-        { href: "/admin/contactanos", label: "Contáctanos", icon: MessageSquare, notifications: 0 },
+        { href: "/admin/contactanos", label: "Contáctanos", icon: MessageSquare, notifications: counts.contactanos || 0 },
         { href: "/admin/newsletter", label: "Newsletter", icon: Mail, notifications: 0 },
         { href: "/admin/bajas", label: "Reportes de Bajas", icon: UserMinus, notifications: 0 },
     ]

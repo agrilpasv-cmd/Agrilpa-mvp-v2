@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useRef, useCallback } from "react"
 import { Card } from "@/components/ui/card"
-import { Users, MessageSquare, Shield, Database, ClipboardList, Package, Settings } from "lucide-react"
+import { Users, MessageSquare, Shield, Database, ClipboardList, Package, Settings, Crown } from "lucide-react"
 import dynamic from "next/dynamic"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"

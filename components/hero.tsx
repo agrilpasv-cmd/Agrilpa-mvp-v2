@@ -1,18 +1,67 @@
 "use client"
 
 import { Button } from "@/components/ui/button"
-import { ArrowRight, Users, Globe, ShieldCheck } from 'lucide-react'
+import { ArrowRight, Users, Globe, ShieldCheck, ChevronLeft, ChevronRight } from 'lucide-react'
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { motion, Variants } from "framer-motion"
+import { motion, Variants, AnimatePresence } from "framer-motion"
 import { AuthStorage } from "@/lib/auth-storage"
-import { useEffect, useRef } from "react"
+import { useEffect, useRef, useState, useCallback } from "react"
+import Image from "next/image"
+
+interface HeroImage {
+  id: string
+  image_url: string
+  link_url?: string
+}
 
 export function Hero() {
   const router = useRouter()
   const videoRef = useRef<HTMLVideoElement>(null)
+  
+  const [images, setImages] = useState<HeroImage[]>([])
+  const [currentIndex, setCurrentIndex] = useState(0)
+  const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
+    const fetchImages = async () => {
+      try {
+        const res = await fetch("/api/hero")
+        const data = await res.json()
+        if (data.images && data.images.length > 0) {
+          setImages(data.images)
+        }
+      } catch (error) {
+        console.error("Error fetching hero images:", error)
+      } finally {
+        setIsLoading(false)
+      }
+    }
+    fetchImages()
+  }, [])
+
+  const nextSlide = useCallback(() => {
+    if (images.length > 0) {
+      setCurrentIndex((prev) => (prev + 1) % images.length)
+    }
+  }, [images.length])
+
+  const prevSlide = useCallback(() => {
+    if (images.length > 0) {
+      setCurrentIndex((prev) => (prev - 1 + images.length) % images.length)
+    }
+  }, [images.length])
+
+  // Auto-slide every 3.5 seconds
+  useEffect(() => {
+    if (images.length > 1) {
+      const interval = setInterval(nextSlide, 3500)
+      return () => clearInterval(interval)
+    }
+  }, [images.length, nextSlide])
+
+  useEffect(() => {
+    // Play background video
     if (videoRef.current) {
       videoRef.current.defaultMuted = true
       videoRef.current.muted = true
@@ -28,6 +77,7 @@ export function Hero() {
       router.push("/auth")
     }
   }
+
   const containerVariants: Variants = {
     hidden: { opacity: 0 },
     visible: {
@@ -54,76 +104,149 @@ export function Hero() {
 
   return (
     <section className="relative w-full min-h-screen flex items-center overflow-hidden">
-      {/* Video Background */}
-      <video
-        ref={videoRef}
-        src="https://res.cloudinary.com/dvdz0yhuh/video/upload/v1774293524/184808-874264370_medium_p3dznv.mp4"
-        autoPlay
-        loop
-        muted
-        playsInline
-        className="absolute inset-0 w-full h-full object-cover"
-      />
+      {/* Background Video ALWAYS visible */}
+      <div className="absolute inset-0 w-full h-full z-0">
+        <video
+          ref={videoRef}
+          src="https://res.cloudinary.com/dvdz0yhuh/video/upload/v1774293524/184808-874264370_medium_p3dznv.mp4"
+          autoPlay
+          loop
+          muted
+          playsInline
+          className="absolute inset-0 w-full h-full object-cover"
+        />
+      </div>
 
-      {/* Video Overlay: 25% oscuro izquierda → 0% difuminado derecha */}
-      <div className="absolute inset-0 bg-gradient-to-r from-black/25 via-black/10 to-transparent pointer-events-none" />
+      {/* Video Overlay: Aún más claro */}
+      <div className="absolute inset-0 bg-black/10 pointer-events-none z-0" />
 
-      <div className="relative z-10 w-full max-w-7xl mx-auto px-6 sm:px-12 lg:px-16 pt-20">
+      <div className="relative z-10 w-full max-w-[85rem] mx-auto px-6 sm:px-10 lg:px-16 pt-20 flex flex-col lg:flex-row items-center gap-12 lg:gap-16">
+        
+        {/* Left Column: Text and Buttons */}
         <motion.div 
-          className="flex flex-col items-start text-left max-w-4xl space-y-7"
+          className="flex flex-col items-start text-left w-full lg:w-[50%] xl:w-[45%] space-y-7"
           variants={containerVariants}
           initial="hidden"
           animate="visible"
         >
-
-
           {/* Main Title */}
-          <motion.h1 variants={itemVariants} className="text-6xl sm:text-7xl lg:text-[6rem] font-black text-white leading-[1.05] tracking-tighter">
-            Conecta el<br />
-            campo con el<br />
-            mundo.
+          <motion.h1 variants={itemVariants} className="text-[3.5rem] sm:text-7xl lg:text-[5rem] xl:text-[6rem] font-black text-white leading-[1.05] tracking-tighter drop-shadow-[0_4px_4px_rgba(0,0,0,0.5)]">
+            Conecta<br />
+            el campo<br />
+            con el mundo.
           </motion.h1>
 
           {/* Description */}
-          <motion.p variants={itemVariants} className="text-base sm:text-lg text-white/90 leading-relaxed max-w-xl">
+          <motion.p variants={itemVariants} className="text-base sm:text-lg text-white/90 leading-relaxed max-w-xl drop-shadow-md">
             La plataforma B2B para promocionar tus productos agrícolas y negociar directamente con compradores
             internacionales. Sin intermediarios, sin complicaciones.
           </motion.p>
 
           {/* Buttons */}
-          <motion.div variants={itemVariants} className="flex flex-col sm:flex-row gap-4 pt-4">
+          <motion.div variants={itemVariants} className="flex flex-col sm:flex-row gap-4 pt-4 w-full">
             <Button
               size="lg"
               onClick={handleVenderClick}
-              className="bg-primary hover:bg-primary/85 text-white font-bold px-10 h-14 rounded-2xl shadow-[0_0_32px_rgba(139,198,70,0.35)] hover:shadow-[0_0_48px_rgba(139,198,70,0.5)] hover:-translate-y-1 transition-all duration-300 text-base"
+              className="bg-primary hover:bg-primary/85 text-white font-bold px-8 h-14 rounded-2xl shadow-[0_0_32px_rgba(139,198,70,0.35)] hover:shadow-[0_0_48px_rgba(139,198,70,0.5)] hover:-translate-y-1 transition-all duration-300 text-base"
             >
               Vender mis productos
             </Button>
             <Link href="/productos">
               <span
-                className="relative inline-flex items-center justify-center px-8 h-14 rounded-2xl font-semibold text-base text-white cursor-pointer select-none overflow-hidden group hover:-translate-y-1 transition-transform duration-300"
+                className="relative inline-flex items-center justify-center px-6 h-14 rounded-2xl font-semibold text-base text-white cursor-pointer select-none overflow-hidden group hover:-translate-y-1 transition-transform duration-300"
                 style={{ WebkitBackdropFilter: "blur(8px)", backdropFilter: "blur(8px)" }}
               >
-                {/* Glass tint — barely visible, just a light wash */}
-                <span className="absolute inset-0 rounded-2xl bg-white/8 group-hover:bg-white/12 transition-colors duration-400" />
-                {/* Outer border ring */}
-                <span className="absolute inset-0 rounded-2xl ring-1 ring-inset ring-white/30 group-hover:ring-white/50 transition-all duration-300" />
-                {/* Top edge — sharp reflective shine */}
+                <span className="absolute inset-0 rounded-2xl bg-white/10 group-hover:bg-white/20 transition-colors duration-400" />
+                <span className="absolute inset-0 rounded-2xl ring-1 ring-inset ring-white/40 group-hover:ring-white/60 transition-all duration-300" />
                 <span className="absolute inset-x-4 top-0 h-[1.5px] bg-gradient-to-r from-transparent via-white/80 to-transparent" />
-                {/* Inner highlight — top half glow */}
-                <span className="absolute inset-x-0 top-0 h-1/2 rounded-t-2xl bg-gradient-to-b from-white/12 to-transparent pointer-events-none" />
-                {/* Hover shimmer sweep */}
-                <span className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 bg-gradient-to-br from-white/18 via-transparent to-transparent pointer-events-none" />
-                {/* Label */}
-                <span className="relative z-10 drop-shadow-sm">Buscar Proveedores</span>
+                <span className="absolute inset-x-0 top-0 h-1/2 rounded-t-2xl bg-gradient-to-b from-white/20 to-transparent pointer-events-none" />
+                <span className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 bg-gradient-to-br from-white/20 via-transparent to-transparent pointer-events-none" />
+                <span className="relative z-10 drop-shadow-md">Buscar Proveedores</span>
               </span>
             </Link>
           </motion.div>
-
-
-
         </motion.div>
+
+        {/* Right Column: Banners Carousel */}
+        {!isLoading && images.length > 0 && (
+          <motion.div 
+            initial={{ opacity: 0, x: 50 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.8, delay: 0.5, type: "spring" }}
+            className="w-full lg:w-[50%] xl:w-[55%] relative"
+          >
+            <div className="relative w-full aspect-[16/7] sm:aspect-video rounded-3xl overflow-hidden shadow-2xl border border-white/20 bg-black/10 backdrop-blur-sm group">
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={currentIndex}
+                  initial={{ opacity: 0, scale: 1.05 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.4 }}
+                  className="absolute inset-0 w-full h-full"
+                >
+                  {images[currentIndex].link_url ? (
+                    <Link href={images[currentIndex].link_url as string} className="w-full h-full block">
+                      <Image
+                        src={images[currentIndex].image_url}
+                        alt="Promotional Banner"
+                        fill
+                        className="object-cover transition-transform duration-700 hover:scale-105"
+                        priority
+                      />
+                    </Link>
+                  ) : (
+                    <Image
+                      src={images[currentIndex].image_url}
+                      alt="Promotional Banner"
+                      fill
+                      className="object-cover"
+                      priority
+                    />
+                  )}
+                </motion.div>
+              </AnimatePresence>
+
+              {/* Controls */}
+              {images.length > 1 && (
+                <>
+                  <button 
+                    onClick={(e) => { e.preventDefault(); prevSlide(); }}
+                    className="absolute left-4 top-1/2 -translate-y-1/2 p-3 rounded-full bg-black/20 hover:bg-black/50 text-white backdrop-blur-md transition-all opacity-0 group-hover:opacity-100 shadow-xl"
+                    aria-label="Anterior imagen"
+                  >
+                    <ChevronLeft className="w-6 h-6" />
+                  </button>
+                  <button 
+                    onClick={(e) => { e.preventDefault(); nextSlide(); }}
+                    className="absolute right-4 top-1/2 -translate-y-1/2 p-3 rounded-full bg-black/20 hover:bg-black/50 text-white backdrop-blur-md transition-all opacity-0 group-hover:opacity-100 shadow-xl"
+                    aria-label="Siguiente imagen"
+                  >
+                    <ChevronRight className="w-6 h-6" />
+                  </button>
+
+                  {/* Dots Pagination */}
+                  <div className="absolute bottom-6 left-0 right-0 flex justify-center gap-3 z-20">
+                    {images.map((_, idx) => (
+                      <button
+                        key={idx}
+                        onClick={(e) => { e.preventDefault(); setCurrentIndex(idx); }}
+                        className={`transition-all duration-300 rounded-full bg-white shadow-md ${
+                          idx === currentIndex ? "w-8 h-2 opacity-100" : "w-2 h-2 opacity-50 hover:opacity-80 hover:scale-110"
+                        }`}
+                        aria-label={`Ir a imagen ${idx + 1}`}
+                      />
+                    ))}
+                  </div>
+                </>
+              )}
+            </div>
+          </motion.div>
+        )}
+
       </div>
     </section>
   )
 }
+
+
