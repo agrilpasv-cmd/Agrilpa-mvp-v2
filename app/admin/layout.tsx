@@ -107,18 +107,6 @@ export default function AdminLayout({
             </Link>
 
             <div className="hidden md:flex items-center space-x-3">
-              <Link href="/admin/actividad">
-                <Button variant="ghost" size="sm" className="gap-2">
-                  <MousePointer2 className="w-4 h-4" />
-                  Registro
-                </Button>
-              </Link>
-              <Link href="/admin/hero">
-                <Button variant="ghost" size="sm" className="gap-2">
-                  <ImageIcon className="w-4 h-4" />
-                  Banners
-                </Button>
-              </Link>
               <Button
                 variant="outline"
                 size="sm"
@@ -142,9 +130,11 @@ export default function AdminLayout({
       </nav>
 
       <div className="flex">
-        {/* Sidebar */}
+        {/* Sidebar - always visible on desktop */}
         <aside
-          className={`${isSidebarOpen ? "translate-x-0" : "-translate-x-full"} md:translate-x-0 fixed md:relative w-64 h-[calc(100vh-64px)] bg-card border-r border-border transition-transform duration-300 ease-in-out z-40 overflow-y-auto`}
+          className={`${
+            isSidebarOpen ? "translate-x-0" : "-translate-x-full"
+          } md:translate-x-0 fixed md:sticky md:top-16 md:self-start w-64 h-[calc(100vh-64px)] bg-card border-r border-border transition-transform duration-300 ease-in-out z-40 overflow-y-auto shrink-0`}
         >
           <div className="p-6">
             <div className="mb-6 p-4 bg-primary/10 rounded-lg border border-primary/20">
