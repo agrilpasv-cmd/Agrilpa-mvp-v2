@@ -8,44 +8,52 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY || ""
 )
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
-    // We join with profiles/users if possible. 
-    // Since Auth.users is not directly joinable in simple queries without a profile table, 
-    // we'll fetch activities and then fetch user details if needed, 
-    // or assume there is a 'users' table in public schema that syncs with auth.users.
-    
-    // Let's check if there's a public 'users' table first.
-    const { data: activities, error } = await supabase
-      .from("user_activities")
-      .select(`
-        *,
-        user:user_id (
-          id,
-          full_name,
-          email
-        )
-      `)
-      .order("created_at", { ascending: false })
-      .limit(200)
+    const { searchParams } = new URL(request.url)
+    const userId = searchParams.get("userId") // optional filter by user
 
-    if (error) {
-      // Fallback if the join fails (maybe the users table is different)
-      const { data: simpleActivities, error: simpleError } = await supabase
-        .from("user_activities")
-        .select("*")
-        .order("created_at", { ascending: false })
-        .limit(200)
-        
-      if (simpleError) throw simpleError
-      return NextResponse.json({ activities: simpleActivities })
+    // 1. Fetch activities
+    let query = supabase
+      .from("user_activities")
+      .select("*")
+      .order("created_at", { ascending: false })
+      .limit(500)
+
+    if (userId) {
+      query = query.eq("user_id", userId)
     }
 
-    // Map data to flatten user info
-    const formattedActivities = activities.map((a: any) => ({
+    const { data: activities, error } = await query
+
+    if (error) throw error
+    if (!activities || activities.length === 0) {
+      return NextResponse.json({ activities: [] })
+    }
+
+    // 2. Get unique user IDs (excluding nulls)
+    const userIds = [...new Set(activities.map((a) => a.user_id).filter(Boolean))]
+
+    // 3. Fetch user profiles for those IDs
+    let userMap: Record<string, { full_name: string; email: string }> = {}
+    if (userIds.length > 0) {
+      const { data: profiles } = await supabase
+        .from("users")
+        .select("id, full_name, email")
+        .in("id", userIds)
+
+      if (profiles) {
+        profiles.forEach((p) => {
+          userMap[p.id] = { full_name: p.full_name || "", email: p.email || "" }
+        })
+      }
+    }
+
+    // 4. Merge user info into activities
+    const formattedActivities = activities.map((a) => ({
       ...a,
-      user_name: a.user?.full_name,
-      user_email: a.user?.email
+      user_name: a.user_id ? (userMap[a.user_id]?.full_name || "Sin nombre") : "Invitado",
+      user_email: a.user_id ? (userMap[a.user_id]?.email || "Sin correo") : "No registrado",
     }))
 
     return NextResponse.json({ activities: formattedActivities })
