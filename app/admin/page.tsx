@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useRef, useCallback } from "react"
 import { Card } from "@/components/ui/card"
-import { Users, MessageSquare, Shield, Database, ClipboardList, Package, Crown } from "lucide-react"
+import { Users, MessageSquare, Shield, Database, ClipboardList, Package, Crown, MousePointer2, Image as ImageIcon, Activity } from "lucide-react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { AnalyticsDashboard } from "./components/analytics-dashboard"
@@ -117,7 +117,33 @@ export default function AdminDashboardPage() {
         </div>
 
         {/* Stats Grid - System Health */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
+        <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6 mb-12">
+          <Link href="/admin/actividad">
+            <Card className="p-6 border-l-4 border-l-primary cursor-pointer hover:shadow-lg hover:scale-[1.02] transition-all duration-200">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-muted-foreground mb-2">Registro</p>
+                  <p className="text-3xl font-bold text-foreground">Actividad</p>
+                  <p className="text-xs text-blue-600 mt-2">Ver movimientos</p>
+                </div>
+                <Activity className="w-12 h-12 text-primary/20" />
+              </div>
+            </Card>
+          </Link>
+
+          <Link href="/admin/hero">
+            <Card className="p-6 border-l-4 border-l-amber-500 cursor-pointer hover:shadow-lg hover:scale-[1.02] transition-all duration-200">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-muted-foreground mb-2">Banners</p>
+                  <p className="text-3xl font-bold text-foreground">Hero</p>
+                  <p className="text-xs text-amber-600 mt-2">Gestionar carrusel</p>
+                </div>
+                <ImageIcon className="w-12 h-12 text-amber-500/20" />
+              </div>
+            </Card>
+          </Link>
+
           <Link href="/admin/usuarios">
             <Card className="p-6 border-l-4 border-l-primary cursor-pointer hover:shadow-lg hover:scale-[1.02] transition-all duration-200">
               <div className="flex items-center justify-between">
@@ -218,14 +244,14 @@ export default function AdminDashboardPage() {
               <p className="text-sm text-muted-foreground">Navega a las secciones principales</p>
             </div>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
+          <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mt-6">
             <Link href="/admin/usuarios">
               <Button
                 variant="outline"
                 className="w-full h-24 flex flex-col items-center justify-center gap-2 bg-transparent hover:border-primary"
               >
                 <Users className="w-8 h-8 text-primary" />
-                <span className="font-semibold">Gestión de Usuarios</span>
+                <span className="font-semibold text-xs text-center">Gestión de Usuarios</span>
               </Button>
             </Link>
             <Link href="/admin/publicaciones">
@@ -234,7 +260,25 @@ export default function AdminDashboardPage() {
                 className="w-full h-24 flex flex-col items-center justify-center gap-2 bg-transparent hover:border-primary"
               >
                 <Package className="w-8 h-8 text-primary" />
-                <span className="font-semibold">Publicaciones</span>
+                <span className="font-semibold text-xs text-center">Publicaciones</span>
+              </Button>
+            </Link>
+            <Link href="/admin/hero">
+              <Button
+                variant="outline"
+                className="w-full h-24 flex flex-col items-center justify-center gap-2 bg-transparent hover:border-primary"
+              >
+                <ImageIcon className="w-8 h-8 text-primary" />
+                <span className="font-semibold text-xs text-center">Banners Hero</span>
+              </Button>
+            </Link>
+            <Link href="/admin/actividad">
+              <Button
+                variant="outline"
+                className="w-full h-24 flex flex-col items-center justify-center gap-2 bg-transparent hover:border-primary"
+              >
+                <MousePointer2 className="w-8 h-8 text-primary" />
+                <span className="font-semibold text-xs text-center">Registro de Actividad</span>
               </Button>
             </Link>
             <Link href="/admin/contactanos">
@@ -243,7 +287,7 @@ export default function AdminDashboardPage() {
                 className="w-full h-24 flex flex-col items-center justify-center gap-2 bg-transparent hover:border-primary"
               >
                 <MessageSquare className="w-8 h-8 text-primary" />
-                <span className="font-semibold">Contáctanos</span>
+                <span className="font-semibold text-xs text-center">Contáctanos</span>
               </Button>
             </Link>
           </div>

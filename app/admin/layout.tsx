@@ -54,6 +54,7 @@ export default function AdminLayout({
     { href: "/admin/financiamiento", label: "Financiamiento", icon: DollarSign },
     { href: "/admin/logistica", label: "Logística", icon: Truck },
     { href: "/admin/compras", label: "Compras", icon: ShoppingCart },
+    { href: "/admin/actividad", label: "Registro de Actividad", icon: MousePointer2 },
     { href: "/admin/contactanos", label: "Contáctanos", icon: MessageSquare },
     { href: "/admin/newsletter", label: "Newsletter", icon: Mail },
     { href: "/admin/bajas", label: "Reportes de Bajas", icon: UserMinus },
@@ -106,6 +107,18 @@ export default function AdminLayout({
             </Link>
 
             <div className="hidden md:flex items-center space-x-3">
+              <Link href="/admin/actividad">
+                <Button variant="ghost" size="sm" className="gap-2">
+                  <MousePointer2 className="w-4 h-4" />
+                  Registro
+                </Button>
+              </Link>
+              <Link href="/admin/hero">
+                <Button variant="ghost" size="sm" className="gap-2">
+                  <ImageIcon className="w-4 h-4" />
+                  Banners
+                </Button>
+              </Link>
               <Button
                 variant="outline"
                 size="sm"

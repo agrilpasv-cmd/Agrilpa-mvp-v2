@@ -11,6 +11,7 @@ import { CountryPicker, PhoneCodePicker } from "@/components/ui/country-picker"
 import { MapPin } from "lucide-react"
 import { createBrowserClient } from "@/lib/supabase/client"
 import { AuthStorage } from "@/lib/auth-storage"
+import { trackActivity } from "@/lib/track"
 
 function AuthPageContent() {
   const router = useRouter()
@@ -238,6 +239,7 @@ function AuthPageContent() {
 
         setSubmitted(true)
         console.log("[Agrilpa] Registration successful, redirecting to login...")
+        trackActivity('login', 'Registro de nuevo usuario exitoso', { email: formData.email, type: formData.userType })
 
         setTimeout(() => {
           console.log("[Agrilpa] Reloading page and redirecting to login")
@@ -297,6 +299,7 @@ function AuthPageContent() {
         console.log(`[Agrilpa] Login successful, redirecting to ${redirectTo}`)
         
         setSubmitted(true)
+        trackActivity('login', 'Inicio de sesión exitoso')
         window.location.href = redirectTo
       }
     } catch (err) {

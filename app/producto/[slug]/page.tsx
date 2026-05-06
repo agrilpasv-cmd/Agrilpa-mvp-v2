@@ -20,6 +20,7 @@ import { getProductBySlug, getProductsByCategory, allProducts } from "@/lib/prod
 import { createClient } from "@/lib/supabase/client"
 import { format } from "date-fns"
 import { es } from "date-fns/locale"
+import { trackActivity } from "@/lib/track"
 
 // Helper function to check if a string is a valid UUID or numeric ID
 const isValidId = (str: string): boolean => {
@@ -147,7 +148,10 @@ export default function ProductPage() {
               body: JSON.stringify({ productId: slug })
             })
               .then(res => res.json())
-              .then(result => console.log('View increment result:', result))
+              .then(result => {
+                console.log('View increment result:', result)
+                trackActivity('page_view', `Visto producto: ${data.product.title}`, { productId: slug })
+              })
               .catch(err => console.error('View tracking failed:', err))
 
             // Parse company info from description if available
@@ -283,7 +287,6 @@ export default function ProductPage() {
   const otherProducts = dynamicRelatedProducts
     .filter((p) => !sameNameProducts.includes(p) && !sameCategoryProducts.includes(p))
     .sort(() => Math.random() - 0.5)
-
   const relatedProducts = [...sameNameProducts, ...sameCategoryProducts, ...otherProducts].slice(0, 3)
 
   const relatedTitle = (sameNameProducts.length > 0 || sameCategoryProducts.length > 0)
@@ -312,7 +315,6 @@ export default function ProductPage() {
     }
 
     // Track initial "Contact Vendor" click (generic)
-    // Use a small timeout to ensure tracking starts before potential UI shifts
     setTimeout(() => trackContactClick("generic"), 0)
   }
 
@@ -334,7 +336,8 @@ export default function ProductPage() {
         sellerId: (product as any).vendorId
       })
 
-      const response = await fetch("/api/products/track-contact-click", {
+      // Standard contact tracking
+      await fetch("/api/products/track-contact-click", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -350,10 +353,14 @@ export default function ProductPage() {
         })
       })
 
-      const result = await response.json()
-      console.log(`[v0] Tracking result for ${type}:`, result)
-    } catch (err) {
-      console.error("[v0] Failed to track contact click:", err)
+      // User activity tracking
+      trackActivity('click', `Contacto vía ${type}: ${product.name}`, { 
+        productId: product.id, 
+        type 
+      })
+
+    } catch (error) {
+      console.error("Error tracking contact click:", error)
     }
   }
 
@@ -363,96 +370,45 @@ export default function ProductPage() {
       setIsAuthDialogOpen(true)
       return
     }
+    
+    // Track initiation of purchase
+    trackActivity('click', `Inició proceso de compra: ${product.name}`, { productId: product.id })
+    
+    // Redirect to purchase flow
     router.push(`/compra/${slug}`)
   }
 
   const handleQuotationSubmit = async () => {
-    if (!quotationForm.buyerName || !quotationForm.quantity || !quotationForm.destinationCountry || !quotationForm.estimatedDate) {
-      alert("Por favor completa todos los campos requeridos")
-      return
-    }
-
-    if (quotationForm.contactMethod === "WhatsApp" && (!quotationForm.countryCode || !quotationForm.phoneNumber)) {
-      alert("Por favor ingresa tu código de país y número de teléfono")
-      return
-    }
-
-    if (quotationForm.contactMethod === "Email" && !quotationForm.email) {
-      alert("Por favor ingresa tu correo electrónico")
-      return
-    }
-
-    const productId = product.id
-    const sellerId = (product as any).vendorId
-
-    if (!productId || !sellerId) {
-      console.error("Missing product or seller information:", { productId, sellerId })
-      alert("Error: No se pudo identificar el producto o el vendedor. Por favor refresca la página.")
-      return
-    }
-
+    if (!product) return
+    
     setIsSubmittingQuotation(true)
-
     try {
-      const payload = {
-        productId,
-        productTitle: product.name,
-        productImage: product.image,
-        sellerId,
-        buyerName: quotationForm.buyerName,
-        contactMethod: quotationForm.contactMethod,
-        countryCode: quotationForm.countryCode,
-        phoneNumber: quotationForm.phoneNumber,
-        email: quotationForm.email,
-        quantity: quotationForm.quantity,
-        destinationCountry: quotationForm.destinationCountry,
-        estimatedDate: quotationForm.estimatedDate,
-        notes: quotationForm.notes,
-        targetPrice: quotationForm.targetPrice,
-        incoterm: quotationForm.incoterm,
-        currency: quotationForm.currency,
-        buyerId: currentUserId,
-        containerSize: product.shippingUnitType === "FCL" ? (quotationForm.containerSize || product.containerSize || "20ST") : null
-      }
+      const supabase = createClient()
+      const { data: { session } } = await supabase.auth.getSession()
 
-      console.log("=== SENDING QUOTATION ===")
-      console.log("Payload:", payload)
-
-      // Detailed check before sending
-      const missingInPayload = Object.entries(payload)
-        .filter(([key, value]) => {
-          // Fields required by API
-          const required = ["productId", "sellerId", "buyerName", "quantity", "destinationCountry", "estimatedDate"]
-          return required.includes(key) && !value
+      const response = await fetch("/api/products/submit-quotation", {
+        method: "POST",
+        headers: { 
+          "Content-Type": "application/json",
+          ...(session ? { Authorization: `Bearer ${session.access_token}` } : {})
+        },
+        body: JSON.stringify({
+          productId: product.id,
+          productName: product.name,
+          sellerId: (product as any).vendorId,
+          buyerId: currentUserId,
+          ...quotationForm
         })
-        .map(([key]) => key)
-
-      if (missingInPayload.length > 0) {
-        console.error("Missing fields in payload:", missingInPayload)
-        alert(`Error: Faltan datos obligatorios: ${missingInPayload.join(", ")}`)
-        setIsSubmittingQuotation(false)
-        return
-      }
-
-      const apiUrl = '/api/quotations/create'
-      console.log(`Hitting API: ${apiUrl}`)
-
-      const response = await fetch(apiUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
       })
 
       const result = await response.json()
-
-      if (result.success) {
+      if (response.ok) {
         setQuotationSuccess(true)
-        setQuotationForm({
-          buyerName: "",
-          contactMethod: "WhatsApp",
-          countryCode: "",
-          phoneNumber: "",
-          email: "",
+        trackActivity('click', `Cotización enviada: ${product.name}`, { productId: product.id })
+        
+        // Reset form but keep contact info
+        setQuotationForm(prev => ({
+          ...prev,
           quantity: "",
           destinationCountry: "",
           estimatedDate: "",
@@ -461,7 +417,7 @@ export default function ProductPage() {
           incoterm: "",
           currency: "USD",
           containerSize: ""
-        })
+        }))
       } else {
         console.error("Error Response:", result)
         const detailedError = result.details || result.error || "Error al enviar la cotización"
@@ -473,6 +429,20 @@ export default function ProductPage() {
     } finally {
       setIsSubmittingQuotation(false)
     }
+  }
+
+  const handleBuy = () => {
+    if (!currentUserId) {
+      setAuthDialogAction("comprar este producto")
+      setIsAuthDialogOpen(true)
+      return
+    }
+    
+    // Track initiation of purchase
+    trackActivity('click', `Inició proceso de compra: ${product.name}`, { productId: product.id })
+    
+    // Redirect to purchase flow
+    router.push(`/compra/${slug}`)
   }
 
   if (!product) return null
