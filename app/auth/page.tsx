@@ -60,23 +60,25 @@ function AuthPageContent() {
         } = await supabaseRef.current.auth.getSession()
 
         if (session?.user) {
-          console.log("[Agrilpa] User already has active session, checking profile...")
+          const redirectTo = searchParams.get("redirectTo") || "/"
+          console.log(`[Agrilpa] User already has active session, redirecting to ${redirectTo}...`)
 
-          // Verificar el perfil del usuario para determinar el rol
+          // If session is active, ensure AuthStorage is synced
           const { data: profile } = await supabaseRef.current
             .from("users")
             .select("role")
             .eq("id", session.user.id)
             .maybeSingle()
+          
+          const role = profile?.role || "user"
+          AuthStorage.setSession(session.user.id, session.user.email || "", role)
 
-          if (profile?.role === "admin") {
-            console.log("[Agrilpa] Admin user detected, redirecting to /admin")
-            router.push("/admin")
-            return
-          }
-
-          console.log("[Agrilpa] Regular user detected, redirecting to /")
-          router.push("/")
+          // If they were trying to reach admin but aren't admin, let middleware/shell handle it
+          // but for now, we just push to wherever they wanted to go
+          router.push(redirectTo)
+        } else {
+          // If no session, clear any stale local storage to avoid "ghost" panels
+          AuthStorage.clearSession()
         }
       } catch (err) {
         console.error("[Agrilpa] Error checking existing session:", err)
@@ -84,7 +86,7 @@ function AuthPageContent() {
     }
 
     checkExistingSession()
-  }, [router])
+  }, [router, searchParams])
 
   useEffect(() => {
     const mode = searchParams.get("mode")
@@ -291,16 +293,11 @@ function AuthPageContent() {
         const role = isAdmin ? "admin" : "user"
         AuthStorage.setSession(data.user.id, data.user.email || "", role)
 
-        if (isAdmin) {
-          console.log("[Agrilpa] Admin email detected, redirecting to /admin")
-          setSubmitted(true)
-          window.location.href = "/admin"
-          return
-        }
-
-        console.log("[Agrilpa] Regular user, redirecting to /")
+        const redirectTo = searchParams.get("redirectTo") || (isAdmin ? "/admin" : "/dashboard")
+        console.log(`[Agrilpa] Login successful, redirecting to ${redirectTo}`)
+        
         setSubmitted(true)
-        window.location.href = "/"
+        window.location.href = redirectTo
       }
     } catch (err) {
       console.error("[Agrilpa] Auth error:", err)

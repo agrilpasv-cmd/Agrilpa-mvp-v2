@@ -130,22 +130,19 @@ export async function GET(request: Request) {
         // Fetch rows via pagination with a cap to prevent mobile crashes and OOM
         let analyticsRows: any[] = []
         const PAGE_SIZE = 1000
-        const MAX_ROWS = isMobile ? 1500 : 5000 // Limit rows on mobile for performance
+        const MAX_ROWS = isMobile ? 800 : 5000 // Limit rows strictly on mobile for stability
         let from = 0
         
-        while (from < MAX_ROWS) {
-            const { data: batch } = await supabaseAdmin
-                .from("page_analytics")
-                .select("path, country, referrer, user_agent, created_at")
-                .gte("created_at", limitDate.toISOString())
-                .order("created_at", { ascending: true })
-                .range(from, from + PAGE_SIZE - 1)
+        // Use a faster query for analytics data
+        const { data: analyticsDataResult } = await supabaseAdmin
+            .from("page_analytics")
+            .select("path, country, referrer, user_agent, created_at")
+            .gte("created_at", limitDate.toISOString())
+            .order("created_at", { ascending: false })
+            .limit(MAX_ROWS)
             
-            if (!batch || batch.length === 0) break
-            analyticsRows = analyticsRows.concat(batch)
-            if (batch.length < PAGE_SIZE) break
-            from += PAGE_SIZE
-        }
+        analyticsRows = analyticsDataResult || []
+
 
         // Parsers
         const parseUserAgent = (ua: string) => {

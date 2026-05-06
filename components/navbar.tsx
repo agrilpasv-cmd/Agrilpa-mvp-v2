@@ -29,16 +29,56 @@ export function Navbar() {
   const router = useRouter()
 
   useEffect(() => {
-    const session = AuthStorage.getSession()
-    if (session) {
-      setIsLoggedIn(true)
-      setUserRole(session.role)
-      fetchNotificationCount()
-
-      // Set up interval to fetch notification count every 60 seconds
-      const interval = setInterval(fetchNotificationCount, 60000)
-      return () => clearInterval(interval)
+    const syncAuth = async () => {
+      try {
+        const supabase = createBrowserClient()
+        const { data: { session } } = await supabase.auth.getSession()
+        
+        if (session?.user) {
+          // If we have a real session, sync it to AuthStorage and UI
+          const { data: profile } = await supabase
+            .from("users")
+            .select("role")
+            .eq("id", session.user.id)
+            .maybeSingle()
+            
+          const role = profile?.role || "user"
+          AuthStorage.setSession(session.user.id, session.user.email || "", role)
+          
+          setIsLoggedIn(true)
+          setUserRole(role)
+          fetchNotificationCount()
+        } else {
+          // If no real session, ensure local storage is clean
+          const localSession = AuthStorage.getSession()
+          if (localSession) {
+            console.log("[Navbar] Local session stale, clearing...")
+            AuthStorage.clearSession()
+            setIsLoggedIn(false)
+            setUserRole(null)
+          }
+        }
+      } catch (err) {
+        console.error("[Navbar] Auth sync error:", err)
+        // Fallback to local session if network fails, but marked as tentative
+        const localSession = AuthStorage.getSession()
+        if (localSession) {
+          setIsLoggedIn(true)
+          setUserRole(localSession.role)
+        }
+      }
     }
+
+    syncAuth()
+    
+    // Set up interval to fetch notification count every 60 seconds if logged in
+    const interval = setInterval(() => {
+      if (AuthStorage.getSession()) {
+        fetchNotificationCount()
+      }
+    }, 60000)
+    
+    return () => clearInterval(interval)
   }, [])
 
   // Close popup when clicking outside

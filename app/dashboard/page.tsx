@@ -23,12 +23,19 @@ export default function DashboardPage() {
         const { createBrowserClient } = await import("@/lib/supabase/client")
         const supabase = createBrowserClient()
         const { data: { user } } = await supabase.auth.getUser()
+        
         if (user) {
-          const admin = user.email === ADMIN_EMAIL
-          setIsAdmin(admin)
+          const { data: profile } = await supabase.from("users").select("role").eq("id", user.id).maybeSingle()
+          const role = profile?.role || (user.email === ADMIN_EMAIL ? "admin" : "user")
+          
+          setIsAdmin(role === "admin")
+          AuthStorage.setSession(user.id, user.email || "", role)
+        } else {
+          // If explicitly no user, and we were loading based on localSession, clear it
+          AuthStorage.clearSession()
         }
-      } catch {
-        // Silently fail — local session is still valid
+      } catch (err) {
+        console.warn("[DashboardPage] Verification failed:", err)
       } finally {
         setLoading(false)
       }

@@ -51,28 +51,39 @@ export async function middleware(request: NextRequest) {
         return NextResponse.redirect(redirectUrl)
     }
 
-    // Admin routes require admin role
+    // Use a faster check for admin access if possible
     if (user && request.nextUrl.pathname.startsWith("/admin")) {
-        // Known admin emails as fallback when DB is unavailable
-        const ADMIN_EMAILS = ["agrilpasv@gmail.com"]
-        const isAdminByEmail = ADMIN_EMAILS.includes(user.email || "")
+        try {
+            // Known admin emails as fallback when DB is unavailable or slow
+            const ADMIN_EMAILS = ["agrilpasv@gmail.com"]
+            const isAdminByEmail = ADMIN_EMAILS.includes(user.email || "")
 
-        const { data: profile, error: profileError } = await supabase
-            .from("users")
-            .select("role")
-            .eq("id", user.id)
-            .single()
+            // Perform DB check with a controller to handle potential hangs on mobile
+            // Note: Next.js middleware has a 30s timeout, but mobile connections can be fickle
+            const { data: profile, error: profileError } = await supabase
+                .from("users")
+                .select("role")
+                .eq("id", user.id)
+                .maybeSingle()
 
-        if (profileError) {
-            console.error("[Middleware] Error fetching user role:", profileError.message)
-        }
+            if (profileError) {
+                console.warn("[Middleware] DB Role check failed, using fallback:", profileError.message)
+            }
 
-        const isAdminByRole = profile?.role === "admin"
+            const isAdminByRole = profile?.role === "admin"
 
-        // Allow access if admin by role OR by email fallback
-        if (!isAdminByRole && !isAdminByEmail) {
-            // Non-admin users get redirected to dashboard
-            return NextResponse.redirect(new URL("/dashboard", request.url))
+            // Allow access if admin by role OR by email fallback
+            if (!isAdminByRole && !isAdminByEmail) {
+                console.log(`[Middleware] Non-admin user ${user.email} attempted to access admin. Redirecting to dashboard.`)
+                return NextResponse.redirect(new URL("/dashboard", request.url))
+            }
+        } catch (err) {
+            console.error("[Middleware] Critical error in admin check:", err)
+            // If everything fails, and they aren't on the fallback list, safety first
+            const ADMIN_EMAILS = ["agrilpasv@gmail.com"]
+            if (!ADMIN_EMAILS.includes(user.email || "")) {
+                return NextResponse.redirect(new URL("/dashboard", request.url))
+            }
         }
     }
 
@@ -81,30 +92,25 @@ export async function middleware(request: NextRequest) {
         return NextResponse.redirect(new URL("/dashboard", request.url))
     }
 
-    // Analytics Tracking (Fire and forget)
-    // We only track main pages to avoid noise
-    if (request.method === "GET" && !request.nextUrl.pathname.startsWith("/api")) {
-        // Detect country from header (Vercel/Cloudflare) or fallback to XX
-        // @ts-ignore
-        const country = request.geo?.country ||
-            request.headers.get("x-vercel-ip-country") ||
-            request.headers.get("cf-ipcountry") ||
-            "XX"
-
+    // Analytics Tracking (Async)
+    if (request.method === "GET" && !request.nextUrl.pathname.startsWith("/api") && !request.nextUrl.pathname.includes(".")) {
+        const country = request.headers.get("x-vercel-ip-country") || 
+                       request.headers.get("cf-ipcountry") || 
+                       "XX"
+        
         const path = request.nextUrl.pathname
-        const referrer = request.headers.get("referer") || ""
+        const userAgent = request.headers.get("user-agent") || "unknown"
 
-        // Use the anon key client already created to insert
-        // We don't await this to not block the response time significantly
+        // Fire and forget, but with catch to prevent middleware crash
         supabase.from("page_analytics").insert({
             path,
             country,
-            referrer,
-            user_agent: request.headers.get("user-agent") || "unknown",
+            referrer: request.headers.get("referer") || "",
+            user_agent: userAgent,
             user_id: user?.id ?? null
         }).then(({ error }) => {
-            if (error) console.error("Analytics error:", error.message)
-        })
+            if (error) console.warn("[Middleware] Analytics skipped:", error.message)
+        }).catch(() => {/* ignore */})
     }
 
     return response

@@ -44,22 +44,49 @@ export default function DashboardShell({
     const { counts } = useDashboard()
 
     useEffect(() => {
-        // Fast sync from localStorage to avoid long waits
+        // Fast sync from localStorage to avoid long waits for UI rendering
         const localSession = AuthStorage.getSession()
-        if (localSession?.email === "agrilpasv@gmail.com") {
+        if (localSession?.role === "admin") {
             setIsAdmin(true)
         }
 
-        const checkUser = async () => {
-            const { createBrowserClient } = await import("@/lib/supabase/client")
-            const supabase = createBrowserClient()
-            const { data: { user } } = await supabase.auth.getUser()
-            if (user) {
-                setIsAdmin(user.email === "agrilpasv@gmail.com")
+        const verifySession = async () => {
+            try {
+                const { createBrowserClient } = await import("@/lib/supabase/client")
+                const supabase = createBrowserClient()
+                
+                // Get the real session from Supabase
+                const { data: { session } } = await supabase.auth.getSession()
+                
+                if (!session?.user) {
+                    console.log("[Dashboard] No active session found, redirecting to auth...")
+                    AuthStorage.clearSession()
+                    router.push("/auth?redirectTo=" + encodeURIComponent(window.location.pathname))
+                    return
+                }
+
+                // Verify profile for accurate role
+                const { data: profile } = await supabase
+                    .from("users")
+                    .select("role")
+                    .eq("id", session.user.id)
+                    .maybeSingle()
+                
+                const role = profile?.role || "user"
+                const isAdminUser = role === "admin" || session.user.email === "agrilpasv@gmail.com"
+                
+                setIsAdmin(isAdminUser)
+                
+                // Sync to AuthStorage
+                AuthStorage.setSession(session.user.id, session.user.email || "", role)
+                
+            } catch (err) {
+                console.error("[Dashboard] Session verification failed:", err)
             }
         }
-        checkUser()
-    }, [])
+        
+        verifySession()
+    }, [router])
 
     const adminMenuItems = [
         { href: "/", label: "Inicio", icon: Home, notifications: 0 },
