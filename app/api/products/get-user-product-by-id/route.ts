@@ -81,7 +81,7 @@ export async function GET(request: NextRequest) {
             .eq("product_id", productId)
             .order("created_at", { ascending: false })
             
-        let averageRating = 5.0
+        let averageRating = 0.0
         let reviewCount = 0
         let formattedReviews: any[] = []
 

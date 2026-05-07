@@ -25,7 +25,9 @@ export async function POST(request: NextRequest) {
       hasExportCertificates,
       providerCountry1,
       providerCountry2,
-      providerCountry3
+      providerCountry3,
+      howHeardAboutUs,
+      howHeardOther
     } = await request.json()
 
     // Validar datos requeridos
@@ -51,6 +53,8 @@ export async function POST(request: NextRequest) {
         provider_countries: [providerCountry1, providerCountry2, providerCountry3].filter(Boolean),
         has_export_certificates: hasExportCertificates,
         annual_volume: volumeRange,
+        how_heard_about_us: howHeardAboutUs,
+        how_heard_other: howHeardOther,
       },
     })
 
@@ -85,7 +89,9 @@ export async function POST(request: NextRequest) {
       provider_countries: [providerCountry1, providerCountry2, providerCountry3].filter(Boolean),
       has_export_certificates: hasExportCertificates === true,
       annual_volume: volumeRange || null,
-      plan_type: 'gratis'
+      plan_type: 'gratis',
+      how_heard_about_us: howHeardAboutUs || null,
+      how_heard_other: howHeardOther || null
     })
 
     if (profileError) {

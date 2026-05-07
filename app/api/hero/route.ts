@@ -16,15 +16,24 @@ const supabase = createClient(
 
 export async function GET() {
   try {
-    const { data, error } = await supabase
+    const { data: imagesData, error: imagesError } = await supabase
       .from("hero_images")
       .select("*")
       .eq("is_active", true)
       .order("order_index", { ascending: true })
       .order("created_at", { ascending: false })
 
-    if (error) throw error
-    return NextResponse.json({ images: data })
+    if (imagesError) throw imagesError
+
+    const { data: settingsData, error: settingsError } = await supabase
+      .from("hero_images")
+      .select("link_url")
+      .eq("id", "00000000-0000-0000-0000-000000000000")
+      .single()
+
+    const interval = settingsData?.link_url ? parseInt(settingsData.link_url, 10) : 3500;
+
+    return NextResponse.json({ images: imagesData, interval })
   } catch (err: any) {
     return NextResponse.json({ error: err.message }, { status: 500 })
   }

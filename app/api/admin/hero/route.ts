@@ -22,7 +22,12 @@ export async function GET() {
       .order("created_at", { ascending: false })
 
     if (error) throw error
-    return NextResponse.json({ images: data })
+
+    const images = data.filter(img => img.id !== '00000000-0000-0000-0000-000000000000');
+    const settingsRow = data.find(img => img.id === '00000000-0000-0000-0000-000000000000');
+    const interval = settingsRow?.link_url ? parseInt(settingsRow.link_url, 10) : 3500;
+
+    return NextResponse.json({ images, interval })
   } catch (err: any) {
     return NextResponse.json({ error: err.message }, { status: 500 })
   }

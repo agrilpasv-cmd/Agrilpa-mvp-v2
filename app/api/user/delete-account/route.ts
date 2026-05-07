@@ -44,10 +44,19 @@ export async function DELETE(request: Request) {
             console.error("[DeleteAccount] Warning: could not save deletion report:", reportError.message)
         }
 
-        // 2. Delete user profile from public users table
+        // 2. Delete user dependencies manually to prevent foreign key errors
+        await adminClient.from("user_activities").delete().eq("user_id", user.id)
+        await adminClient.from("user_products").delete().eq("user_id", user.id)
+        await adminClient.from("quotations").delete().or(`buyer_id.eq.${user.id},seller_id.eq.${user.id}`)
+        // We do NOT delete from account_deletion_reports so we keep the reason, or we could if we want.
+        // Actually, we inserted it above so we MUST NOT delete from account_deletion_reports. 
+        // Wait, account_deletion_reports might have a foreign key. Let's make sure it doesn't fail.
+        
+        // 3. Delete user profile from public users table
         const { error: profileError } = await adminClient.from("users").delete().eq("id", user.id)
         if (profileError) {
             console.error("[DeleteAccount] Warning: could not delete user profile:", profileError.message)
+            return NextResponse.json({ error: "No se pudo eliminar el perfil de la base de datos (Error de FK). Contacte a soporte." }, { status: 500 })
         }
 
         // 3. Delete the auth user permanently

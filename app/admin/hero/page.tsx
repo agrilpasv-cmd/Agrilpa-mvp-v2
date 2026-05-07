@@ -4,7 +4,7 @@ import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { useToast } from "@/components/ui/use-toast"
-import { X, Plus, Loader2, Save, Check } from "lucide-react"
+import { X, Plus, Loader2, Save, Check, Clock } from "lucide-react"
 import Image from "next/image"
 
 interface HeroImage {
@@ -18,6 +18,8 @@ interface HeroImage {
 
 export default function HeroAdminPage() {
   const [images, setImages] = useState<HeroImage[]>([])
+  const [intervalSeconds, setIntervalSeconds] = useState<string>("3.5")
+  const [isSavingInterval, setIsSavingInterval] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
   const [isUploading, setIsUploading] = useState(false)
   const { toast } = useToast()
@@ -29,6 +31,9 @@ export default function HeroAdminPage() {
       const data = await res.json()
       if (data.images) {
         setImages(data.images)
+      }
+      if (data.interval) {
+        setIntervalSeconds((data.interval / 1000).toString())
       }
     } catch (error) {
       console.error("Error fetching images:", error)
@@ -45,6 +50,46 @@ export default function HeroAdminPage() {
   useEffect(() => {
     fetchImages()
   }, [])
+
+  const handleSaveInterval = async () => {
+    const parsed = parseFloat(intervalSeconds)
+    if (isNaN(parsed) || parsed < 0.5) {
+      toast({
+        title: "Valor inválido",
+        description: "El tiempo debe ser al menos 0.5 segundos.",
+        variant: "destructive"
+      })
+      return
+    }
+
+    try {
+      setIsSavingInterval(true)
+      const res = await fetch("/api/admin/hero", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ 
+          id: "00000000-0000-0000-0000-000000000000", 
+          link_url: (parsed * 1000).toString() 
+        })
+      })
+      
+      if (!res.ok) throw new Error("Error al guardar tiempo")
+      
+      toast({
+        title: "Éxito",
+        description: "Tiempo de rotación actualizado.",
+      })
+    } catch (error) {
+      console.error(error)
+      toast({
+        title: "Error",
+        description: "No se pudo actualizar el tiempo.",
+        variant: "destructive"
+      })
+    } finally {
+      setIsSavingInterval(false)
+    }
+  }
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -142,16 +187,45 @@ export default function HeroAdminPage() {
 
   return (
     <div className="p-4 md:p-8 w-full max-w-[1600px] mx-auto">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900">Hero Banners</h1>
-        <p className="text-muted-foreground mt-1">Sube banners publicitarios y configura hacia dónde redirigen al hacer clic.</p>
-        <div className="flex flex-col gap-2 mt-4">
-          <p className="text-sm text-gray-500 italic">Se mostrarán en el carrusel derecho de la página de inicio.</p>
-          <div className="flex items-center gap-2 bg-blue-50 border border-blue-100 text-blue-700 px-4 py-2 rounded-lg w-fit">
-            <span className="font-semibold text-xs uppercase tracking-wider">Medida recomendada:</span>
-            <span className="font-bold">1920 x 1080 px</span>
-            <span className="text-blue-400 mx-1">|</span>
-            <span className="text-xs">Relación 16:9</span>
+      <div className="mb-8 flex flex-col md:flex-row md:items-start justify-between gap-6">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900">Hero Banners</h1>
+          <p className="text-muted-foreground mt-1">Sube banners publicitarios y configura hacia dónde redirigen al hacer clic.</p>
+          <div className="flex flex-col gap-2 mt-4">
+            <p className="text-sm text-gray-500 italic">Se mostrarán en el carrusel derecho de la página de inicio.</p>
+            <div className="flex items-center gap-2 bg-blue-50 border border-blue-100 text-blue-700 px-4 py-2 rounded-lg w-fit">
+              <span className="font-semibold text-xs uppercase tracking-wider">Medida recomendada:</span>
+              <span className="font-bold">1920 x 1080 px</span>
+              <span className="text-blue-400 mx-1">|</span>
+              <span className="text-xs">Relación 16:9</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Interval Setting */}
+        <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm min-w-[300px]">
+          <h3 className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
+            <Clock className="w-4 h-4 text-primary" />
+            Tiempo de Rotación
+          </h3>
+          <div className="flex gap-2 items-center">
+            <Input 
+              type="number"
+              step="0.1"
+              min="0.5"
+              value={intervalSeconds}
+              onChange={(e) => setIntervalSeconds(e.target.value)}
+              className="w-24 text-center"
+            />
+            <span className="text-sm text-gray-500 font-medium">segundos</span>
+            <Button 
+              size="sm" 
+              onClick={handleSaveInterval}
+              disabled={isSavingInterval}
+              className="ml-auto"
+            >
+              {isSavingInterval ? <Loader2 className="w-4 h-4 animate-spin" /> : "Guardar"}
+            </Button>
           </div>
         </div>
       </div>

@@ -38,11 +38,22 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Acceso denegado: requieres permisos de Administrador" }, { status: 403 })
     }
 
-    // Delete profile from users table
-    console.log(`[Admin Delete] Borrando perfil de BD...`)
-    await adminClient.from("users").delete().eq("id", userId)
+    // 1. Delete user dependencies manually to prevent foreign key errors
+    await adminClient.from("user_activities").delete().eq("user_id", userId)
+    await adminClient.from("user_products").delete().eq("user_id", userId)
+    await adminClient.from("quotations").delete().or(`buyer_id.eq.${userId},seller_id.eq.${userId}`)
+    await adminClient.from("account_deletion_reports").delete().eq("user_id", userId)
 
-    // Delete from auth.users
+    // 2. Delete profile from users table
+    console.log(`[Admin Delete] Borrando perfil de BD...`)
+    const { error: profileError } = await adminClient.from("users").delete().eq("id", userId)
+    
+    if (profileError) {
+      console.error("[Admin] Error deleting user profile:", profileError)
+      return NextResponse.json({ error: "No se pudo eliminar el perfil de la base de datos: " + profileError.message }, { status: 500 })
+    }
+
+    // 3. Delete from auth.users
     console.log(`[Admin Delete] Borrando usuario de Auth (${userId})...`)
     const { error: authError } = await adminClient.auth.admin.deleteUser(userId)
 

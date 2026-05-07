@@ -163,7 +163,7 @@ export function Navbar() {
   const contactLink = { href: "/contacto", label: "Contáctenos" }
 
   return (
-    <nav className="sticky top-0 z-50 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+    <nav className="sticky top-0 z-50 border-b border-border bg-white dark:bg-background">
       <div className="px-6 lg:px-10">
         <div className="flex justify-between items-center h-20">
           <Link href="/" className="flex items-center space-x-2">

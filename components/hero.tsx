@@ -20,6 +20,7 @@ export function Hero() {
   const videoRef = useRef<HTMLVideoElement>(null)
   
   const [images, setImages] = useState<HeroImage[]>([])
+  const [intervalMs, setIntervalMs] = useState(3500)
   const [currentIndex, setCurrentIndex] = useState(0)
   const [isLoading, setIsLoading] = useState(true)
 
@@ -30,6 +31,9 @@ export function Hero() {
         const data = await res.json()
         if (data.images && data.images.length > 0) {
           setImages(data.images)
+        }
+        if (data.interval) {
+          setIntervalMs(data.interval)
         }
       } catch (error) {
         console.error("Error fetching hero images:", error)
@@ -52,13 +56,13 @@ export function Hero() {
     }
   }, [images.length])
 
-  // Auto-slide every 3.5 seconds
+  // Auto-slide
   useEffect(() => {
     if (images.length > 1) {
-      const interval = setInterval(nextSlide, 3500)
+      const interval = setInterval(nextSlide, intervalMs)
       return () => clearInterval(interval)
     }
-  }, [images.length, nextSlide])
+  }, [images.length, nextSlide, intervalMs])
 
   useEffect(() => {
     // Play background video

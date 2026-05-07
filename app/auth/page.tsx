@@ -44,6 +44,8 @@ function AuthPageContent() {
     volumeRange: "",
     companyWebsite: "",
     address: "",
+    howHeardAboutUs: "",
+    howHeardOther: "",
   })
   const [submitted, setSubmitted] = useState(false)
   const [error, setError] = useState("")
@@ -226,6 +228,8 @@ function AuthPageContent() {
             providerCountry2: formData.doesProvideInternationally === "true" ? formData.providerCountry2 : "",
             providerCountry3: formData.doesProvideInternationally === "true" ? formData.providerCountry3 : "",
             hasExportCertificates: formData.hasExportCertificates === "true",
+            howHeardAboutUs: formData.howHeardAboutUs,
+            howHeardOther: formData.howHeardOther,
           }),
         })
 
@@ -486,6 +490,8 @@ function AuthPageContent() {
                           volumeRange: "",
                           companyWebsite: "",
                           address: "",
+                          howHeardAboutUs: "",
+                          howHeardOther: "",
                         })
                       }}
                       className="w-full border-2 border-primary text-primary font-semibold py-3.5 rounded-md hover:bg-primary/5 transition flex items-center justify-center gap-2 mt-3"
@@ -889,6 +895,44 @@ function AuthPageContent() {
                         <option value="500001-1000000">De $500,001 a $1,000,000</option>
                         <option value="1000000plus">Más de $1,000,000</option>
                       </select>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-foreground mb-2">
+                        ¿Cómo se enteró de nosotros? *
+                      </label>
+                      <select
+                        name="howHeardAboutUs"
+                        value={formData.howHeardAboutUs}
+                        onChange={handleInputChange}
+                        className="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary bg-white transition mb-3"
+                        required
+                      >
+                        <option value="" disabled>Selecciona una opción</option>
+                        <option value="TikTok">TikTok</option>
+                        <option value="Instagram">Instagram</option>
+                        <option value="Facebook">Facebook</option>
+                        <option value="LinkedIn">LinkedIn</option>
+                        <option value="Reddit">Reddit</option>
+                        <option value="Correo">Correo</option>
+                        <option value="Recomendación de un amigo/colega">Recomendación de un amigo/colega</option>
+                        <option value="Internet">Internet</option>
+                        <option value="Otro">Otro</option>
+                      </select>
+
+                      {formData.howHeardAboutUs === "Otro" && (
+                        <div className="animate-in fade-in zoom-in duration-300 mt-2">
+                          <input
+                            type="text"
+                            name="howHeardOther"
+                            value={formData.howHeardOther}
+                            onChange={handleInputChange}
+                            placeholder="Especifique cómo se enteró"
+                            className="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary transition"
+                            required
+                          />
+                        </div>
+                      )}
                     </div>
 
                     <div className="flex gap-3 pt-4">
