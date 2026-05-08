@@ -28,6 +28,11 @@ import {
     UserMinus,
     Image as ImageIcon,
     Activity,
+    CreditCard,
+    Newspaper,
+    ListOrdered,
+    Receipt,
+    ShoppingBag
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -102,12 +107,12 @@ export default function DashboardShell({
         { href: "/admin/publicaciones", label: "Publicaciones", icon: Package, notifications: 0 },
         { href: "/admin/visibilidad", label: "Visibilidad", icon: Eye, notifications: 0 },
         { href: "/admin/reviews", label: "Reviews", icon: Star, notifications: 0 },
-        { href: "/admin/suscripciones", label: "Suscripciones", icon: Mail, notifications: 0 },
+        { href: "/admin/suscripciones", label: "Suscripciones", icon: CreditCard, notifications: 0 },
         { href: "/admin/financiamiento", label: "Financiamiento", icon: DollarSign, notifications: 0 },
         { href: "/admin/logistica", label: "Logística", icon: Truck, notifications: 0 },
         { href: "/admin/compras", label: "Compras Globales", icon: ShoppingCart, notifications: 0 },
         { href: "/admin/contactanos", label: "Contáctanos", icon: MessageSquare, notifications: counts.contactanos || 0 },
-        { href: "/admin/newsletter", label: "Newsletter", icon: Mail, notifications: 0 },
+        { href: "/admin/newsletter", label: "Newsletter", icon: Newspaper, notifications: 0 },
         { href: "/admin/bajas", label: "Reportes de Bajas", icon: UserMinus, notifications: 0 },
     ]
 
@@ -123,8 +128,8 @@ export default function DashboardShell({
         },
         {
             href: "/dashboard/mis-solicitudes",
-            label: "Mis Solicitudes",
-            icon: ClipboardList,
+            label: "Solicitudes",
+            icon: ListOrdered,
             notifications: 0,
         },
         {
@@ -133,7 +138,7 @@ export default function DashboardShell({
             icon: ClipboardList,
             notifications: counts.cotizaciones,
         },
-        { href: "/dashboard/ventas", label: "Mis Ventas", icon: Package, notifications: counts.ventas },
+        { href: "/dashboard/ventas", label: "Mis Ventas", icon: ShoppingBag, notifications: counts.ventas },
         { href: "/dashboard/compras", label: "Mis Compras", icon: ShoppingCart, notifications: counts.compras },
         {
             href: "/dashboard/logistica",
@@ -144,7 +149,7 @@ export default function DashboardShell({
         {
             href: "/dashboard/transacciones",
             label: "Transacciones",
-            icon: FileText,
+            icon: Receipt,
             notifications: counts.transacciones,
         },
         { href: "/dashboard/mensajes", label: "Mensajes", icon: MessageSquare, notifications: counts.mensajes },

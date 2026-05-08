@@ -15,7 +15,7 @@ export async function GET() {
     // Fetch active, non-expired purchase requests
     const { data: requests, error } = await supabase
       .from("purchase_requests")
-      .select("id, product_name, category, quantity, unit, country, delivery_state, delivery_address, image_url, specs, source_type, desired_date, user_id, created_at, expires_at")
+      .select("id, product_name, category, quantity, unit, country, delivery_state, delivery_address, image_url, specs, source_type, desired_date, user_id, created_at, expires_at, views_count")
       .eq("status", "active")
       .gte("expires_at", now)
       .order("created_at", { ascending: false })
@@ -80,6 +80,7 @@ export async function GET() {
         expires_at: r.expires_at,
         days_remaining: daysRemaining,
         is_pro: isPro,
+        views_count: r.views_count || 0,
         // NO buyer_email, buyer_company, contact_value, budget
       }
     })

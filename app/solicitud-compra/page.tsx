@@ -9,7 +9,6 @@ import { PRODUCT_CATEGORIES } from "@/lib/constants"
 import { useToast } from "@/hooks/use-toast"
 import { CountryPicker, PhoneCodePicker } from "@/components/ui/country-picker"
 
-
 import {
   Search,
   PackageSearch,
@@ -24,8 +23,6 @@ import {
   Users,
   ShieldCheck,
   Bell,
-  Smile,
-  X,
   Clock,
   MessageSquare,
   Mail,
@@ -42,7 +39,6 @@ export default function SolicitudCompraPage() {
   const router = useRouter()
   const supabase = createClient()
   const { toast } = useToast()
-  // Emoji picker state
 
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
@@ -118,7 +114,7 @@ export default function SolicitudCompraPage() {
               setLimitReached(true)
               setLimitMessage(
                 limData.is_pro
-                  ? `Has alcanzado el l\u00edmite de ${limData.max_requests} solicitudes activas. Edita o elimina una existente.`
+                  ? `Has alcanzado el límite de ${limData.max_requests} solicitudes activas. Edita o elimina una existente.`
                   : "Ya tienes 1 solicitud activa. Actualiza a Pro para publicar hasta 5, o edita tu solicitud existente."
               )
             }
@@ -158,7 +154,6 @@ export default function SolicitudCompraPage() {
     setContactValue(`+${whatsappCode} ${val}`)
   }
 
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
@@ -169,6 +164,15 @@ export default function SolicitudCompraPage() {
         variant: "destructive",
       })
       router.push("/auth")
+      return
+    }
+
+    if (productName.length < 15 || productName.length > 50) {
+      toast({
+        title: "Nombre del producto inválido",
+        description: "El nombre del producto debe tener entre 15 y 50 caracteres.",
+        variant: "destructive",
+      })
       return
     }
 
@@ -448,9 +452,14 @@ export default function SolicitudCompraPage() {
                 placeholder="Ej: Café arábica lavado, Aguacate Hass, Cacao fino de aroma..."
                 value={productName}
                 onChange={(e) => setProductName(e.target.value)}
+                minLength={15}
+                maxLength={50}
                 className="w-full px-4 py-3 rounded-lg border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary transition-all"
                 required
               />
+              <p className="text-xs text-muted-foreground mt-1 text-right">
+                {productName.length}/50 caracteres (Mínimo 15)
+              </p>
             </div>
 
             {/* Category and Quantity row */}
@@ -480,7 +489,8 @@ export default function SolicitudCompraPage() {
                 </label>
                 <div className="flex gap-2">
                   <input
-                    type="text"
+                    type="number"
+                    min="1"
                     placeholder="Ej: 5000"
                     value={quantity}
                     onChange={(e) => setQuantity(e.target.value)}
@@ -491,6 +501,7 @@ export default function SolicitudCompraPage() {
                     value={unit}
                     onChange={(e) => setUnit(e.target.value)}
                     className="w-24 px-3 py-3 rounded-lg border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary transition-all"
+                    required
                   >
                     <option value="kg">kg</option>
                     <option value="ton">ton</option>
@@ -507,13 +518,14 @@ export default function SolicitudCompraPage() {
             <div>
               <label className="block text-sm font-semibold text-foreground mb-2">
                 <CalendarDays className="w-4 h-4 inline mr-1 -mt-0.5" />
-                Fecha deseada de entrega
+                Fecha deseada de entrega <span className="text-red-500">*</span>
               </label>
               <input
                 type="date"
                 value={desiredDate}
                 onChange={(e) => setDesiredDate(e.target.value)}
                 className="w-full px-4 py-3 rounded-lg border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary transition-all"
+                required
               />
             </div>
 
@@ -526,18 +538,20 @@ export default function SolicitudCompraPage() {
               <div className="space-y-4">
                 <div>
                   <label className="block text-sm font-semibold text-foreground mb-2">
-                    País de destino
+                    País de destino <span className="text-red-500">*</span>
                   </label>
                   <CountryPicker
                     value={country}
                     onChange={(countryName) => setCountry(countryName)}
                     placeholder="Selecciona el país de entrega"
                   />
+                  {/* Since CountryPicker might not pass 'required' directly to a native input, we handle validation at submit or add required manually if possible */}
+                  <input type="hidden" value={country} required />
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-semibold text-foreground mb-2">
-                      Estado / Provincia
+                      Estado / Provincia <span className="text-red-500">*</span>
                     </label>
                     <input
                       type="text"
@@ -545,11 +559,12 @@ export default function SolicitudCompraPage() {
                       value={deliveryState}
                       onChange={(e) => setDeliveryState(e.target.value)}
                       className="w-full px-4 py-3 rounded-lg border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary transition-all"
+                      required
                     />
                   </div>
                   <div>
                     <label className="block text-sm font-semibold text-foreground mb-2">
-                      Dirección de entrega
+                      Dirección de entrega <span className="text-red-500">*</span>
                     </label>
                     <input
                       type="text"
@@ -557,6 +572,7 @@ export default function SolicitudCompraPage() {
                       value={deliveryAddress}
                       onChange={(e) => setDeliveryAddress(e.target.value)}
                       className="w-full px-4 py-3 rounded-lg border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary transition-all"
+                      required
                     />
                   </div>
                 </div>
@@ -568,7 +584,7 @@ export default function SolicitudCompraPage() {
               <div>
                 <label className="block text-sm font-semibold text-foreground mb-2">
                   <Package className="w-4 h-4 inline mr-1 -mt-0.5" />
-                  Presupuesto estimado (USD)
+                  Presupuesto estimado (USD) <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="text"
@@ -576,18 +592,20 @@ export default function SolicitudCompraPage() {
                   value={budget}
                   onChange={(e) => setBudget(e.target.value)}
                   className="w-full px-4 py-3 rounded-lg border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary transition-all"
+                  required
                 />
               </div>
 
               <div>
                 <label className="block text-sm font-semibold text-foreground mb-2">
                   <Globe className="w-4 h-4 inline mr-1 -mt-0.5" />
-                  Origen del producto
+                  Origen del producto <span className="text-red-500">*</span>
                 </label>
                 <select
                   value={sourceType}
                   onChange={(e) => setSourceType(e.target.value)}
                   className="w-full px-4 py-3 rounded-lg border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary transition-all"
+                  required
                 >
                   <option value="cualquiera">Cualquiera (Local o Importado)</option>
                   <option value="local">Solo producto local</option>
@@ -599,7 +617,7 @@ export default function SolicitudCompraPage() {
             {/* Description */}
             <div>
               <label className="block text-sm font-semibold text-foreground mb-2">
-                Descripción detallada
+                Descripción detallada <span className="text-red-500">*</span>
               </label>
               <textarea
                 placeholder="Describe las especificaciones del producto que necesitas: calidad, certificaciones, empaque, condiciones de envío, etc."
@@ -607,6 +625,7 @@ export default function SolicitudCompraPage() {
                 onChange={(e) => setDescription(e.target.value)}
                 rows={3}
                 className="w-full px-4 py-3 rounded-lg border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary transition-all resize-none"
+                required
               />
             </div>
 
@@ -614,7 +633,7 @@ export default function SolicitudCompraPage() {
             <div>
               <label className="block text-sm font-semibold text-foreground mb-2">
                 <ClipboardList className="w-4 h-4 inline mr-1 -mt-0.5" />
-                Especificaciones técnicas / Notas
+                Especificaciones técnicas / Notas <span className="text-red-500">*</span>
               </label>
               <textarea
                 placeholder={"Ej:\n• Humedad máxima al 12%\n• Grano limpio para consumo animal\n• Certificación orgánica requerida\n• Empaque en sacos de 50kg"}
@@ -622,6 +641,7 @@ export default function SolicitudCompraPage() {
                 onChange={(e) => setSpecs(e.target.value)}
                 rows={4}
                 className="w-full px-4 py-3 rounded-lg border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary transition-all resize-none"
+                required
               />
               <p className="text-xs text-muted-foreground mt-1">
                 Agrega cualquier detalle técnico que ayude a los proveedores a entender exactamente lo que necesitas.
@@ -705,6 +725,7 @@ export default function SolicitudCompraPage() {
                       <input
                         type="text"
                         inputMode="numeric"
+                        pattern="[0-9]*"
                         placeholder="70000000"
                         value={whatsappNumber}
                         onChange={handleWhatsappPhoneInput}
@@ -751,7 +772,7 @@ export default function SolicitudCompraPage() {
 
             {!isAuthenticated && (
               <p className="text-center text-sm text-muted-foreground">
-                Debes <button onClick={() => router.push("/auth")} className="text-primary font-semibold hover:underline">iniciar sesión</button> para enviar tu solicitud.
+                Debes <button onClick={() => router.push("/auth")} type="button" className="text-primary font-semibold hover:underline">iniciar sesión</button> para enviar tu solicitud.
               </p>
             )}
           </form>

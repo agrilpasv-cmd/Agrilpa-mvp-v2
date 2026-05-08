@@ -23,7 +23,7 @@ export async function trackActivity(
 ) {
   try {
     const session = AuthStorage.getSession()
-    const userId = session?.user?.id
+    const userId = session?.userId
     
     await fetch("/api/analytics/track", {
       method: "POST",

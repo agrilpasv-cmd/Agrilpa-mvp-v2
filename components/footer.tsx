@@ -40,8 +40,6 @@ export function Footer() {
           <div>
             <h4 className="font-bold mb-4">Vendedores</h4>
             <ul className="space-y-2 text-sm opacity-80">
-              <li></li>
-              <li></li>
               <li>
                 <Link href="/guia-exportacion" className="hover:opacity-100" onClick={() => window.scrollTo(0, 0)}>
                   Guía de exportación
@@ -57,7 +55,11 @@ export function Footer() {
           <div>
             <h4 className="font-bold mb-4">Compradores</h4>
             <ul className="space-y-2 text-sm opacity-80">
-              <li></li>
+              <li>
+                <Link href="/mercado" className="hover:opacity-100">
+                  Mercado
+                </Link>
+              </li>
               <li>
                 <Link href="/productos" className="hover:opacity-100">
                   Productos

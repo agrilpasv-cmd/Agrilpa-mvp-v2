@@ -5,6 +5,7 @@ import { Analytics } from "@vercel/analytics/next"
 import { Footer } from "@/components/footer"
 import { FooterWrapper } from "@/components/footer-wrapper"
 import { NavbarWrapper } from "@/components/navbar-wrapper"
+import { RouteTracker } from "@/components/route-tracker"
 import { Toaster } from "@/components/ui/sonner"
 import "./globals.css"
 
@@ -40,6 +41,7 @@ export default function RootLayout({
   return (
     <html lang="es">
       <body className={`font-sans antialiased`}>
+        <RouteTracker />
         <NavbarWrapper />
         {children}
         <Toaster />

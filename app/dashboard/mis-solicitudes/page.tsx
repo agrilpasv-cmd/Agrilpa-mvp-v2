@@ -10,6 +10,16 @@ import { PRODUCT_CATEGORIES } from "@/lib/constants"
 import { CountryPicker, PhoneCodePicker } from "@/components/ui/country-picker"
 import { useToast } from "@/hooks/use-toast"
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
+import {
   Plus,
   Loader2,
   Package,
@@ -97,6 +107,7 @@ export default function MisSolicitudesPage() {
   const [showEditEmojiPicker, setShowEditEmojiPicker] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
   const [deletingId, setDeletingId] = useState<string | null>(null)
+  const [requestToDelete, setRequestToDelete] = useState<string | null>(null)
 
   // WhatsApp edit state
   const [editWhatsappCode, setEditWhatsappCode] = useState("")
@@ -233,15 +244,19 @@ export default function MisSolicitudesPage() {
     }
   }
 
-  const deleteRequest = async (id: string) => {
-    if (!confirm("¿Estás seguro de eliminar esta solicitud?")) return
-    setDeletingId(id)
+  const deleteRequest = (id: string) => {
+    setRequestToDelete(id)
+  }
+
+  const confirmDelete = async () => {
+    if (!requestToDelete) return
+    setDeletingId(requestToDelete)
 
     try {
       const { data: { session } } = await supabase.auth.getSession()
       if (!session) return
 
-      const res = await fetch(`/api/mis-solicitudes?id=${id}`, {
+      const res = await fetch(`/api/mis-solicitudes?id=${requestToDelete}`, {
         method: "DELETE",
         headers: { Authorization: `Bearer ${session.access_token}` },
       })
@@ -254,6 +269,7 @@ export default function MisSolicitudesPage() {
       toast({ title: "Error al eliminar", variant: "destructive" })
     } finally {
       setDeletingId(null)
+      setRequestToDelete(null)
     }
   }
 
@@ -269,7 +285,7 @@ export default function MisSolicitudesPage() {
     <div className="space-y-6 p-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-3xl font-bold">Mis Solicitudes de Compra</h1>
+          <h1 className="text-3xl font-bold">Solicitudes de Compra</h1>
           <p className="text-muted-foreground">
             Gestiona tus solicitudes de productos
             {isPro && (
@@ -286,10 +302,10 @@ export default function MisSolicitudesPage() {
           <Link href="/solicitud-compra">
             <Button
               disabled={!canCreate}
-              className="rounded-xl gap-2 font-semibold"
+              className="rounded-xl gap-2 font-semibold bg-emerald-600 hover:bg-emerald-700 text-white"
             >
               <Plus className="w-4 h-4" />
-              Nueva Solicitud
+              Crear una solicitud de compra
             </Button>
           </Link>
         </div>
@@ -315,9 +331,9 @@ export default function MisSolicitudesPage() {
             <h3 className="text-lg font-bold mb-2">No tienes solicitudes</h3>
             <p className="text-muted-foreground mb-6">Crea tu primera solicitud para que los proveedores te contacten.</p>
             <Link href="/solicitud-compra">
-              <Button className="rounded-xl gap-2">
+              <Button className="rounded-xl gap-2 font-semibold bg-emerald-600 hover:bg-emerald-700 text-white">
                 <Plus className="w-4 h-4" />
-                Crear Solicitud
+                Crear una solicitud de compra
               </Button>
             </Link>
           </CardContent>
@@ -677,6 +693,23 @@ export default function MisSolicitudesPage() {
           })}
         </div>
       )}
+
+      <AlertDialog open={!!requestToDelete} onOpenChange={(open) => !open && setRequestToDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>¿Estás seguro de eliminar esta solicitud?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Esta acción no se puede deshacer. Esto eliminará permanentemente tu solicitud de compra de nuestros servidores.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmDelete} className="bg-red-600 hover:bg-red-700 text-white">
+              Eliminar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }
