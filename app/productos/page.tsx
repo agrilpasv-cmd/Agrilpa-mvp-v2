@@ -293,31 +293,40 @@ export default function ProductosPage() {
           </div>
 
           {/* Filter Toggle Button */}
-          <div className="mb-6 flex items-center gap-2">
-            <button
-              onClick={() => setShowFilters(!showFilters)}
-              className="flex items-center gap-2 px-4 py-2 rounded-lg border border-border bg-card text-foreground hover:bg-background transition-colors"
+          <div className="mb-6 flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setShowFilters(!showFilters)}
+                className="flex items-center gap-2 px-4 py-2 rounded-lg border border-border bg-card text-foreground hover:bg-background transition-colors"
+              >
+                <Filter className="w-4 h-4" />
+                {showFilters ? "Ocultar filtros" : "Mostrar más filtros"}
+              </button>
+              {(verifiedOnly ||
+                minRating > 0 ||
+                priceRange[0] > 0 ||
+                priceRange[1] < 500 ||
+                selectedCountry !== "todos" ||
+                searchContent !== "" ||
+                containerFilter !== "todos" ||
+                searchTerm !== "" ||
+                selectedCategory !== "todos") && (
+                  <button
+                    onClick={handleResetFilters}
+                    className="flex items-center gap-2 px-4 py-2 rounded-lg text-primary hover:bg-primary/10 transition-colors"
+                  >
+                    <X className="w-4 h-4" />
+                    Limpiar filtros
+                  </button>
+                )}
+            </div>
+            <Link
+              href="/solicitud-compra"
+              className="flex items-center gap-2 px-5 py-2.5 rounded-lg bg-primary hover:bg-primary/90 text-white font-semibold text-sm transition-all hover:shadow-lg hover:shadow-primary/25 hover:-translate-y-0.5"
             >
-              <Filter className="w-4 h-4" />
-              {showFilters ? "Ocultar filtros" : "Mostrar más filtros"}
-            </button>
-            {(verifiedOnly ||
-              minRating > 0 ||
-              priceRange[0] > 0 ||
-              priceRange[1] < 500 ||
-              selectedCountry !== "todos" ||
-              searchContent !== "" ||
-              containerFilter !== "todos" ||
-              searchTerm !== "" ||
-              selectedCategory !== "todos") && (
-                <button
-                  onClick={handleResetFilters}
-                  className="flex items-center gap-2 px-4 py-2 rounded-lg text-primary hover:bg-primary/10 transition-colors"
-                >
-                  <X className="w-4 h-4" />
-                  Limpiar filtros
-                </button>
-              )}
+              <Search className="w-4 h-4" />
+              ¿No encuentras algo?
+            </Link>
           </div>
 
           {/* Advanced Filters */}

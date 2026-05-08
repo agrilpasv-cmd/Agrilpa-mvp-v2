@@ -122,6 +122,12 @@ export default function DashboardShell({
             notifications: counts.publicaciones,
         },
         {
+            href: "/dashboard/mis-solicitudes",
+            label: "Mis Solicitudes",
+            icon: ClipboardList,
+            notifications: 0,
+        },
+        {
             href: "/dashboard/cotizaciones",
             label: "Cotizaciones",
             icon: ClipboardList,

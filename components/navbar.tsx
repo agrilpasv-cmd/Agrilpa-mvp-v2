@@ -157,6 +157,7 @@ export function Navbar() {
   const navLinks = [
     { href: "/como-funciona", label: "Cómo funciona" },
     { href: "/productos", label: "Productos" },
+    { href: "/pedidos", label: "Pedidos" },
     { href: "/mercado", label: "Mercado" },
   ]
 

@@ -149,25 +149,26 @@ export function Hero() {
           {/* Buttons */}
           <motion.div variants={itemVariants} className="flex flex-col sm:flex-row gap-4 pt-4 w-full">
             <Button
+              asChild
               size="lg"
-              onClick={handleVenderClick}
               className="bg-primary hover:bg-primary/85 text-white font-bold px-8 h-14 rounded-2xl shadow-[0_0_32px_rgba(139,198,70,0.35)] hover:shadow-[0_0_48px_rgba(139,198,70,0.5)] hover:-translate-y-1 transition-all duration-300 text-base"
             >
-              Vender mis productos
+              <Link href="/productos">
+                Buscar Proveedores
+              </Link>
             </Button>
-            <Link href="/productos">
-              <span
-                className="relative inline-flex items-center justify-center px-6 h-14 rounded-2xl font-semibold text-base text-white cursor-pointer select-none overflow-hidden group hover:-translate-y-1 transition-transform duration-300"
-                style={{ WebkitBackdropFilter: "blur(8px)", backdropFilter: "blur(8px)" }}
-              >
-                <span className="absolute inset-0 rounded-2xl bg-white/10 group-hover:bg-white/20 transition-colors duration-400" />
-                <span className="absolute inset-0 rounded-2xl ring-1 ring-inset ring-white/40 group-hover:ring-white/60 transition-all duration-300" />
-                <span className="absolute inset-x-4 top-0 h-[1.5px] bg-gradient-to-r from-transparent via-white/80 to-transparent" />
-                <span className="absolute inset-x-0 top-0 h-1/2 rounded-t-2xl bg-gradient-to-b from-white/20 to-transparent pointer-events-none" />
-                <span className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 bg-gradient-to-br from-white/20 via-transparent to-transparent pointer-events-none" />
-                <span className="relative z-10 drop-shadow-md">Buscar Proveedores</span>
-              </span>
-            </Link>
+            <button
+              onClick={handleVenderClick}
+              className="relative inline-flex items-center justify-center px-6 h-14 rounded-2xl font-semibold text-base text-white cursor-pointer select-none overflow-hidden group hover:-translate-y-1 transition-transform duration-300"
+              style={{ WebkitBackdropFilter: "blur(8px)", backdropFilter: "blur(8px)" }}
+            >
+              <span className="absolute inset-0 rounded-2xl bg-white/10 group-hover:bg-white/20 transition-colors duration-400" />
+              <span className="absolute inset-0 rounded-2xl ring-1 ring-inset ring-white/40 group-hover:ring-white/60 transition-all duration-300" />
+              <span className="absolute inset-x-4 top-0 h-[1.5px] bg-gradient-to-r from-transparent via-white/80 to-transparent" />
+              <span className="absolute inset-x-0 top-0 h-1/2 rounded-t-2xl bg-gradient-to-b from-white/20 to-transparent pointer-events-none" />
+              <span className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 bg-gradient-to-br from-white/20 via-transparent to-transparent pointer-events-none" />
+              <span className="relative z-10 drop-shadow-md">Vender mis productos</span>
+            </button>
           </motion.div>
         </motion.div>
 
