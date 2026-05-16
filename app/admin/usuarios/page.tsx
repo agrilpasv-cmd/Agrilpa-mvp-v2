@@ -36,6 +36,20 @@ interface User {
   country_code?: string
   metadata_phone_number?: string
   company_website?: string
+  how_heard_about_us?: string
+  how_heard_other?: string
+}
+
+const HOW_HEARD_LABELS: Record<string, string> = {
+  TikTok: "TikTok",
+  Instagram: "Instagram",
+  Facebook: "Facebook",
+  LinkedIn: "LinkedIn",
+  Reddit: "Reddit",
+  Correo: "Correo electrónico",
+  "Recomendación de un amigo/colega": "Recomendación",
+  Internet: "Internet / Google",
+  Otro: "Otro",
 }
 
 export default function AdminUsersPage() {
@@ -218,6 +232,7 @@ export default function AdminUsersPage() {
                     <th className="text-left p-4 font-medium">Países P.</th>
                     <th className="text-left p-4 font-medium">Volumen Anual</th>
                     <th className="text-left p-4 font-medium">Tipo</th>
+                    <th className="text-left p-4 font-medium">¿Cómo supo de Agrilpa?</th>
                     <th className="text-left p-4 font-medium">Rol</th>
                     <th className="text-left p-4 font-medium">Plan</th>
                     <th className="text-left p-4 font-medium">Registro</th>
@@ -331,6 +346,20 @@ export default function AdminUsersPage() {
                         <span className="px-2 py-1 rounded-full text-xs bg-blue-100 text-blue-800">
                           {user.user_type || "Usuario"}
                         </span>
+                      </td>
+                      <td className="p-4 min-w-[160px]">
+                        {user.how_heard_about_us ? (
+                          <div className="flex flex-col gap-1">
+                            <span className="px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800 border border-purple-200 w-fit">
+                              {HOW_HEARD_LABELS[user.how_heard_about_us] || user.how_heard_about_us}
+                            </span>
+                            {user.how_heard_about_us === "Otro" && user.how_heard_other && (
+                              <span className="text-xs text-muted-foreground italic">{user.how_heard_other}</span>
+                            )}
+                          </div>
+                        ) : (
+                          <span className="text-muted-foreground text-xs">Sin respuesta</span>
+                        )}
                       </td>
                       <td className="p-4">
                         <Select value={user.role || "user"} onValueChange={(value) => handleRoleChange(user.id, value)}>

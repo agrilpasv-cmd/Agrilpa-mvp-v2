@@ -88,6 +88,17 @@ export function ProducerRegistrationForm() {
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target
+
+    // Restringir estado y dirección a solo letras, números y espacios
+    if (name === "state" || name === "address") {
+      const filteredValue = value.replace(/[^a-zA-Z0-9áéíóúÁÉÍÓÚñÑ\s]/g, "")
+      setFormData((prev) => ({
+        ...prev,
+        [name]: filteredValue,
+      }))
+      return
+    }
+
     setFormData((prev) => ({
       ...prev,
       [name]: value,

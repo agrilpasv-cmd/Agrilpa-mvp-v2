@@ -45,7 +45,7 @@ export default function PublicacionesPage() {
 
   // Custom hook for sidebar updates
   const { refreshCounts } = useDashboard()
-  const [publicationLimit, setPublicationLimit] = useState<number>(3)
+  const [publicationLimit, setPublicationLimit] = useState<number>(5)
   const [isPro, setIsPro] = useState(false)
 
   useEffect(() => {

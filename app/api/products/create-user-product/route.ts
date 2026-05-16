@@ -75,7 +75,7 @@ export async function POST(request: NextRequest) {
       .single()
 
     const isPro = userProfile?.plan_type === "pro"
-    const productLimit = isPro ? 10 : 3
+    const productLimit = isPro ? 10 : 5
 
     const { count, error: countError } = await supabaseAdmin
       .from("user_products")
@@ -88,7 +88,7 @@ export async function POST(request: NextRequest) {
     }
 
     if (count !== null && count >= productLimit) {
-      const planLabel = isPro ? "Pro (10 publicaciones)" : "Gratis (3 publicaciones)"
+      const planLabel = isPro ? "Pro (10 publicaciones)" : "Gratis (5 publicaciones)"
       return NextResponse.json(
         { error: `Has alcanzado el límite de tu plan ${planLabel}. ${isPro ? "Elimina una publicación para crear una nueva." : "Actualiza a Pro para publicar hasta 10 productos."}` },
         { status: 403 }

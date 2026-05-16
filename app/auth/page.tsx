@@ -108,6 +108,17 @@ function AuthPageContent() {
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target
+    
+    // Restringir estado y dirección a solo letras, números y espacios
+    if (name === "state" || name === "address") {
+      const filteredValue = value.replace(/[^a-zA-Z0-9áéíóúÁÉÍÓÚñÑ\s]/g, "")
+      setFormData((prev) => ({
+        ...prev,
+        [name]: filteredValue,
+      }))
+      return
+    }
+
     setFormData((prev) => ({
       ...prev,
       [name]: value,
@@ -167,6 +178,17 @@ function AuthPageContent() {
         !formData.phoneNumber
       ) {
         setError("Por favor completa todos los campos requeridos de tu perfil comercial")
+        return
+      }
+
+      // Validar que estado y dirección contengan letras o números (no solo puntos/símbolos)
+      const alphanumericRegex = /[a-zA-Z0-9áéíóúÁÉÍÓÚñÑ]/
+      if (!alphanumericRegex.test(formData.state)) {
+        setError("El campo Estado / Provincia debe contener letras o números")
+        return
+      }
+      if (!alphanumericRegex.test(formData.address)) {
+        setError("La dirección debe contener letras o números")
         return
       }
 

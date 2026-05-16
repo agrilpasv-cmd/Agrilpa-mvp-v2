@@ -145,7 +145,7 @@ export async function GET() {
         }
 
         const isPro = planType === "pro"
-        const publicationLimit = isPro ? 10 : 3
+        const publicationLimit = isPro ? 10 : 5
 
         // Date reference for 7 day window
         const sevenDaysAgo = new Date()

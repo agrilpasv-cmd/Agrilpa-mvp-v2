@@ -302,7 +302,7 @@ export default function MisSolicitudesPage() {
           <Link href="/solicitud-compra">
             <Button
               disabled={!canCreate}
-              className="rounded-xl gap-2 font-semibold bg-emerald-600 hover:bg-emerald-700 text-white"
+              className="rounded-xl gap-2 font-semibold"
             >
               <Plus className="w-4 h-4" />
               Crear una solicitud de compra
@@ -331,7 +331,7 @@ export default function MisSolicitudesPage() {
             <h3 className="text-lg font-bold mb-2">No tienes solicitudes</h3>
             <p className="text-muted-foreground mb-6">Crea tu primera solicitud para que los proveedores te contacten.</p>
             <Link href="/solicitud-compra">
-              <Button className="rounded-xl gap-2 font-semibold bg-emerald-600 hover:bg-emerald-700 text-white">
+              <Button className="rounded-xl gap-2 font-semibold">
                 <Plus className="w-4 h-4" />
                 Crear una solicitud de compra
               </Button>

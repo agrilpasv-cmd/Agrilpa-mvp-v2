@@ -13,12 +13,24 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url)
     const userId = searchParams.get("userId") // optional filter by user
 
+    // Get the ID for agrilpasv@gmail.com to exclude their activities
+    const { data: adminUser } = await supabase
+      .from("users")
+      .select("id")
+      .eq("email", "agrilpasv@gmail.com")
+      .maybeSingle()
+
     // 1. Fetch activities
     let query = supabase
       .from("user_activities")
       .select("*")
       .order("created_at", { ascending: false })
       .limit(500)
+
+    // Exclude the admin email
+    if (adminUser?.id) {
+      query = query.neq("user_id", adminUser.id)
+    }
 
     if (userId) {
       query = query.eq("user_id", userId)

@@ -35,6 +35,15 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Faltan campos requeridos" }, { status: 400 })
     }
 
+    // Validar que estado y dirección contengan letras o números (no solo puntos/símbolos)
+    const alphanumericRegex = /[a-zA-Z0-9áéíóúÁÉÍÓÚñÑ]/
+    if (state && !alphanumericRegex.test(state)) {
+      return NextResponse.json({ error: "El campo Estado debe contener letras o números" }, { status: 400 })
+    }
+    if (address && !alphanumericRegex.test(address)) {
+      return NextResponse.json({ error: "La dirección debe contener letras o números" }, { status: 400 })
+    }
+
     const adminClient = createAdminClient()
 
     // Registrar usuario en Supabase Auth con email confirmado automáticamente

@@ -41,7 +41,9 @@ export async function GET() {
         country_code: authUser?.user_metadata?.country_code || null,
         metadata_phone_number: authUser?.user_metadata?.phone_number || null,
         company_website: profile.company_website || authUser?.user_metadata?.company_website || null,
-        plan_type: profile.plan_type || 'gratis'
+        plan_type: profile.plan_type || 'gratis',
+        how_heard_about_us: profile.how_heard_about_us || authUser?.user_metadata?.how_heard_about_us || null,
+        how_heard_other: profile.how_heard_other || authUser?.user_metadata?.how_heard_other || null,
       }
     })
 
