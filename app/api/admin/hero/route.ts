@@ -23,7 +23,7 @@ export async function GET() {
 
     if (error) throw error
 
-    const images = data.filter(img => img.id !== '00000000-0000-0000-0000-000000000000');
+    const images = data.filter(img => img.id !== '00000000-0000-0000-0000-000000000000' && img.id !== '11111111-1111-1111-1111-111111111111');
     const settingsRow = data.find(img => img.id === '00000000-0000-0000-0000-000000000000');
     const interval = settingsRow?.link_url ? parseInt(settingsRow.link_url, 10) : 3500;
 

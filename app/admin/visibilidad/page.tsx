@@ -8,7 +8,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Switch } from "@/components/ui/switch"
 import { Input } from "@/components/ui/input"
 import { useToast } from "@/hooks/use-toast"
-import { Eye, EyeOff, Loader2, Search } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import { Eye, EyeOff, Loader2, Search, Star, Save, ArrowUp, ArrowDown, AlertCircle } from "lucide-react"
 import { allProducts } from "@/lib/products-data"
 
 interface UserProduct {
@@ -32,8 +33,10 @@ interface StaticProductVisibility {
 export default function VisibilityPage() {
     const [userProducts, setUserProducts] = useState<UserProduct[]>([])
     const [staticVisibility, setStaticVisibility] = useState<Record<number, boolean>>({})
+    const [featuredIds, setFeaturedIds] = useState<string[]>([])
     const [loading, setLoading] = useState(true)
     const [updating, setUpdating] = useState<string | null>(null)
+    const [savingFeatured, setSavingFeatured] = useState(false)
     const [searchQuery, setSearchQuery] = useState("")
     const { toast } = useToast()
 
@@ -61,6 +64,13 @@ export default function VisibilityPage() {
                 })
                 setStaticVisibility(visibilityMap)
             }
+
+            // Fetch featured products configuration
+            const featuredRes = await fetch("/api/admin/visibility/featured-products")
+            if (featuredRes.ok) {
+                const featuredData = await featuredRes.json()
+                setFeaturedIds(featuredData.featuredProductIds || [])
+            }
         } catch (error) {
             console.error("Error fetching data:", error)
             toast({
@@ -70,6 +80,63 @@ export default function VisibilityPage() {
             })
         } finally {
             setLoading(false)
+        }
+    }
+
+    const toggleFeatured = (productId: string) => {
+        setFeaturedIds((prev) => {
+            if (prev.includes(productId)) {
+                return prev.filter((id) => id !== productId)
+            }
+            if (prev.length >= 4) {
+                toast({
+                    title: "Límite alcanzado",
+                    description: "Solo puedes destacar un máximo de 4 productos en la página de inicio.",
+                    variant: "destructive",
+                })
+                return prev
+            }
+            return [...prev, productId]
+        })
+    }
+
+    const moveFeatured = (index: number, direction: "up" | "down") => {
+        const nextIndex = direction === "up" ? index - 1 : index + 1
+        if (nextIndex < 0 || nextIndex >= featuredIds.length) return
+
+        const updated = [...featuredIds]
+        const temp = updated[index]
+        updated[index] = updated[nextIndex]
+        updated[nextIndex] = temp
+        setFeaturedIds(updated)
+    }
+
+    const saveFeaturedProducts = async () => {
+        setSavingFeatured(true)
+        try {
+            const res = await fetch("/api/admin/visibility/featured-products", {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ featuredProductIds: featuredIds }),
+            })
+            const data = await res.json()
+            if (res.ok) {
+                toast({
+                    title: "Productos destacados guardados",
+                    description: "Los productos destacados de la página de inicio se han actualizado correctamente y cargarán de inmediato.",
+                })
+            } else {
+                throw new Error(data.error || "Error al guardar")
+            }
+        } catch (error: any) {
+            console.error("Error saving featured products:", error)
+            toast({
+                title: "Error",
+                description: error.message || "No se pudieron guardar los productos destacados",
+                variant: "destructive",
+            })
+        } finally {
+            setSavingFeatured(false)
         }
     }
 
@@ -210,10 +277,221 @@ export default function VisibilityPage() {
                     <TabsTrigger value="user">
                         Productos de Usuarios ({userProducts.length})
                     </TabsTrigger>
+                    <TabsTrigger value="featured">
+                        Destacados en Inicio ({featuredIds.length}/4)
+                    </TabsTrigger>
                     <TabsTrigger value="static">
                         Productos Estáticos ({allProducts.length})
                     </TabsTrigger>
                 </TabsList>
+
+                <TabsContent value="featured" className="space-y-6">
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                        {/* Selected featured products list and sorting (Left/Middle Column - takes 2/3 space on large screens) */}
+                        <div className="lg:col-span-2 space-y-4">
+                            <Card className="border-amber-500/20 bg-amber-500/[0.02]">
+                                <CardHeader className="pb-3">
+                                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                                        <div className="flex items-center gap-2">
+                                            <div className="p-2 bg-amber-500/10 rounded-lg text-amber-500">
+                                                <Star className="w-5 h-5 fill-amber-500 text-amber-500" />
+                                            </div>
+                                            <div>
+                                                <CardTitle>Productos Destacados en Inicio</CardTitle>
+                                                <CardDescription>
+                                                    Selecciona y ordena exactamente hasta 4 productos para mostrarlos en el Hero de la página de inicio.
+                                                </CardDescription>
+                                            </div>
+                                        </div>
+                                        <Button
+                                            onClick={saveFeaturedProducts}
+                                            disabled={savingFeatured}
+                                            className="bg-amber-600 hover:bg-amber-700 text-white font-medium shadow-lg hover:shadow-amber-500/20 transition-all flex items-center gap-2 self-start sm:self-auto"
+                                        >
+                                            {savingFeatured ? (
+                                                <Loader2 className="w-4 h-4 animate-spin" />
+                                            ) : (
+                                                <Save className="w-4 h-4" />
+                                            )}
+                                            {savingFeatured ? "Guardando..." : "Guardar Destacados"}
+                                        </Button>
+                                    </div>
+                                </CardHeader>
+                                <CardContent>
+                                    {featuredIds.length === 0 ? (
+                                        <div className="flex flex-col items-center justify-center py-12 border-2 border-dashed rounded-lg border-muted p-4 text-center">
+                                            <AlertCircle className="w-8 h-8 text-muted-foreground mb-3" />
+                                            <h3 className="font-semibold text-base mb-1">Sin productos destacados</h3>
+                                            <p className="text-sm text-muted-foreground max-w-md">
+                                                No has seleccionado ningún producto destacado. La página de inicio mostrará los últimos productos subidos por defecto.
+                                            </p>
+                                        </div>
+                                    ) : (
+                                        <div className="space-y-3">
+                                            {featuredIds.map((id, index) => {
+                                                const product = userProducts.find((p) => p.id === id)
+                                                if (!product) return null
+                                                return (
+                                                    <div
+                                                        key={id}
+                                                        className="flex items-center justify-between p-4 bg-background border border-amber-500/25 rounded-lg shadow-sm hover:shadow-md transition-all duration-200"
+                                                    >
+                                                        <div className="flex items-center gap-4 flex-1 min-w-0">
+                                                            <div className="flex items-center justify-center font-bold text-amber-600 bg-amber-500/10 w-6 h-6 rounded-full text-xs shrink-0">
+                                                                {index + 1}
+                                                            </div>
+                                                            <div className="w-12 h-12 rounded bg-muted overflow-hidden flex-shrink-0 border border-amber-500/10">
+                                                                <img
+                                                                    src={product.image || "/placeholder.svg"}
+                                                                    alt={product.title}
+                                                                    className="w-full h-full object-cover"
+                                                                />
+                                                            </div>
+                                                            <div className="flex-1 min-w-0">
+                                                                <h3 className="font-semibold truncate text-foreground text-sm sm:text-base">{product.title}</h3>
+                                                                <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                                                                    <span>{product.category}</span>
+                                                                    <span>•</span>
+                                                                    <span className="font-medium text-amber-600">{product.price}</span>
+                                                                    <span>•</span>
+                                                                    <span className="truncate">
+                                                                        {product.user?.company_name || product.user?.full_name}
+                                                                    </span>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        <div className="flex items-center gap-1 sm:gap-2 ml-4 shrink-0">
+                                                            <Button
+                                                                variant="outline"
+                                                                size="icon"
+                                                                className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                                                                onClick={() => moveFeatured(index, "up")}
+                                                                disabled={index === 0}
+                                                            >
+                                                                <ArrowUp className="w-4 h-4" />
+                                                            </Button>
+                                                            <Button
+                                                                variant="outline"
+                                                                size="icon"
+                                                                className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                                                                onClick={() => moveFeatured(index, "down")}
+                                                                disabled={index === featuredIds.length - 1}
+                                                            >
+                                                                <ArrowDown className="w-4 h-4" />
+                                                            </Button>
+                                                            <Button
+                                                                variant="ghost"
+                                                                size="sm"
+                                                                className="text-red-500 hover:text-red-600 hover:bg-red-50"
+                                                                onClick={() => toggleFeatured(id)}
+                                                            >
+                                                                Quitar
+                                                            </Button>
+                                                        </div>
+                                                    </div>
+                                                )
+                                            })}
+                                        </div>
+                                    )}
+                                </CardContent>
+                            </Card>
+                        </div>
+
+                        {/* Summary and Stats (Right Column) */}
+                        <div className="space-y-4">
+                            <Card>
+                                <CardHeader>
+                                    <CardTitle className="text-lg">¿Por qué usar destacados manuales?</CardTitle>
+                                </CardHeader>
+                                <CardContent className="text-sm text-muted-foreground space-y-3">
+                                    <p>
+                                        🚀 <strong>Carga ultra rápida:</strong> Al seleccionar manualmente los productos destacados, la página de inicio carga de forma <strong>inmediata</strong> (en milisegundos) en lugar de hacer consultas dinámicas pesadas.
+                                    </p>
+                                    <p>
+                                        🎯 <strong>Control total:</strong> Elige exactamente qué productos y en qué orden quieres promocionar ante los nuevos visitantes de Agrilpa.
+                                    </p>
+                                    <p>
+                                        💡 <strong>Requisitos:</strong> Solo se pueden destacar productos que tengan visibilidad activa. Si ocultas un producto en el catálogo, no se mostrará como destacado.
+                                    </p>
+                                </CardContent>
+                            </Card>
+                        </div>
+                    </div>
+
+                    {/* Selector List of Active User Products */}
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>Selecciona Productos del Catálogo</CardTitle>
+                            <CardDescription>
+                                Haz clic en la estrella ⭐ para añadir o quitar un producto del inicio. (Límite: 4 productos).
+                            </CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                            {/* Filter only visible products for selecting as featured */}
+                            {userProducts.filter(p => p.is_visible).length === 0 ? (
+                                <div className="text-center py-8 text-muted-foreground">
+                                    No hay productos visibles activos para destacar. Activa la visibilidad de algún producto en la primera pestaña.
+                                </div>
+                            ) : (
+                                <div className="space-y-3">
+                                    {userProducts
+                                        .filter(p => p.is_visible && (
+                                            p.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                                            p.category.toLowerCase().includes(searchQuery.toLowerCase())
+                                        ))
+                                        .map((product) => {
+                                            const isFeatured = featuredIds.includes(product.id)
+                                            return (
+                                                <div
+                                                    key={product.id}
+                                                    className={`flex items-center justify-between p-4 border rounded-lg transition-all duration-200 ${
+                                                        isFeatured
+                                                            ? "border-amber-500 bg-amber-500/[0.02] shadow-sm"
+                                                            : "hover:bg-muted/50"
+                                                    }`}
+                                                >
+                                                    <div className="flex items-center gap-4 flex-1 min-w-0">
+                                                        <div className="w-12 h-12 rounded bg-muted overflow-hidden flex-shrink-0">
+                                                            <img
+                                                                src={product.image || "/placeholder.svg"}
+                                                                alt={product.title}
+                                                                className="w-full h-full object-cover"
+                                                            />
+                                                        </div>
+                                                        <div className="flex-1 min-w-0">
+                                                            <h3 className="font-medium truncate text-sm sm:text-base">{product.title}</h3>
+                                                            <div className="flex items-center gap-2 text-xs sm:text-sm text-muted-foreground">
+                                                                <span>{product.category}</span>
+                                                                <span>•</span>
+                                                                <span className="font-medium text-amber-600">{product.price}</span>
+                                                                <span>•</span>
+                                                                <span className="truncate">
+                                                                    {product.user?.company_name || product.user?.full_name}
+                                                                </span>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <Button
+                                                        variant={isFeatured ? "default" : "outline"}
+                                                        size="sm"
+                                                        onClick={() => toggleFeatured(product.id)}
+                                                        className={`flex items-center gap-2 shrink-0 ml-4 ${
+                                                            isFeatured
+                                                                ? "bg-amber-500 hover:bg-amber-600 text-white"
+                                                                : "hover:border-amber-500 hover:text-amber-600"
+                                                        }`}
+                                                    >
+                                                        <Star className={`w-4 h-4 ${isFeatured ? "fill-white" : ""}`} />
+                                                        <span className="hidden sm:inline">{isFeatured ? "Destacado" : "Destacar"}</span>
+                                                    </Button>
+                                                </div>
+                                            )
+                                        })}
+                                </div>
+                            )}
+                        </CardContent>
+                    </Card>
+                </TabsContent>
 
                 <TabsContent value="user" className="space-y-4">
                     <Card>

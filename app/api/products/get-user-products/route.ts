@@ -10,13 +10,43 @@ export async function GET() {
       process.env.SUPABASE_SERVICE_ROLE_KEY!
     )
 
-    // First fetch products
-    const { data: productsData, error: productsError } = await supabase
-      .from("user_products")
-      .select("id, title, category, description, country, image, price, quantity, min_order, contact_method, contact_info, shipping_unit_type, container_size, user_id")
-      .eq("is_visible", true)
-      .order("created_at", { ascending: false })
-      .limit(20)
+    // Check if there is a custom featured products setting
+    const { data: featuredRow } = await supabase
+      .from("hero_images")
+      .select("link_url")
+      .eq("id", "11111111-1111-1111-1111-111111111111")
+      .maybeSingle()
+
+    const featuredIds = featuredRow?.link_url ? featuredRow.link_url.split(",").filter(Boolean) : []
+
+    let productsData: any[] = []
+    let productsError = null
+
+    if (featuredIds.length > 0) {
+      const { data, error } = await supabase
+        .from("user_products")
+        .select("id, title, category, description, country, image, price, quantity, min_order, contact_method, contact_info, shipping_unit_type, container_size, user_id")
+        .eq("is_visible", true)
+        .in("id", featuredIds)
+      
+      if (error) {
+        productsError = error
+      } else if (data) {
+        // Sort products according to the order of featuredIds chosen by the user
+        productsData = data.sort((a: any, b: any) => featuredIds.indexOf(a.id) - featuredIds.indexOf(b.id))
+      }
+    } else {
+      // Fallback: Fetch latest products dynamically
+      const { data, error } = await supabase
+        .from("user_products")
+        .select("id, title, category, description, country, image, price, quantity, min_order, contact_method, contact_info, shipping_unit_type, container_size, user_id")
+        .eq("is_visible", true)
+        .order("created_at", { ascending: false })
+        .limit(20)
+      
+      productsData = data || []
+      productsError = error
+    }
 
     if (productsError) {
       console.error("[API] Database fetch error:", productsError)
@@ -103,12 +133,14 @@ export async function GET() {
       }
     })
 
-    // Sort: Pro sellers first, then by original order
-    processed.sort((a: any, b: any) => {
-      if (a.seller_is_pro && !b.seller_is_pro) return -1
-      if (!a.seller_is_pro && b.seller_is_pro) return 1
-      return 0
-    })
+    // Sort: Pro sellers first, then by original order (only if not using manual featured products)
+    if (featuredIds.length === 0) {
+      processed.sort((a: any, b: any) => {
+        if (a.seller_is_pro && !b.seller_is_pro) return -1
+        if (!a.seller_is_pro && b.seller_is_pro) return 1
+        return 0
+      })
+    }
 
     const response = NextResponse.json({ products: processed }, { status: 200 })
     // Cache 60s in browser, 300s in CDN/edge
