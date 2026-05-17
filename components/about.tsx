@@ -5,14 +5,14 @@ import { motion } from "framer-motion"
 
 export function About() {
   return (
-    <section id="sobre" className="pt-8 pb-16 md:pt-12 md:pb-24 bg-background">
+    <section id="sobre" className="pt-0 pb-16 md:pb-24 bg-background">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <motion.div 
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: "-50px" }}
           transition={{ duration: 0.6 }}
-          className="text-center mb-10"
+          className="text-center mb-16"
         >
           <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">Sobre Agrilpa</h2>
           <p className="text-lg text-muted-foreground max-w-3xl mx-auto">
