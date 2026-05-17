@@ -96,7 +96,7 @@ export function ProductPreview() {
           {isLoading ? (
             Array.from({ length: 4 }).map((_, i) => (
               <motion.div key={`sk-${i}`} variants={cardVariants} className="h-full">
-                <Card className="bg-card border border-border rounded-lg overflow-hidden flex flex-col h-[320px]">
+                <Card className="bg-card border border-border rounded-lg overflow-hidden flex flex-col h-[320px] p-0 gap-0">
                   <Skeleton className="h-48 w-full shrink-0 rounded-none bg-primary/5" />
                   <div className="p-5 flex flex-col gap-3 flex-1">
                     <Skeleton className="h-5 w-3/4 bg-primary/10" />
@@ -117,7 +117,7 @@ export function ProductPreview() {
             products.map((product) => (
               <motion.div key={product.id} variants={cardVariants} className="h-full">
                 <Link href={`/producto/${product.id}`} className="block h-full">
-                  <Card className="bg-card border border-border rounded-lg overflow-hidden hover:border-primary/50 hover:shadow-lg transition-all cursor-pointer flex flex-col h-full">
+                  <Card className="bg-card border border-border rounded-lg overflow-hidden hover:border-primary/50 hover:shadow-lg transition-all cursor-pointer flex flex-col h-full p-0 gap-0">
 
                     <div className="h-48 w-full shrink-0 overflow-hidden bg-gradient-to-br from-primary/5 to-primary/10">
                       <img
