@@ -178,6 +178,13 @@ export default function ProductPage() {
               extractedIncoterm = incotermMatch[1].trim()
             }
 
+            // Extract supply capacity from description
+            let extractedSupplyCapacity = null
+            const supplyMatch = desc.match(/Capacidad de Abastecimiento: (.*?)(\n|$)/)
+            if (supplyMatch) {
+              extractedSupplyCapacity = supplyMatch[1].trim()
+            }
+
             // Transform user product to match static product structure
             const transformed = {
               id: data.product.id,
@@ -215,6 +222,7 @@ export default function ProductPage() {
                 { label: "Embalaje", value: data.product.packaging },
                 { label: "Tamaño Embalaje", value: `${data.product.packaging_size} kg` },
                 { label: "Vendedor", value: producerName },
+                ...(extractedSupplyCapacity ? [{ label: "Capacidad de Abastecimiento", value: extractedSupplyCapacity }] : []),
                 ...(data.product.shipping_unit_type ? [{ 
                   label: "Unidad de Envío", 
                   value: data.product.shipping_unit_type === "FCL" 

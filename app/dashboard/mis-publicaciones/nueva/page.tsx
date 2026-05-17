@@ -15,6 +15,7 @@ import { createClient } from "@/lib/supabase/client"
 import { v4 as uuidv4 } from "uuid"
 import { PRODUCT_CATEGORIES } from "@/lib/constants"
 import { useDashboard } from "../../context"
+import { PhoneCodePicker } from "@/components/ui/country-picker"
 
 const exportRequirementsByCountry: Record<string, Array<{ name: string; description: string }>> = {
   "Estados Unidos": [
@@ -77,8 +78,11 @@ export default function NuevaPublicacionPage() {
     certifications: "",
     incoterm: "A definir con el comprador",
     saleMethod: "standard", // "standard" or "fcl"
+    supplyCapacity: "",
+    supplyCapacityUnit: "toneladas",
+    supplyCapacityPeriod: "mes",
   })
-  const [isPriceOnRequest, setIsPriceOnRequest] = useState(false)
+  const [isPriceOnRequest, setIsPriceOnRequest] = useState(true)
   const [certInput, setCertInput] = useState("")
   const [statusMessage, setStatusMessage] = useState<{ type: 'success' | 'error' | 'loading' | null, text: string }>({ type: null, text: "" })
   const [imagePreview, setImagePreview] = useState<string>("")
@@ -336,64 +340,94 @@ export default function NuevaPublicacionPage() {
                 {/* Image 1 (Required) */}
                 <div className="flex flex-col gap-2">
                   <div className="flex items-center justify-center w-full">
-                    <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-border rounded-lg cursor-pointer hover:bg-muted/50 transition-colors">
-                      <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                        <svg className="w-8 h-8 mb-2 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                        </svg>
-                        <p className="mb-2 text-sm text-muted-foreground font-semibold">Foto Principal *</p>
+                    {imagePreview ? (
+                      <div className="relative w-full h-32 border border-border rounded-lg overflow-hidden group shadow-sm bg-muted animate-in fade-in zoom-in-95 duration-200">
+                        <img src={imagePreview} alt="Preview 1" className="w-full h-full object-cover" />
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setImagePreview("")
+                            setFormData(p => ({ ...p, image: "" }))
+                          }}
+                          className="absolute top-2 right-2 bg-destructive/90 hover:bg-destructive text-white rounded-full p-1.5 shadow-md transition-all duration-200 hover:scale-105"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
                       </div>
-                      <input type="file" accept="image/*" onChange={(e) => handleImageUpload(e, "image")} className="hidden" disabled={isLoading} />
-                    </label>
+                    ) : (
+                      <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-border rounded-lg cursor-pointer hover:bg-muted/50 transition-colors">
+                        <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                          <svg className="w-8 h-8 mb-2 text-muted-foreground animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                          </svg>
+                          <p className="mb-2 text-sm text-muted-foreground font-semibold">Foto Principal *</p>
+                        </div>
+                        <input type="file" accept="image/*" onChange={(e) => handleImageUpload(e, "image")} className="hidden" disabled={isLoading} />
+                      </label>
+                    )}
                   </div>
-                  {imagePreview && (
-                    <div className="w-full h-32 rounded-md overflow-hidden border border-border relative">
-                      <img src={imagePreview} alt="Preview 1" className="w-full h-full object-cover" />
-                      <button type="button" onClick={() => {setImagePreview(""); setFormData(p => ({...p, image: ""}))}} className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1"><X className="w-4 h-4"/></button>
-                    </div>
-                  )}
                 </div>
 
                 {/* Image 2 (Optional) */}
                 <div className="flex flex-col gap-2">
                   <div className="flex items-center justify-center w-full">
-                    <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-border rounded-lg cursor-pointer hover:bg-muted/50 transition-colors">
-                      <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                        <svg className="w-8 h-8 mb-2 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                        </svg>
-                        <p className="mb-2 text-sm text-muted-foreground font-semibold">Foto Adicional</p>
+                    {imagePreview2 ? (
+                      <div className="relative w-full h-32 border border-border rounded-lg overflow-hidden group shadow-sm bg-muted animate-in fade-in zoom-in-95 duration-200">
+                        <img src={imagePreview2} alt="Preview 2" className="w-full h-full object-cover" />
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setImagePreview2("")
+                            setFormData(p => ({ ...p, image2: "" }))
+                          }}
+                          className="absolute top-2 right-2 bg-destructive/90 hover:bg-destructive text-white rounded-full p-1.5 shadow-md transition-all duration-200 hover:scale-105"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
                       </div>
-                      <input type="file" accept="image/*" onChange={(e) => handleImageUpload(e, "image2")} className="hidden" disabled={isLoading} />
-                    </label>
+                    ) : (
+                      <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-border rounded-lg cursor-pointer hover:bg-muted/50 transition-colors">
+                        <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                          <svg className="w-8 h-8 mb-2 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                          </svg>
+                          <p className="mb-2 text-sm text-muted-foreground font-semibold">Foto Adicional</p>
+                        </div>
+                        <input type="file" accept="image/*" onChange={(e) => handleImageUpload(e, "image2")} className="hidden" disabled={isLoading} />
+                      </label>
+                    )}
                   </div>
-                  {imagePreview2 && (
-                    <div className="w-full h-32 rounded-md overflow-hidden border border-border relative">
-                      <img src={imagePreview2} alt="Preview 2" className="w-full h-full object-cover" />
-                      <button type="button" onClick={() => {setImagePreview2(""); setFormData(p => ({...p, image2: ""}))}} className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1"><X className="w-4 h-4"/></button>
-                    </div>
-                  )}
                 </div>
 
                 {/* Image 3 (Optional) */}
                 <div className="flex flex-col gap-2">
                   <div className="flex items-center justify-center w-full">
-                    <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-border rounded-lg cursor-pointer hover:bg-muted/50 transition-colors">
-                      <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                        <svg className="w-8 h-8 mb-2 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                        </svg>
-                        <p className="mb-2 text-sm text-muted-foreground font-semibold">Foto Adicional</p>
+                    {imagePreview3 ? (
+                      <div className="relative w-full h-32 border border-border rounded-lg overflow-hidden group shadow-sm bg-muted animate-in fade-in zoom-in-95 duration-200">
+                        <img src={imagePreview3} alt="Preview 3" className="w-full h-full object-cover" />
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setImagePreview3("")
+                            setFormData(p => ({ ...p, image3: "" }))
+                          }}
+                          className="absolute top-2 right-2 bg-destructive/90 hover:bg-destructive text-white rounded-full p-1.5 shadow-md transition-all duration-200 hover:scale-105"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
                       </div>
-                      <input type="file" accept="image/*" onChange={(e) => handleImageUpload(e, "image3")} className="hidden" disabled={isLoading} />
-                    </label>
+                    ) : (
+                      <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-border rounded-lg cursor-pointer hover:bg-muted/50 transition-colors">
+                        <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                          <svg className="w-8 h-8 mb-2 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                          </svg>
+                          <p className="mb-2 text-sm text-muted-foreground font-semibold">Foto Adicional</p>
+                        </div>
+                        <input type="file" accept="image/*" onChange={(e) => handleImageUpload(e, "image3")} className="hidden" disabled={isLoading} />
+                      </label>
+                    )}
                   </div>
-                  {imagePreview3 && (
-                    <div className="w-full h-32 rounded-md overflow-hidden border border-border relative">
-                      <img src={imagePreview3} alt="Preview 3" className="w-full h-full object-cover" />
-                      <button type="button" onClick={() => {setImagePreview3(""); setFormData(p => ({...p, image3: ""}))}} className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1"><X className="w-4 h-4"/></button>
-                    </div>
-                  )}
                 </div>
               </div>
             </div>
@@ -444,20 +478,6 @@ export default function NuevaPublicacionPage() {
                 <div className="flex bg-muted p-1 rounded-lg mb-3">
                   <button
                     type="button"
-                    aria-pressed={!isPriceOnRequest}
-                    onClick={() => {
-                      setIsPriceOnRequest(false)
-                      setFormData(prev => ({ ...prev, price: "" }))
-                    }}
-                    className={`flex-1 py-2 text-sm font-medium rounded-md transition-all ${!isPriceOnRequest
-                      ? "bg-primary text-primary-foreground shadow-sm"
-                      : "text-muted-foreground hover:text-foreground"
-                      }`}
-                  >
-                    Precio
-                  </button>
-                  <button
-                    type="button"
                     aria-pressed={isPriceOnRequest}
                     onClick={() => {
                       setIsPriceOnRequest(true)
@@ -469,6 +489,20 @@ export default function NuevaPublicacionPage() {
                       }`}
                   >
                     Cotización
+                  </button>
+                  <button
+                    type="button"
+                    aria-pressed={!isPriceOnRequest}
+                    onClick={() => {
+                      setIsPriceOnRequest(false)
+                      setFormData(prev => ({ ...prev, price: "" }))
+                    }}
+                    className={`flex-1 py-2 text-sm font-medium rounded-md transition-all ${!isPriceOnRequest
+                      ? "bg-primary text-primary-foreground shadow-sm"
+                      : "text-muted-foreground hover:text-foreground"
+                      }`}
+                  >
+                    Precio
                   </button>
                 </div>
 
@@ -859,6 +893,63 @@ export default function NuevaPublicacionPage() {
             </div>
 
 
+            {/* Capacidad de Abastecimiento */}
+            <div>
+              <label htmlFor="supplyCapacity" className="block text-sm font-medium mb-2">
+                Capacidad de Abastecimiento <span className="text-xs text-muted-foreground">(Opcional)</span>
+              </label>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div>
+                  <Input
+                    id="supplyCapacity"
+                    type="number"
+                    name="supplyCapacity"
+                    value={formData.supplyCapacity}
+                    onChange={handleInputChange}
+                    placeholder="Ej: 50"
+                    min="0"
+                    disabled={isLoading}
+                    className="w-full"
+                  />
+                </div>
+                <div>
+                  <select
+                    id="supplyCapacityUnit"
+                    name="supplyCapacityUnit"
+                    value={formData.supplyCapacityUnit}
+                    onChange={handleInputChange}
+                    className="w-full px-3 py-2 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary bg-background text-sm"
+                    disabled={isLoading}
+                  >
+                    <option value="kg">kg</option>
+                    <option value="toneladas">toneladas</option>
+                    <option value="libras">libras</option>
+                    <option value="TM">TM</option>
+                    <option value="unidades">unidades</option>
+                  </select>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-muted-foreground text-sm font-medium px-1">/</span>
+                  <select
+                    id="supplyCapacityPeriod"
+                    name="supplyCapacityPeriod"
+                    value={formData.supplyCapacityPeriod}
+                    onChange={handleInputChange}
+                    className="w-full px-3 py-2 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary bg-background text-sm"
+                    disabled={isLoading}
+                  >
+                    <option value="mes">mes</option>
+                    <option value="semana">semana</option>
+                    <option value="día">día</option>
+                    <option value="año">año</option>
+                  </select>
+                </div>
+              </div>
+              <p className="text-xs text-muted-foreground mt-1.5">
+                Indica la cantidad máxima que puedes proveer de este producto en un periodo determinado (ej: 50 toneladas / mes).
+              </p>
+            </div>
+
             {/* Incoterm Field */}
             <div>
               <label htmlFor="incoterm" className="block text-sm font-medium mb-2">
@@ -1081,21 +1172,12 @@ export default function NuevaPublicacionPage() {
                 </label>
                 {formData.contactMethod === "WhatsApp" ? (
                   <div className="flex gap-2">
-                    <div className="w-32">
-                      <div className="flex">
-                        <span className="inline-flex items-center px-3 bg-muted border border-r-0 border-border rounded-l-md text-sm text-muted-foreground">
-                          +
-                        </span>
-                        <Input
-                          id="countryCode"
-                          className="pl-6"
-                          placeholder="503"
-                          type="number"
-                          value={formData.countryCode}
-                          onChange={(e) => setFormData({ ...formData, countryCode: e.target.value })}
-                        />
-                      </div>
-                      <p className="text-xs text-muted-foreground mt-1">Ej: 503</p>
+                    <div className="w-36 shrink-0">
+                      <PhoneCodePicker
+                        value={formData.countryCode}
+                        onChange={(phoneCode, countryCode) => setFormData({ ...formData, countryCode: phoneCode })}
+                      />
+                      <p className="text-xs text-muted-foreground mt-1">Código de país</p>
                     </div>
                     <div className="flex-1">
                       <Input

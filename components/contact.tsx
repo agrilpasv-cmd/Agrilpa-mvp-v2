@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Mail, Phone, MapPin, Send, CheckCircle2 } from "lucide-react"
 import { useState } from "react"
+import { CountryPicker, PhoneCodePicker } from "@/components/ui/country-picker"
 
 export function Contact() {
   const [formData, setFormData] = useState({
@@ -129,21 +130,13 @@ export function Contact() {
                 <div className="space-y-2">
                   <label className="text-sm font-medium text-foreground">Teléfono</label>
                   <div className="flex gap-3">
-                    <div className="w-24">
-                      <div className="relative">
-                        <span className="absolute left-3 top-3 text-muted-foreground text-sm font-medium">+</span>
-                        <input
-                          type="text"
-                          name="countryCode"
-                          value={formData.countryCode}
-                          onChange={handlePhoneInput}
-                          inputMode="numeric"
-                          placeholder="503"
-                          maxLength="4"
-                          className="w-full pl-7 pr-4 py-3 border border-border rounded-lg bg-background text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition"
-                        />
-                      </div>
-                    </div>
+                    <PhoneCodePicker
+                      value={formData.countryCode}
+                      onChange={(phoneCode) =>
+                        setFormData((prev) => ({ ...prev, countryCode: phoneCode }))
+                      }
+                      className="w-32 shrink-0"
+                    />
                     <div className="flex-1">
                       <div className="relative">
                         <Phone className="absolute left-3 top-3 text-muted-foreground w-5 h-5" />
@@ -195,30 +188,22 @@ export function Contact() {
                     className="w-full px-4 py-3 border border-border rounded-lg bg-background text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition"
                   />
                 </div>
-                <div className="space-y-2">
+                <div className="space-y-2 react-select-container">
                   <label htmlFor="country" className="text-sm font-medium text-foreground">
                     País
                   </label>
-                  <select
-                    id="country"
-                    name="country"
+                  <CountryPicker
                     value={formData.country}
-                    onChange={handleChange}
-                    className="w-full px-4 py-3 border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition"
-                  >
-                    <option value="">Selecciona un país</option>
-                    <option value="El Salvador">El Salvador</option>
-                    <option value="Guatemala">Guatemala</option>
-                    <option value="Honduras">Honduras</option>
-                    <option value="Nicaragua">Nicaragua</option>
-                    <option value="Costa Rica">Costa Rica</option>
-                    <option value="Panamá">Panamá</option>
-                    <option value="México">México</option>
-                    <option value="Estados Unidos">Estados Unidos</option>
-                    <option value="España">España</option>
-                    <option value="Colombia">Colombia</option>
-                    <option value="Otro">Otro</option>
-                  </select>
+                    syncPhoneCode
+                    onChange={(countryName, phoneCode) => {
+                      setFormData((prev) => ({
+                        ...prev,
+                        country: countryName,
+                        ...(phoneCode ? { countryCode: phoneCode } : {}),
+                      }))
+                    }}
+                    placeholder="Selecciona tu país"
+                  />
                 </div>
               </div>
 

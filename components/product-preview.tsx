@@ -42,7 +42,7 @@ export function ProductPreview() {
     const controller = new AbortController()
     const timeout = setTimeout(() => controller.abort(), 8000)
 
-    fetch("/api/products/get-user-products", {
+    fetch("/api/products/get-user-products?featured=true", {
       signal: controller.signal,
       cache: "no-store",
     })

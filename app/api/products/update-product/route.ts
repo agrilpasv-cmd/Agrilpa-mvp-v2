@@ -45,7 +45,11 @@ export async function PUT(request: Request) {
         let fullDescription = description || ""
         if (company_name || contact_method) {
             const incotermValue = incoterm || "A definir con el comprador"
+            const supplyCapacity = body.supplyCapacity ? `${body.supplyCapacity} ${body.supplyCapacityUnit || "kg"} / ${body.supplyCapacityPeriod || "mes"}` : ""
             fullDescription = `${description}\n\n---\nInformación del Vendedor:\nEmpresa: ${company_name || ""}\nContacto: ${contact_method || ""}\nIncoterm: ${incotermValue}`
+            if (supplyCapacity) {
+                fullDescription += `\nCapacidad de Abastecimiento: ${supplyCapacity}`
+            }
         }
 
         // Build update object with only provided fields

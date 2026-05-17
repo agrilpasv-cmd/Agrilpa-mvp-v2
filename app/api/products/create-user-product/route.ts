@@ -97,7 +97,11 @@ export async function POST(request: NextRequest) {
 
     // Combine contact info into description since we might not have specific columns
     const incoterm = body.incoterm || "A definir con el comprador"
-    const fullDescription = `${description}\n\n---\nInformación del Vendedor:\nEmpresa: ${companyName}\nContacto: ${contactMethod}\nIncoterm: ${incoterm}`
+    const supplyCapacity = body.supplyCapacity ? `${body.supplyCapacity} ${body.supplyCapacityUnit || "kg"} / ${body.supplyCapacityPeriod || "mes"}` : ""
+    let fullDescription = `${description}\n\n---\nInformación del Vendedor:\nEmpresa: ${companyName}\nContacto: ${contactMethod}\nIncoterm: ${incoterm}`
+    if (supplyCapacity) {
+      fullDescription += `\nCapacidad de Abastecimiento: ${supplyCapacity}`
+    }
 
     const { data, error } = await supabaseAdmin
       .from("user_products")

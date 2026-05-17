@@ -3,26 +3,33 @@ import { NextResponse } from "next/server"
 
 export const revalidate = 60
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
     const supabase = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.SUPABASE_SERVICE_ROLE_KEY!
     )
 
-    // Check if there is a custom featured products setting
-    const { data: featuredRow } = await supabase
-      .from("hero_images")
-      .select("link_url")
-      .eq("id", "11111111-1111-1111-1111-111111111111")
-      .maybeSingle()
-
-    const featuredIds = featuredRow?.link_url ? featuredRow.link_url.split(",").filter(Boolean) : []
+    // Check if we only want featured products
+    const { searchParams } = new URL(request.url)
+    const onlyFeatured = searchParams.get("featured") === "true"
 
     let productsData: any[] = []
     let productsError = null
+    let featuredIds: string[] = []
 
-    if (featuredIds.length > 0) {
+    if (onlyFeatured) {
+      // Check if there is a custom featured products setting
+      const { data: featuredRow } = await supabase
+        .from("hero_images")
+        .select("link_url")
+        .eq("id", "11111111-1111-1111-1111-111111111111")
+        .maybeSingle()
+
+      featuredIds = featuredRow?.link_url ? featuredRow.link_url.split(",").filter(Boolean) : []
+    }
+
+    if (onlyFeatured && featuredIds.length > 0) {
       const { data, error } = await supabase
         .from("user_products")
         .select("id, title, category, description, country, image, price, quantity, min_order, contact_method, contact_info, shipping_unit_type, container_size, user_id")
@@ -36,13 +43,13 @@ export async function GET() {
         productsData = data.sort((a: any, b: any) => featuredIds.indexOf(a.id) - featuredIds.indexOf(b.id))
       }
     } else {
-      // Fallback: Fetch latest products dynamically
+      // Fetch latest products dynamically for general listing (e.g. catalog page)
       const { data, error } = await supabase
         .from("user_products")
         .select("id, title, category, description, country, image, price, quantity, min_order, contact_method, contact_info, shipping_unit_type, container_size, user_id")
         .eq("is_visible", true)
         .order("created_at", { ascending: false })
-        .limit(20)
+        .limit(100)
       
       productsData = data || []
       productsError = error
