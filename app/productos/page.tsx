@@ -494,89 +494,98 @@ export default function ProductosPage() {
           {filteredProducts.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
               {filteredProducts.map((product) => (
-                <Link key={product.id} href={`/producto/${product.slug}`}>
-                  <Card className="bg-card border border-border rounded-lg overflow-hidden hover:border-primary/50 hover:shadow-lg transition-all cursor-pointer flex flex-col h-full p-0 gap-0">
-                    {/* Product image/icon */}
-                    <div className="relative bg-gradient-to-br from-primary/5 to-primary/10 h-48 w-full flex items-center justify-center overflow-hidden shrink-0">
+                <Link key={product.id} href={`/producto/${product.slug}`} className="block h-full">
+                  <Card className="bg-card border border-border rounded-2xl overflow-hidden hover:border-primary/50 hover:shadow-xl hover:shadow-primary/5 transition-all cursor-pointer flex flex-col h-full p-0 gap-0 group">
+                    {/* Image Section */}
+                    <div className="relative h-52 w-full shrink-0 overflow-hidden bg-slate-100">
                       <img
                         src={product.image || "/placeholder.svg"}
                         alt={product.name}
-                        className="w-full h-full object-cover"
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                       />
                       
-                      {/* Overlay Badges */}
-                      {(product as any).sellerIsPro && (
-                        <div className="absolute top-3 left-3 flex items-center justify-center w-7 h-7 rounded-full bg-white/90 backdrop-blur border border-amber-200 shadow-md animate-in zoom-in duration-300" title="Usuario PRO">
-                          <Star className="w-4 h-4 fill-amber-500 text-amber-500" />
+                      {/* Top Badges */}
+                      <div className="absolute top-4 left-4 right-4 flex justify-between items-start">
+                        {/* Category Pill */}
+                        <div className="bg-white/95 backdrop-blur-sm text-slate-900 text-[10px] font-bold uppercase tracking-wider px-2.5 h-6 flex items-center justify-center rounded-full shadow-sm leading-none">
+                          {product.category}
                         </div>
-                      )}
-                      {product.verified && (
-                        <div className="absolute top-3 right-3 flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-emerald-700 bg-emerald-100/90 backdrop-blur border border-emerald-200 px-2.5 py-1 rounded-md shadow-md animate-in zoom-in duration-300">
-                          <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
-                          Verificado
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Product content */}
-                    <div className="p-6 flex-1 flex flex-col">
-                      {/* Header con categoría */}
-                      <div className="flex items-start justify-between mb-3">
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2">
-                            <h3 className="font-bold text-lg text-foreground">{product.name}</h3>
+                        
+                        {/* Verified Pill */}
+                        {product.verified && (
+                          <div className="bg-slate-900/90 backdrop-blur-sm text-white text-[10px] font-bold uppercase tracking-wider px-2.5 h-6 flex items-center justify-center gap-1 rounded-full shadow-sm leading-none">
+                            <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
+                            Verificado
                           </div>
-                          <span className="text-xs font-semibold text-primary bg-primary/10 px-3 py-1 rounded-full inline-block mt-1">
-                            {product.category}
-                          </span>
-                        </div>
-                      </div>
-
-                      {/* Vendedor info */}
-                      <div className="mb-3 pb-3 border-b border-border">
-                        <p className="text-sm font-semibold text-foreground">{product.seller}</p>
-                        <div className="flex items-center gap-1 text-xs text-muted-foreground mt-1">
-                          <MapPin className="w-3 h-3" />
-                          {product.location}
-                        </div>
-                      </div>
-
-                      {/* Description with Fade */}
-                      <div className="relative mb-4 flex-1">
-                        <p className="text-sm text-muted-foreground line-clamp-3 min-h-[4.5rem]">
-                          {product.description?.split("---")[0]}
-                        </p>
-                        {(product.description?.split("---")[0].length || 0) > 130 && (
-                          <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-card via-card/90 to-transparent pointer-events-none" />
+                        )}
+                        {(product as any).sellerIsPro && !product.verified && (
+                          <div className="bg-amber-500/90 backdrop-blur-sm text-white text-[10px] font-bold uppercase tracking-wider px-2.5 h-6 flex items-center justify-center gap-1 rounded-full shadow-sm leading-none">
+                            <Star className="w-3.5 h-3.5 fill-white" />
+                            Pro
+                          </div>
                         )}
                       </div>
 
-                      {/* Rating */}
-                      <div className="flex items-center gap-1 mb-4">
-                        <div className="flex items-center gap-0.5">
-                          <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                          <span className="text-sm font-semibold text-foreground">{product.rating}</span>
+                      {/* Bottom Image Info (Rating) */}
+                      <div className="absolute bottom-3 left-4 right-4">
+                        <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-1.5 bg-black/40 backdrop-blur-md px-2.5 py-1 rounded-full border border-white/10">
+                            <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
+                            <span className="text-white text-xs font-semibold">{product.rating || "Nuevo"}</span>
+                          </div>
+                          {product.reviews > 0 && (
+                            <span className="text-white/90 text-xs font-medium drop-shadow-sm">{product.reviews} reseñas</span>
+                          )}
                         </div>
-                        <span className="text-xs text-muted-foreground">({product.reviews} reseñas)</span>
+                      </div>
+                    </div>
+
+                    {/* Content Section */}
+                    <div className="p-4 flex-1 flex flex-col">
+                      {/* Product Title & Location */}
+                      <div className="mb-2">
+                        <h3 className="text-lg font-bold text-foreground leading-tight mb-1 line-clamp-2">{product.name}</h3>
+                        <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                          <MapPin className="w-3.5 h-3.5 shrink-0" />
+                          <span className="truncate">{product.location}</span>
+                        </div>
                       </div>
 
-                      {/* Price and min order */}
-                      <div className="bg-primary/5 p-3 rounded-lg mb-4">
-                        <div className="flex justify-between items-center mb-2">
-                          <span className="text-xs text-muted-foreground">Precio</span>
-                          <p className="font-bold text-lg text-primary">
-                            {product.price?.includes('$') ? product.price : `$${product.price}`}
+                      {/* Description */}
+                      <p className="text-sm text-muted-foreground line-clamp-2 mb-3 flex-1 leading-relaxed">
+                        {product.description?.split("---")[0]}
+                      </p>
+
+                      <hr className="border-t border-dashed border-border mb-3" />
+
+                      {/* Pricing & Minimum Order */}
+                      <div className="flex justify-between items-end mb-4">
+                        <div>
+                          <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-0.5">Desde</p>
+                          <div className="flex items-baseline gap-1">
+                            {product.price === "Por Cotizar" ? (
+                              <span className="text-xl font-black text-foreground">Por Cotizar</span>
+                            ) : (
+                              <>
+                                <span className="text-2xl font-black text-foreground">
+                                  {product.price?.includes('$') ? product.price : `$${product.price}`}
+                                </span>
+                                <span className="text-sm font-semibold text-muted-foreground">/kg</span>
+                              </>
+                            )}
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-0.5">Pedido Mín.</p>
+                          <p className="text-base font-bold text-foreground">
+                            {product.minOrder?.replace(/[^0-9.,]/g, '') || product.minOrder}
                           </p>
                         </div>
-                        <div>
-                          <span className="text-xs text-muted-foreground">Pedido mínimo: {product.minOrder}</span>
-                        </div>
                       </div>
 
-                      {/* Contact button */}
-                      {/* Contact button */}
+                      {/* Contact Button */}
                       <button
-                        className="w-full bg-primary hover:bg-primary/90 text-white font-semibold py-2 px-4 rounded transition-colors flex items-center justify-center gap-2"
+                        className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-semibold py-3 px-4 rounded-xl transition-all flex items-center justify-center gap-2 shadow-sm"
                         onClick={(e) => {
                           e.preventDefault()
                           e.stopPropagation()
@@ -590,7 +599,6 @@ export default function ProductosPage() {
                           const contactInfo = (product as any).contactInfo
 
                           if (contactMethod === "WhatsApp") {
-                            // Extract numbers from contactInfo or use it directly
                             const phone = contactInfo.replace(/\D/g, "")
                             const message = encodeURIComponent(`Hola vi tu producto "${product.name}" en la plataforma Agrilpa 🌱, y estoy interesado.`)
                             window.open(`https://wa.me/${phone}?text=${message}`, '_blank')
@@ -602,14 +610,13 @@ export default function ProductosPage() {
                             alert(`Contactar vía ${contactMethod}: ${contactInfo}`)
                             trackContactClick(product, "generic")
                           } else {
-                            // Default behavior: go to product page
                             router.push(`/producto/${product.slug}`)
                             trackContactClick(product, "generic")
                           }
                         }}
                       >
-                        <MessageCircle className="w-4 h-4" />
-                        Contactar Vendedor
+                        <MessageCircle className="w-5 h-5" />
+                        Contactar vendedor
                       </button>
                     </div>
                   </Card>
