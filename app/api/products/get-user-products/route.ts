@@ -49,7 +49,7 @@ export async function GET(request: Request) {
         .select("id, title, category, description, country, image, price, quantity, min_order, contact_method, contact_info, shipping_unit_type, container_size, user_id")
         .eq("is_visible", true)
         .order("created_at", { ascending: false })
-        .limit(100)
+        .limit(onlyFeatured ? 4 : 100)
       
       productsData = data || []
       productsError = error
