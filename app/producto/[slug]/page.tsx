@@ -889,24 +889,85 @@ export default function ProductPage() {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {relatedProducts.map((relProduct) => (
                 <Link key={relProduct.id} href={`/producto/${relProduct.slug}`}>
-                  <Card className="bg-card border border-border rounded-lg overflow-hidden hover:border-primary/50 hover:shadow-lg transition-all cursor-pointer h-full flex flex-col">
-                    <div className="bg-gradient-to-br from-primary/5 to-primary/10 h-40 flex items-center justify-center overflow-hidden">
+                  <Card className="bg-card border border-border rounded-2xl overflow-hidden hover:border-primary/50 hover:shadow-xl hover:shadow-primary/5 transition-all cursor-pointer flex flex-col h-full p-0 gap-0 group">
+                    {/* Image Section */}
+                    <div className="relative h-52 w-full shrink-0 overflow-hidden bg-slate-100">
                       <img
                         src={relProduct.image || "/placeholder.svg"}
                         alt={relProduct.name}
-                        className="w-full h-full object-cover"
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                       />
+                      
+                      {/* Top Badges */}
+                      <div className="absolute top-4 left-4 right-4 flex justify-between items-start">
+                        {/* Category Pill */}
+                        <div className="bg-white/95 backdrop-blur-sm text-slate-900 text-[10px] font-bold uppercase tracking-wider px-2.5 h-6 flex items-center justify-center rounded-full shadow-sm leading-none">
+                          {relProduct.category}
+                        </div>
+                        
+                        {/* Verified Pill */}
+                        {(relProduct.verified || (relProduct as any).sellerIsPro) && (
+                          <div className="bg-slate-900/90 backdrop-blur-sm text-white text-[10px] font-bold uppercase tracking-wider px-2.5 h-6 flex items-center justify-center gap-1 rounded-full shadow-sm leading-none">
+                            <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
+                            Verificado
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Bottom Image Info (Rating) */}
+                      <div className="absolute bottom-3 left-4 right-4">
+                        <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-1.5 bg-black/40 backdrop-blur-md px-2.5 py-1 rounded-full border border-white/10">
+                            <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
+                            <span className="text-white text-xs font-semibold">{relProduct.rating || "Nuevo"}</span>
+                          </div>
+                          {relProduct.reviews > 0 && (
+                            <span className="text-white/90 text-xs font-medium drop-shadow-sm">{relProduct.reviews} reseñas</span>
+                          )}
+                        </div>
+                      </div>
                     </div>
+
+                    {/* Content Section */}
                     <div className="p-4 flex-1 flex flex-col">
-                      <h3 className="font-bold text-foreground mb-2">{relProduct.name}</h3>
-                      <p className="text-sm text-muted-foreground mb-3 flex-1 line-clamp-2">{relProduct.description?.split("---")[0]}</p>
-                      <div className="flex items-center justify-between mt-auto pt-2">
-                        <span className="font-bold text-primary">
-                          {relProduct.price === "Por Cotizar" ? "Por Cotizar" : (relProduct.price?.includes('$') ? relProduct.price : `$${relProduct.price}`)}
-                        </span>
-                        <div className="flex items-center gap-1">
-                          <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                          <span className="text-sm font-semibold">{relProduct.rating}</span>
+                      {/* Product Title & Location */}
+                      <div className="mb-2">
+                        <h3 className="text-lg font-bold text-foreground leading-tight mb-1 line-clamp-2">{relProduct.name}</h3>
+                        <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                          <MapPin className="w-3.5 h-3.5 shrink-0" />
+                          <span className="truncate">{relProduct.location}</span>
+                        </div>
+                      </div>
+
+                      {/* Description */}
+                      <p className="text-sm text-muted-foreground line-clamp-2 mb-3 flex-1 leading-relaxed">
+                        {relProduct.description?.split("---")[0]}
+                      </p>
+
+                      <hr className="border-t border-dashed border-border mb-3" />
+
+                      {/* Pricing & Minimum Order */}
+                      <div className="flex justify-between items-end mb-4">
+                        <div>
+                          <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-0.5">Desde</p>
+                          <div className="flex items-baseline gap-1">
+                            {relProduct.price === "Por Cotizar" ? (
+                              <span className="text-xl font-black text-foreground">Por Cotizar</span>
+                            ) : (
+                              <>
+                                <span className="text-2xl font-black text-foreground">
+                                  {relProduct.price?.includes('$') ? relProduct.price : `$${relProduct.price}`}
+                                </span>
+                                <span className="text-sm font-semibold text-muted-foreground">/kg</span>
+                              </>
+                            )}
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-0.5">Pedido Mín.</p>
+                          <p className="text-base font-bold text-foreground">
+                            {relProduct.minOrder?.replace(/[^0-9.,]/g, '') || relProduct.minOrder}
+                          </p>
                         </div>
                       </div>
                     </div>

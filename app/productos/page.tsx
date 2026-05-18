@@ -512,16 +512,10 @@ export default function ProductosPage() {
                         </div>
                         
                         {/* Verified Pill */}
-                        {product.verified && (
+                        {(product.verified || (product as any).sellerIsPro) && (
                           <div className="bg-slate-900/90 backdrop-blur-sm text-white text-[10px] font-bold uppercase tracking-wider px-2.5 h-6 flex items-center justify-center gap-1 rounded-full shadow-sm leading-none">
                             <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
                             Verificado
-                          </div>
-                        )}
-                        {(product as any).sellerIsPro && !product.verified && (
-                          <div className="bg-amber-500/90 backdrop-blur-sm text-white text-[10px] font-bold uppercase tracking-wider px-2.5 h-6 flex items-center justify-center gap-1 rounded-full shadow-sm leading-none">
-                            <Star className="w-3.5 h-3.5 fill-white" />
-                            Pro
                           </div>
                         )}
                       </div>
