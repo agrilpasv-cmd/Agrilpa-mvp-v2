@@ -159,6 +159,45 @@ export async function GET(request: Request) {
             return { os, device }
         }
 
+        // Helper to pre-fill trend buckets
+        const prefillTrend = (range: string) => {
+            const trend: Record<string, { visitors: Set<string>, views: number }> = {}
+            const now = new Date()
+            if (range === "24h") {
+                for (let i = 23; i >= 0; i--) {
+                    const d = new Date(now)
+                    d.setHours(d.getHours() - i)
+                    trend[d.getHours() + ":00"] = { visitors: new Set(), views: 0 }
+                }
+            } else if (range === "7d") {
+                for (let i = 6; i >= 0; i--) {
+                    const d = new Date(now)
+                    d.setDate(d.getDate() - i)
+                    trend[d.toLocaleDateString('default', { day: '2-digit', month: 'short' })] = { visitors: new Set(), views: 0 }
+                }
+            } else if (range === "30d") {
+                for (let i = 29; i >= 0; i--) {
+                    const d = new Date(now)
+                    d.setDate(d.getDate() - i)
+                    trend[d.toLocaleDateString('default', { day: '2-digit', month: 'short' })] = { visitors: new Set(), views: 0 }
+                }
+            } else if (range === "6m") {
+                for (let i = 5; i >= 0; i--) {
+                    const d = new Date(now)
+                    d.setMonth(d.getMonth() - i)
+                    trend[d.toLocaleString('default', { month: 'short' })] = { visitors: new Set(), views: 0 }
+                }
+            } else if (range === "1y") {
+                for (let i = 11; i >= 0; i--) {
+                    const d = new Date(now)
+                    d.setMonth(d.getMonth() - i)
+                    const yearKey = d.getFullYear().toString().substring(2)
+                    trend[`${d.toLocaleString('default', { month: 'short' })} ${yearKey}`] = { visitors: new Set(), views: 0 }
+                }
+            }
+            return trend
+        }
+
         // Aggregation Buckets
         const counts = {
             visits: 0,
@@ -168,13 +207,17 @@ export async function GET(request: Request) {
             referrers: {} as Record<string, number>,
             os: {} as Record<string, number>,
             devices: {} as Record<string, number>,
-            trend: {} as Record<string, { visitors: Set<string>, views: number }>
+            trend: prefillTrend(range)
         }
 
         // Helper for trend grouping keys
         const getTrendKey = (date: Date, range: string) => {
             if (range === "24h") return date.getHours() + ":00"
-            if (range === "6m" || range === "1y") return date.toLocaleString('default', { month: 'short' })
+            if (range === "6m") return date.toLocaleString('default', { month: 'short' })
+            if (range === "1y") {
+                const yearKey = date.getFullYear().toString().substring(2)
+                return `${date.toLocaleString('default', { month: 'short' })} ${yearKey}`
+            }
             return date.toLocaleDateString('default', { day: '2-digit', month: 'short' })
         }
 
