@@ -231,19 +231,28 @@ export default function AnaliticaPage() {
                 <CardDescription>Usuarios totales vs Usuarios que regresan por semana.</CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="h-[300px] w-full">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <LineChart data={retentionData} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
-                      <CartesianGrid strokeDasharray="3 3" opacity={0.3} vertical={false} />
-                      <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 12 }} />
-                      <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12 }} />
-                      <Tooltip 
-                        contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
-                      />
-                      <Line type="monotone" dataKey="usuarios" stroke="#94a3b8" strokeWidth={3} dot={{ r: 4 }} name="Nuevos Usuarios" />
-                      <Line type="monotone" dataKey="retenidos" stroke="#16a34a" strokeWidth={3} dot={{ r: 4 }} name="Usuarios Retenidos" />
-                    </LineChart>
-                  </ResponsiveContainer>
+                <div className="h-[300px] w-full flex items-center justify-center">
+                  {loading ? (
+                    <div className="flex flex-col items-center gap-3">
+                      <div className="w-8 h-8 border-4 border-primary/30 border-t-primary rounded-full animate-spin" />
+                      <p className="text-sm text-muted-foreground animate-pulse">Cargando métricas...</p>
+                    </div>
+                  ) : retentionData.length > 0 ? (
+                    <ResponsiveContainer width="100%" height="100%">
+                      <LineChart data={retentionData} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
+                        <CartesianGrid strokeDasharray="3 3" opacity={0.3} vertical={false} />
+                        <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 12 }} />
+                        <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12 }} />
+                        <Tooltip 
+                          contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                        />
+                        <Line type="monotone" dataKey="usuarios" stroke="#94a3b8" strokeWidth={3} dot={{ r: 4 }} name="Nuevos Usuarios" />
+                        <Line type="monotone" dataKey="retenidos" stroke="#16a34a" strokeWidth={3} dot={{ r: 4 }} name="Usuarios Retenidos" />
+                      </LineChart>
+                    </ResponsiveContainer>
+                  ) : (
+                    <p className="text-sm text-muted-foreground">Sin datos suficientes para graficar.</p>
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -261,19 +270,28 @@ export default function AnaliticaPage() {
                 <CardDescription>Flujo de usuarios desde la Landing Page hasta el contacto.</CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="h-[300px] w-full">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <BarChart layout="vertical" data={funnelData} margin={{ top: 5, right: 30, left: 40, bottom: 5 }}>
-                      <CartesianGrid strokeDasharray="3 3" opacity={0.3} horizontal={false} />
-                      <XAxis type="number" axisLine={false} tickLine={false} />
-                      <YAxis dataKey="name" type="category" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#64748b' }} width={120} />
-                      <Tooltip 
-                        cursor={{ fill: 'rgba(0,0,0,0.05)' }}
-                        contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
-                      />
-                      <Bar dataKey="usuarios" radius={[0, 6, 6, 0]} barSize={32} />
-                    </BarChart>
-                  </ResponsiveContainer>
+                <div className="h-[300px] w-full flex items-center justify-center">
+                  {loading ? (
+                    <div className="flex flex-col items-center gap-3">
+                      <div className="w-8 h-8 border-4 border-blue-500/30 border-t-blue-500 rounded-full animate-spin" />
+                      <p className="text-sm text-muted-foreground animate-pulse">Cargando embudo...</p>
+                    </div>
+                  ) : funnelData.length > 0 ? (
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart layout="vertical" data={funnelData} margin={{ top: 5, right: 30, left: 40, bottom: 5 }}>
+                        <CartesianGrid strokeDasharray="3 3" opacity={0.3} horizontal={false} />
+                        <XAxis type="number" axisLine={false} tickLine={false} />
+                        <YAxis dataKey="name" type="category" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#64748b' }} width={120} />
+                        <Tooltip 
+                          cursor={{ fill: 'rgba(0,0,0,0.05)' }}
+                          contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                        />
+                        <Bar dataKey="usuarios" radius={[0, 6, 6, 0]} barSize={32} />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  ) : (
+                    <p className="text-sm text-muted-foreground">Sin datos suficientes para graficar.</p>
+                  )}
                 </div>
               </CardContent>
             </Card>
