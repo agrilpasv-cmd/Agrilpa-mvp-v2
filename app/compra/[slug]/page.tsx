@@ -13,6 +13,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { RatingOverlay } from "@/components/rating-overlay"
 import { ChevronLeft, Package, MapPin, CreditCard, Truck, Plane, Ship, CheckCircle, Phone } from "lucide-react"
 import { getProductBySlug } from "@/lib/products-data"
+import { CountryPicker, PhoneCodePicker } from "@/components/ui/country-picker"
 
 const TAX_RATES: Record<string, number> = {
   México: 0.16,
@@ -54,10 +55,12 @@ export default function PurchasePage() {
   const [kg, setKg] = useState(100)
   const [purchaseCompleted, setPurchaseCompleted] = useState(false)
   const [isRatingOpen, setIsRatingOpen] = useState(false)
+  // Vendor WhatsApp info (loaded from DB product)
+  const [vendorWhatsApp, setVendorWhatsApp] = useState<{ countryCode: string; phoneNumber: string } | null>(null)
   const [formData, setFormData] = useState({
     fullName: "",
     email: "",
-    countryCode: "", // split phone into countryCode and phoneNumber
+    countryCode: "",
     phoneNumber: "",
     address: "",
     city: "",
@@ -67,8 +70,8 @@ export default function PurchasePage() {
     shippingMethod: "barco",
     paymentMethod: "transferencia",
     specialInstructions: "",
-    containerSize: "", // selected by buyer
-    containerCount: 1, // number of containers
+    containerSize: "",
+    containerCount: 1,
   })
 
   useEffect(() => {
@@ -80,12 +83,11 @@ export default function PurchasePage() {
         .then(res => res.json())
         .then(data => {
           if (data.product) {
-            // Transform user product to match static product structure
             const transformed = {
               id: data.product.id,
               name: data.product.title,
               category: data.product.category,
-              producer: "Productor Local", // Default or extract from desc
+              producer: "Productor Local",
               location: data.product.country,
               country: data.product.country,
               description: data.product.description,
@@ -101,12 +103,22 @@ export default function PurchasePage() {
               containerSize: data.product.container_size || "20ST",
             }
             setUserProduct(transformed)
-            // Initialize selection with seller's default
-            setFormData(prev => ({ 
-              ...prev, 
-              containerSize: data.product.container_size || "20ST",
+            setFormData(prev => ({
+              ...prev,
+              containerSize: (!data.product.container_size || data.product.container_size === "Ambos") ? "20ST" : data.product.container_size,
               containerCount: parseInt(data.product.min_order) || 1
             }))
+            // Capture vendor WhatsApp if available
+            if (
+              data.product.contact_method === "WhatsApp" &&
+              data.product.country_code &&
+              data.product.phone_number
+            ) {
+              setVendorWhatsApp({
+                countryCode: data.product.country_code,
+                phoneNumber: data.product.phone_number,
+              })
+            }
           }
         })
         .finally(() => setIsLoading(false))
@@ -135,14 +147,17 @@ export default function PurchasePage() {
 
   const isFCL = product.shippingUnitType === "FCL"
   
-  // Calculate effective quantity in kg if it's FCL
-  // 20ST = 21000kg, 40HC = 26000kg
+  // For FCL: price is per container, so subtotal = price × number of containers
+  // For standard: price is per kg, so subtotal = price × kg
+  const containerCapacityKg = formData.containerSize === "40HC" ? 26000 : 21000
   const effectiveKg = isFCL 
-    ? (formData.containerCount * (formData.containerSize === "40HC" ? 26000 : 21000))
+    ? (formData.containerCount * containerCapacityKg)
     : kg
 
   const pricePerUnit = Number.parseFloat((product.price || "0").replace(/[^0-9.]/g, "")) || 0
-  const subtotal = pricePerUnit * effectiveKg
+  const subtotal = isFCL 
+    ? pricePerUnit * formData.containerCount  // price is per container
+    : pricePerUnit * kg                       // price is per kg
   const shippingCost = SHIPPING_COSTS[formData.shippingMethod]
   const taxRate = TAX_RATES[formData.country] || 0.15
   const taxAmount = subtotal * taxRate
@@ -172,7 +187,7 @@ export default function PurchasePage() {
         body: JSON.stringify({
           productName: product.name,
           productSlug: slug,
-          quantityKg: kg,
+          quantityKg: effectiveKg,
           priceUsd: totalPrice,
           fullName: formData.fullName,
           email: formData.email,
@@ -188,16 +203,108 @@ export default function PurchasePage() {
           specialInstructions: formData.specialInstructions,
           containerSize: isFCL ? formData.containerSize : null,
           containerCount: isFCL ? formData.containerCount : null,
-          quantityKg: effectiveKg,
         }),
       })
 
       if (!response.ok) {
-        console.error("[v0] Failed to save purchase")
+        console.error("[Agrilpa] Failed to save purchase")
       }
     } catch (error) {
-      console.error("[v0] Purchase save error:", error)
+      console.error("[Agrilpa] Purchase save error:", error)
     }
+
+    // ── Auto-notify vendor via WhatsApp ──────────────────────────────
+    if (vendorWhatsApp?.countryCode && vendorWhatsApp?.phoneNumber) {
+      const quantityLabel = isFCL
+        ? `${formData.containerCount} Contenedor(es) ${formData.containerSize === "20ST" ? "20' Standard" : "40' High Cube"}`
+        : `${kg.toLocaleString()} kg`
+
+      const volumeLabel = isFCL
+        ? `~${effectiveKg.toLocaleString()} kg`
+        : null
+
+      const paymentLabel =
+        formData.paymentMethod === "transferencia" ? "🏦 Transferencia bancaria internacional" :
+        formData.paymentMethod === "carta-credito" ? "💳 Carta de crédito" :
+        "🤝 Crédito comercial"
+
+      const shippingLabel = formData.shippingMethod === "barco" ? "🚢 Barco (15-30 días)" : "✈️ Avión (5-10 días)"
+
+      // Emoji automático según la categoría del producto
+      const categoryEmojis: Record<string, string> = {
+        "Café": "☕",
+        "Cacao": "🍫",
+        "Frutas": "🍎",
+        "Verduras": "🥬",
+        "Granos Básicos": "🌾",
+        "Cereales": "🌾",
+        "Arroz": "🍚",
+        "Caña de azúcar": "🍬",
+        "Aceites": "🫒",
+        "Especias": "🌶️",
+        "Algodón": "🧵",
+        "Semillas": "🌱",
+        "Lácteos": "🥛",
+        "Forraje": "🌿",
+        "Fertilizantes": "🧪",
+        "Herbicidas": "🧴",
+        "Plaguicidas": "🛡️",
+        "Otros": "📦",
+      }
+      const productEmoji = categoryEmojis[product.category] || "📦"
+
+      const message = [
+        `━━━━━━━━━━━━━━━━━━━━━`,
+        `🛒 *NUEVA ORDEN DE COMPRA*`,
+        `━━━━━━━━━━━━━━━━━━━━━`,
+        ``,
+        `${productEmoji} *Producto:* ${product.name}`,
+        `🏷️ *Categoría:* ${product.category}`,
+        `📏 *Cantidad:* ${quantityLabel}`,
+        ...(volumeLabel ? [`⚖️ *Volumen estimado:* ${volumeLabel}`] : []),
+        ``,
+        `─ ─ ─ 💰 *DESGLOSE DE PRECIO* ─ ─ ─`,
+        ``,
+        `   ${isFCL ? "🚛 Precio/contenedor" : "⚖️ Precio/kg"}:  $${pricePerUnit.toLocaleString("en-US", { minimumFractionDigits: 2 })} USD`,
+        `   📋 Subtotal:  $${subtotal.toLocaleString("en-US", { minimumFractionDigits: 2 })} USD`,
+        `   ${formData.shippingMethod === "barco" ? "🚢" : "✈️"} Envío:  $${shippingCost.toFixed(2)} USD`,
+        `   🏛️ Impuestos (${(taxRate * 100).toFixed(0)}%):  $${taxAmount.toLocaleString("en-US", { minimumFractionDigits: 2 })} USD`,
+        ``,
+        `   💵 *TOTAL:  $${totalPrice.toLocaleString("en-US", { minimumFractionDigits: 2 })} USD*`,
+        ``,
+        `─ ─ ─ 👤 *DATOS DEL COMPRADOR* ─ ─ ─`,
+        ``,
+        `   🧑 ${formData.fullName}`,
+        `   📧 ${formData.email}`,
+        `   📱 +${formData.countryCode} ${formData.phoneNumber}`,
+        ``,
+        `─ ─ ─ 📍 *DIRECCIÓN DE ENTREGA* ─ ─ ─`,
+        ``,
+        `   🏠 ${formData.address}`,
+        `   🌆 ${formData.city}, ${formData.state} ${formData.zipCode}`,
+        `   🌍 ${formData.country}`,
+        ``,
+        `─ ─ ─ 📦 *LOGÍSTICA Y PAGO* ─ ─ ─`,
+        ``,
+        `   ${shippingLabel}`,
+        `   ${paymentLabel}`,
+        ...(formData.specialInstructions ? [
+          ``,
+          `─ ─ ─ 📝 *INSTRUCCIONES* ─ ─ ─`,
+          ``,
+          `   ${formData.specialInstructions}`,
+        ] : []),
+        ``,
+        `━━━━━━━━━━━━━━━━━━━━━`,
+        `_Enviado desde_ *Agrilpa* 🍃`,
+        `_agrilpa.com_`,
+        `━━━━━━━━━━━━━━━━━━━━━`,
+      ].join("\n")
+
+      const whatsappUrl = `https://wa.me/${vendorWhatsApp.countryCode}${vendorWhatsApp.phoneNumber}?text=${encodeURIComponent(message)}`
+      window.open(whatsappUrl, "_blank")
+    }
+    // ────────────────────────────────────────────────────────────────
 
     setPurchaseCompleted(true)
     setTimeout(() => {
@@ -331,22 +438,13 @@ export default function PurchasePage() {
                 <div>
                   <label className="block text-sm font-medium text-foreground mb-2">Teléfono *</label>
                   <div className="flex gap-3">
-                    <div className="w-24">
-                      <div className="relative">
-                        <span className="absolute left-3 top-3 text-muted-foreground text-sm font-medium">+</span>
-                        <Input
-                          type="text"
-                          name="countryCode"
-                          value={formData.countryCode}
-                          onChange={handlePhoneInput}
-                          inputMode="numeric"
-                          placeholder="503"
-                          maxLength={4}
-                          className="w-full pl-7 pr-4 py-3 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary transition"
-                          required
-                        />
-                      </div>
-                    </div>
+                    <PhoneCodePicker
+                      value={formData.countryCode}
+                      onChange={(phoneCode) =>
+                        setFormData((prev) => ({ ...prev, countryCode: phoneCode }))
+                      }
+                      className="w-32 shrink-0"
+                    />
 
                     <div className="flex-1">
                       <div className="relative">
@@ -373,22 +471,20 @@ export default function PurchasePage() {
                   </div>
 
                   <div className="space-y-4">
-                    <div>
+                    <div className="react-select-container">
                       <Label htmlFor="country">País *</Label>
-                      <select
-                        id="country"
-                        name="country"
+                      <CountryPicker
                         value={formData.country}
-                        onChange={handleInputChange}
-                        required
-                        className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                      >
-                        {Object.keys(TAX_RATES).map((country) => (
-                          <option key={country} value={country}>
-                            {country}
-                          </option>
-                        ))}
-                      </select>
+                        syncPhoneCode
+                        onChange={(countryName, phoneCode) => {
+                          setFormData((prev) => ({
+                            ...prev,
+                            country: countryName,
+                            ...(phoneCode ? { countryCode: phoneCode } : {}),
+                          }))
+                        }}
+                        placeholder="Selecciona tu país"
+                      />
                       <p className="text-xs text-muted-foreground mt-1">
                         Impuesto aplicable: {(taxRate * 100).toFixed(0)}%
                       </p>
@@ -591,29 +687,33 @@ export default function PurchasePage() {
                     
                     <div>
                       <Label className="mb-2 block text-sm font-medium">Tipo de Contenedor *</Label>
-                      <div className="grid grid-cols-2 gap-2">
-                        <button
-                          type="button"
-                          onClick={() => setFormData(prev => ({ ...prev, containerSize: "20ST" }))}
-                          className={`p-2 text-xs rounded-md border-2 transition-all ${
-                            formData.containerSize === "20ST"
-                              ? "border-primary bg-primary/10 font-bold"
-                              : "border-border hover:border-primary/40"
-                          }`}
-                        >
-                          20&apos; Standard
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => setFormData(prev => ({ ...prev, containerSize: "40HC" }))}
-                          className={`p-2 text-xs rounded-md border-2 transition-all ${
-                            formData.containerSize === "40HC"
-                              ? "border-primary bg-primary/10 font-bold"
-                              : "border-border hover:border-primary/40"
-                          }`}
-                        >
-                          40&apos; High Cube
-                        </button>
+                      <div className={`grid gap-2 ${(!product.containerSize || product.containerSize === "Ambos") ? "grid-cols-2" : "grid-cols-1"}`}>
+                        {(!product.containerSize || product.containerSize === "Ambos" || product.containerSize === "20ST") && (
+                          <button
+                            type="button"
+                            onClick={() => setFormData(prev => ({ ...prev, containerSize: "20ST" }))}
+                            className={`p-2 text-xs rounded-md border-2 transition-all ${
+                              formData.containerSize === "20ST"
+                                ? "border-primary bg-primary/10 font-bold"
+                                : "border-border hover:border-primary/40"
+                            }`}
+                          >
+                            20&apos; Standard
+                          </button>
+                        )}
+                        {(!product.containerSize || product.containerSize === "Ambos" || product.containerSize === "40HC") && (
+                          <button
+                            type="button"
+                            onClick={() => setFormData(prev => ({ ...prev, containerSize: "40HC" }))}
+                            className={`p-2 text-xs rounded-md border-2 transition-all ${
+                              formData.containerSize === "40HC"
+                                ? "border-primary bg-primary/10 font-bold"
+                                : "border-border hover:border-primary/40"
+                            }`}
+                          >
+                            40&apos; High Cube
+                          </button>
+                        )}
                       </div>
                       <p className="text-[10px] text-muted-foreground mt-1">
                         {formData.containerSize === "20ST" ? "Capacidad: ~21,000 kg" : "Capacidad: ~26,000 kg"}
@@ -638,16 +738,22 @@ export default function PurchasePage() {
 
                 <div className="space-y-2 pt-4 border-t border-border">
                   <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Precio por kg</span>
-                    <span className="font-medium">{product.price}</span>
+                    <span className="text-muted-foreground">{isFCL ? "Precio por contenedor" : "Precio por kg"}</span>
+                    <span className="font-medium">${pricePerUnit.toLocaleString("en-US", { minimumFractionDigits: 2 })} USD</span>
                   </div>
+                  {isFCL && (
+                    <div className="flex justify-between text-sm">
+                      <span className="text-muted-foreground">Contenedores</span>
+                      <span className="font-medium">{formData.containerCount} × {formData.containerSize === "20ST" ? "20' Standard" : "40' High Cube"}</span>
+                    </div>
+                  )}
                   <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Volumen Total</span>
-                    <span className="font-medium">{isFCL ? `${effectiveKg.toLocaleString()} kg` : `${kg} kg`}</span>
+                    <span className="text-muted-foreground">{isFCL ? "Volumen estimado" : "Volumen Total"}</span>
+                    <span className="font-medium">{effectiveKg.toLocaleString()} kg</span>
                   </div>
                   <div className="flex justify-between text-sm">
                     <span className="text-muted-foreground">Subtotal</span>
-                    <span className="font-medium">${subtotal.toFixed(2)} USD</span>
+                    <span className="font-medium">${subtotal.toLocaleString("en-US", { minimumFractionDigits: 2 })} USD</span>
                   </div>
                   <div className="flex justify-between text-sm">
                     <span className="text-muted-foreground">
@@ -659,14 +765,14 @@ export default function PurchasePage() {
                     <span className="text-muted-foreground">
                       Impuestos ({formData.country}, {(taxRate * 100).toFixed(0)}%)
                     </span>
-                    <span className="font-medium">${taxAmount.toFixed(2)} USD</span>
+                    <span className="font-medium">${taxAmount.toLocaleString("en-US", { minimumFractionDigits: 2 })} USD</span>
                   </div>
                 </div>
 
                 <div className="pt-4 border-t border-border">
                   <div className="flex justify-between items-center">
                     <span className="text-lg font-bold text-foreground">Total</span>
-                    <span className="text-2xl font-bold text-primary">${totalPrice.toFixed(2)} USD</span>
+                    <span className="text-2xl font-bold text-primary">${totalPrice.toLocaleString("en-US", { minimumFractionDigits: 2 })} USD</span>
                   </div>
                 </div>
 

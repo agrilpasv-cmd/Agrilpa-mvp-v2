@@ -17,6 +17,7 @@ import {
 import { ChatOverlay } from "@/components/chat-overlay"
 import { Star, MapPin, MessageCircle, Check, ChevronLeft, FileText, ShoppingCart, Copy, Calendar, Package, Loader, AlertCircle, ArrowRight, ShieldCheck, X } from "lucide-react"
 import { getProductBySlug, getProductsByCategory, allProducts } from "@/lib/products-data"
+import { ProductHero } from "@/components/product-hero"
 import { createClient } from "@/lib/supabase/client"
 import { format } from "date-fns"
 import { es } from "date-fns/locale"
@@ -462,7 +463,7 @@ export default function ProductPage() {
               trackContactClick("whatsapp")
             }
           }}
-          className={`flex items-center justify-center gap-2 text-sm bg-[#25D366] hover:bg-[#128C7E] text-white font-semibold rounded-md transition-colors ${className}`}
+          className={`flex items-center justify-center gap-2 text-sm border-2 border-slate-900 bg-slate-900 text-white hover:opacity-90 font-semibold rounded-lg transition-all duration-200 dark:border-white dark:bg-white dark:text-slate-900 dark:hover:opacity-90 ${className}`}
         >
           <MessageCircle className="w-5 h-5" />
           Contactar Vendedor
@@ -482,7 +483,7 @@ export default function ProductPage() {
               trackContactClick("email")
             }
           }}
-          className={`flex items-center justify-center gap-2 text-sm bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-md transition-colors ${className}`}
+          className={`flex items-center justify-center gap-2 text-sm border-2 border-slate-900 bg-slate-900 text-white hover:opacity-90 font-semibold rounded-lg transition-all duration-200 dark:border-white dark:bg-white dark:text-slate-900 dark:hover:opacity-90 ${className}`}
         >
           <FileText className="w-5 h-5" />
           Contactar Vendedor
@@ -502,7 +503,7 @@ export default function ProductPage() {
               trackContactClick("telegram")
             }
           }}
-          className={`flex items-center justify-center gap-2 text-sm bg-[#0088cc] hover:bg-[#007dbd] text-white font-semibold rounded-md transition-colors ${className}`}
+          className={`flex items-center justify-center gap-2 text-sm border-2 border-slate-900 bg-slate-900 text-white hover:opacity-90 font-semibold rounded-lg transition-all duration-200 dark:border-white dark:bg-white dark:text-slate-900 dark:hover:opacity-90 ${className}`}
         >
           <FileText className="w-5 h-5" />
           Contactar Vendedor
@@ -510,13 +511,13 @@ export default function ProductPage() {
       )
     }
     return (
-      <Button
+      <button
         onClick={handleContactVendor}
-        className={`bg-primary hover:bg-primary/90 text-white flex items-center justify-center gap-2 ${className}`}
+        className={`border-2 border-slate-900 bg-slate-900 text-white hover:opacity-90 flex items-center justify-center gap-2 font-semibold rounded-lg transition-all duration-200 dark:border-white dark:bg-white dark:text-slate-900 dark:hover:opacity-90 ${className}`}
       >
         <MessageCircle className="w-5 h-5" />
         Contactar Vendedor
-      </Button>
+      </button>
     )
   }
 
@@ -554,228 +555,20 @@ export default function ProductPage() {
           </button>
         </Link>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-16">
-          <div className="lg:col-span-1 space-y-4">
-            <div 
-              className="bg-gradient-to-br from-primary/5 to-primary/10 rounded-lg overflow-hidden h-96 flex items-center justify-center relative cursor-zoom-in group"
-              onClick={() => setIsZoomOpen(true)}
-            >
-              <img
-                src={selectedImage || product.image || "/placeholder.svg"}
-                alt={product.name}
-                className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-              />
-              <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100">
-                <span className="bg-white/90 text-primary px-3 py-1 rounded-full text-xs font-bold shadow-sm">Click para ampliar</span>
-              </div>
-            </div>
-            
-            {(product.image2 || product.image3) && (
-              <div className="grid grid-cols-3 gap-2">
-                <div 
-                  className={`aspect-square rounded-md overflow-hidden border-2 cursor-pointer ${selectedImage === product.image || !selectedImage ? 'border-primary' : 'border-transparent'}`}
-                  onClick={() => setSelectedImage(product.image)}
-                >
-                  <img src={product.image || "/placeholder.svg"} className="w-full h-full object-cover" />
-                </div>
-                {product.image2 && (
-                  <div 
-                    className={`aspect-square rounded-md overflow-hidden border-2 cursor-pointer ${selectedImage === product.image2 ? 'border-primary' : 'border-transparent'}`}
-                    onClick={() => setSelectedImage(product.image2)}
-                  >
-                    <img src={product.image2} className="w-full h-full object-cover" />
-                  </div>
-                )}
-                {product.image3 && (
-                  <div 
-                    className={`aspect-square rounded-md overflow-hidden border-2 cursor-pointer ${selectedImage === product.image3 ? 'border-primary' : 'border-transparent'}`}
-                    onClick={() => setSelectedImage(product.image3)}
-                  >
-                    <img src={product.image3} className="w-full h-full object-cover" />
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
+        <ProductHero
+          product={product}
+          selectedImage={selectedImage}
+          setSelectedImage={setSelectedImage}
+          setIsZoomOpen={setIsZoomOpen}
+          currentUserId={currentUserId}
+          handleBuy={handleBuy}
+          specificContactButton={specificContactButton}
+          setAuthDialogAction={setAuthDialogAction}
+          setIsAuthDialogOpen={setIsAuthDialogOpen}
+          setIsQuotationDialogOpen={setIsQuotationDialogOpen}
+        />
 
-          <div className="lg:col-span-2 space-y-6">
-            <div>
-              <div className="flex items-start justify-between mb-3">
-                <div>
-                  <h1 className="text-4xl font-bold text-foreground mb-2">{product.name}</h1>
-                  <span className="text-sm font-semibold text-primary bg-primary/10 px-3 py-1 rounded-full">
-                    {product.category}
-                  </span>
-                </div>
-                {(product.verified || (product as any).sellerIsPro) && (
-                  <div className="bg-primary/10 border border-primary/20 text-primary px-4 py-2 rounded-full flex items-center gap-2 shadow-sm">
-                    <ShieldCheck className="w-4 h-4" />
-                    <span className="font-bold text-sm">Vendedor Verificado</span>
-                  </div>
-                )}
-              </div>
-            </div>
 
-            <div className="flex items-center gap-3 pb-4 border-b border-border">
-              <div className="flex items-center gap-1">
-                <div className="flex gap-0.5">
-                  {[...Array(5)].map((_, i) => (
-                    <Star
-                      key={i}
-                      className={`w-5 h-5 ${i < Math.floor(product.rating) ? "fill-yellow-400 text-yellow-400" : "text-muted-foreground"
-                        }`}
-                    />
-                  ))}
-                </div>
-                <span className="font-semibold text-foreground ml-2">{product.rating}</span>
-              </div>
-              <span className="text-sm text-muted-foreground">({product.reviews} reseñas)</span>
-            </div>
-
-            {(product as any).vendorId ? (
-              <Link href={`/vendedor/${(product as any).vendorId}`}>
-                <Card className="bg-primary/5 border border-primary/20 p-5 hover:border-primary/50 hover:bg-primary/10 hover:shadow-md transition-all duration-200 cursor-pointer group">
-                  <div className="flex items-center gap-4">
-                    {/* Avatar circle */}
-                    <div className="shrink-0 w-12 h-12 rounded-full bg-gradient-to-br from-primary to-primary/60 flex items-center justify-center text-white font-bold text-base shadow-sm shadow-primary/30">
-                      {(product.producer || "P").slice(0, 2).toUpperCase()}
-                    </div>
-                    {/* Info */}
-                    <div className="flex-1 min-w-0">
-                      <p className="text-xs text-muted-foreground mb-0.5">Productor</p>
-                      <p className="text-base font-bold text-foreground group-hover:text-primary transition-colors truncate">{product.producer}</p>
-                      <div className="flex items-center gap-1.5 text-muted-foreground mt-0.5">
-                        <MapPin className="w-3 h-3 shrink-0" />
-                        <p className="text-xs">{product.location}</p>
-                      </div>
-                    </div>
-                    {/* Ver perfil */}
-                    <span className="inline-flex items-center gap-1 text-xs text-primary font-medium group-hover:gap-1.5 transition-all shrink-0">
-                      Ver perfil
-                      <ArrowRight className="w-3 h-3" />
-                    </span>
-                  </div>
-                </Card>
-              </Link>
-            ) : (
-              <Card className="bg-primary/5 border border-primary/20 p-6">
-                <div className="space-y-3">
-                  <div>
-                    <p className="text-sm text-muted-foreground mb-1">Productor</p>
-                    <p className="text-lg font-bold text-foreground">{product.producer}</p>
-                  </div>
-                  <div className="flex items-center gap-2 text-muted-foreground">
-                    <MapPin className="w-4 h-4" />
-                    <p className="text-sm">{product.location}</p>
-                  </div>
-                </div>
-              </Card>
-            )}
-
-            <Card className="mt-4 bg-primary/10 border border-primary/30 p-6 space-y-4">
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div>
-                  <p className="text-sm text-muted-foreground mb-2">Precio</p>
-                  <p className="text-2xl font-bold text-primary">
-                    {product.price === "Por Cotizar" ? "Por Cotizar" : (product.price?.includes('$') ? product.price : `$${product.price}`)}
-                  </p>
-                  <p className="text-xs text-muted-foreground mt-1">por kg</p>
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground mb-2">Pedido mínimo</p>
-                  <p className="text-2xl font-bold text-foreground">{product.minOrder}</p>
-                  {(product as any).shippingUnitType && (
-                    <p className="text-xs text-primary font-semibold mt-1">
-                      {(product as any).shippingUnitType === "FCL"
-                        ? `🚢 FCL${(product as any).containerSize === "20ST" ? " – 20' Std" : (product as any).containerSize === "40HC" ? " – 40' HC" : ""}`
-                        : (product as any).shippingUnitType === "LCL"
-                          ? "📦 Carga LCL"
-                          : "📋 Cantidad personalizada"}
-                    </p>
-                  )}
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground mb-2">Tipo de Embalaje</p>
-                  <p className="text-lg font-bold text-foreground">{product.packaging}</p>
-                  <p className="text-xs text-muted-foreground mt-1">tipo de empaque</p>
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground mb-2">Tamaño de Embalaje</p>
-                  <p className="text-lg font-bold text-foreground">{product.packagingSize}</p>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    <span className="font-semibold text-primary">kg</span> por embalaje
-                  </p>
-                </div>
-              </div>
-
-              {/* Owner Check Logic */}
-              {currentUserId && (product as any).vendorId === currentUserId ? (
-                <div className="space-y-3">
-                  <Button
-                    disabled
-                    className="w-full bg-muted text-muted-foreground py-6 flex items-center justify-center gap-2 cursor-not-allowed border border-border"
-                  >
-                    <Package className="w-5 h-5" />
-                    Este es tu producto
-                  </Button>
-                  <p className="text-xs text-center text-muted-foreground">
-                    No puedes comprar ni cotizar tus propios productos.
-                  </p>
-                </div>
-              ) : (
-                <>
-                  {product.price === "Por Cotizar" ? (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                      <Button
-                        onClick={() => {
-                          if (!currentUserId) {
-                            setAuthDialogAction("solicitar una cotización")
-                            setIsAuthDialogOpen(true)
-                          } else {
-                            setIsQuotationDialogOpen(true)
-                          }
-                        }}
-                        className="w-full bg-primary hover:bg-primary/90 text-white h-14 flex items-center justify-center gap-2"
-                      >
-                        <FileText className="w-5 h-5" />
-                        Solicitar Cotización
-                      </Button>
-                      {specificContactButton("w-full h-14")}
-                    </div>
-                  ) : (
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                      <Button
-                        onClick={handleBuy}
-                        className="w-full bg-green-600 hover:bg-green-700 text-white h-14 flex items-center justify-center gap-2"
-                      >
-                        <ShoppingCart className="w-5 h-5" />
-                        Comprar
-                      </Button>
-                      {specificContactButton("w-full h-14")}
-                      <Button
-                        onClick={() => {
-                          if (!currentUserId) {
-                            setAuthDialogAction("solicitar una cotización")
-                            setIsAuthDialogOpen(true)
-                          } else {
-                            setIsQuotationDialogOpen(true)
-                          }
-                        }}
-                        className="w-full bg-secondary hover:bg-secondary/90 text-foreground h-14 flex items-center justify-center gap-2 border border-border"
-                      >
-                        <FileText className="w-5 h-5" />
-                        Solicitar Cotización
-                      </Button>
-                    </div>
-                  )}
-                </>
-              )}
-              <p className="text-xs text-muted-foreground text-center pt-2">
-                Para realizar una cotización o compra, necesitas ser un usuario verificado
-              </p>
-            </Card>
-          </div>
-        </div>
 
         <div className="mb-16">
           <Card className="bg-card border border-border p-8">

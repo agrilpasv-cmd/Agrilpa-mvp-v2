@@ -58,6 +58,7 @@ export default function NuevaPublicacionPage() {
     category: "",
     price: "",
     quantity: "",
+    quantityUnit: "kg",
     description: "",
     country: "",
     minOrder: "",
@@ -181,9 +182,9 @@ export default function NuevaPublicacionPage() {
       { key: "description", label: "Descripción del Producto" },
       { key: "country", label: "País de Origen" },
       { key: "minOrder", label: "Pedido Mínimo" },
-      { key: "packaging", label: "Tipo de Embalaje" },
-      { key: "packagingSize", label: "Tamaño del Embalaje" },
+      {key: "packagingSize", label: "Tamaño del Embalaje" },
       { key: "image", label: "Foto Principal del Producto" },
+      { key: "supplyCapacity", label: "Capacidad de Abastecimiento" },
     ]
 
     const missingField = requiredFields.find((field) => !formData[field.key as keyof typeof formData])
@@ -258,12 +259,8 @@ export default function NuevaPublicacionPage() {
           userId,
           ...formData,
           price: isPriceOnRequest ? "Por Cotizar" : formData.price,
-          // Compose minOrder with unit if custom or FCL
-          minOrder: formData.shippingUnit === "FCL"
-            ? `${formData.minOrder || 1} Contenedor(es)`
-            : formData.shippingUnit === "custom"
-              ? `${formData.minOrder} ${formData.minOrderUnit}`
-              : formData.minOrder,
+          quantity: `${formData.quantity} ${formData.quantityUnit || "kg"}`,
+          minOrder: `${formData.minOrder} ${formData.minOrderUnit || "kg"}`,
           shippingUnitType: formData.shippingUnit,
           containerSize: formData.containerSize || null,
           // For WhatsApp, send country code and phone number separately
@@ -432,6 +429,7 @@ export default function NuevaPublicacionPage() {
               </div>
             </div>
 
+            {/* Título y Categoría */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label htmlFor="title" className="block text-sm font-medium mb-2">
@@ -469,84 +467,7 @@ export default function NuevaPublicacionPage() {
               </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label htmlFor="price" className="block text-sm font-medium mb-2">
-                  Precio <span className="text-red-500">*</span>
-                </label>
-
-                <div className="flex bg-muted p-1 rounded-lg mb-3">
-                  <button
-                    type="button"
-                    aria-pressed={isPriceOnRequest}
-                    onClick={() => {
-                      setIsPriceOnRequest(true)
-                      setFormData(prev => ({ ...prev, price: "Por Cotizar" }))
-                    }}
-                    className={`flex-1 py-2 text-sm font-medium rounded-md transition-all ${isPriceOnRequest
-                      ? "bg-primary text-primary-foreground shadow-sm"
-                      : "text-muted-foreground hover:text-foreground"
-                      }`}
-                  >
-                    Cotización
-                  </button>
-                  <button
-                    type="button"
-                    aria-pressed={!isPriceOnRequest}
-                    onClick={() => {
-                      setIsPriceOnRequest(false)
-                      setFormData(prev => ({ ...prev, price: "" }))
-                    }}
-                    className={`flex-1 py-2 text-sm font-medium rounded-md transition-all ${!isPriceOnRequest
-                      ? "bg-primary text-primary-foreground shadow-sm"
-                      : "text-muted-foreground hover:text-foreground"
-                      }`}
-                  >
-                    Precio
-                  </button>
-                </div>
-
-                {!isPriceOnRequest ? (
-                  <div className="relative">
-                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground font-semibold">$</span>
-                    <Input
-                      id="price"
-                      type="number"
-                      name="price"
-                      value={formData.price === "Por Cotizar" ? "" : formData.price}
-                      onChange={handleInputChange}
-                      placeholder="0.00"
-                      className="pl-7 pr-12"
-                      disabled={isLoading}
-                      required={!isPriceOnRequest}
-                      step="0.01"
-                      min="0"
-                    />
-                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">/kg</span>
-                  </div>
-                ) : (
-                  <div className="p-3 bg-muted/50 border border-dashed border-muted-foreground/30 rounded-lg text-center text-sm text-muted-foreground">
-                    El precio se acordará directamente con el comprador
-                  </div>
-                )}
-              </div>
-              <div>
-                <label htmlFor="quantity" className="block text-sm font-medium mb-2">
-                  Cantidad Disponible <span className="text-red-500">*</span>
-                </label>
-                <Input
-                  id="quantity"
-                  type="text"
-                  name="quantity"
-                  value={formData.quantity}
-                  onChange={handleInputChange}
-                  placeholder="Ej: 500 kg"
-                  disabled={isLoading}
-                  required
-                />
-              </div>
-            </div>
-
+            {/* País de Origen y Tipo de Maduración */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label htmlFor="country" className="block text-sm font-medium mb-2">
@@ -640,69 +561,7 @@ export default function NuevaPublicacionPage() {
                 </select>
               </div>
               <div>
-                <label htmlFor="minOrder" className="block text-sm font-medium mb-2">
-                  Pedido Mínimo <span className="text-red-500">*</span>
-                </label>
-                {formData.packaging === "Contenedores" ? (
-                  <div className="flex gap-2">
-                    <Input
-                      id="minOrder"
-                      type="number"
-                      name="minOrder"
-                      value={formData.minOrder || "1"}
-                      onChange={handleInputChange}
-                      min="1"
-                      className="w-full"
-                      disabled={isLoading}
-                      required
-                    />
-                    <span className="flex items-center px-3 bg-primary/10 border border-primary/20 rounded-md font-semibold text-primary text-sm whitespace-nowrap">
-                      Contenedor(es)
-                    </span>
-                  </div>
-                ) : formData.shippingUnit === "custom" ? (
-                  <div className="flex gap-2">
-                    <Input
-                      id="minOrder"
-                      type="number"
-                      name="minOrder"
-                      value={formData.minOrder}
-                      onChange={handleInputChange}
-                      placeholder="Ej: 5"
-                      min="1"
-                      className="w-full"
-                      disabled={isLoading}
-                      required
-                    />
-                    <select
-                      name="minOrderUnit"
-                      value={formData.minOrderUnit}
-                      onChange={handleInputChange}
-                      className="px-3 py-2 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary bg-background text-sm"
-                      disabled={isLoading}
-                    >
-                      <option value="TM">TM</option>
-                      <option value="Contenedores">Contenedores</option>
-                    </select>
-                  </div>
-                ) : (
-                  <Input
-                    id="minOrder"
-                    type="text"
-                    name="minOrder"
-                    value={formData.minOrder}
-                    onChange={handleInputChange}
-                    placeholder="Ej: 100 kg"
-                    disabled={isLoading}
-                    required
-                  />
-                )}
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div>
-                <label className="block text-sm font-medium mb-2">
+                <label htmlFor="maturity" className="block text-sm font-medium mb-2">
                   Tipo de Maduración <span className="text-red-500">*</span>
                 </label>
                 <select
@@ -722,24 +581,32 @@ export default function NuevaPublicacionPage() {
                   <option value="Sobre-maduro">Sobre-maduro</option>
                 </select>
               </div>
+            </div>
 
-              {/* ── Elección de Método de Venta ── */}
-              <div className="md:col-span-2">
+            {/* ── Elección de Método de Venta ── */}
+            <div className="border border-border/60 bg-muted/20 p-4 rounded-xl space-y-4">
+              <div>
                 <label className="block text-sm font-semibold mb-3">
                   ¿Cómo vendes este producto? <span className="text-red-500">*</span>
                 </label>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <button
                     type="button"
-                    onClick={() => setFormData(prev => ({ 
-                      ...prev, 
-                      saleMethod: "standard", 
-                      packaging: "", 
-                      shippingUnit: "", 
-                      containerSize: "", 
-                      minOrderUnit: "kg",
-                      minOrder: "" 
-                    }))}
+                    onClick={() => setFormData(prev => {
+                      const cleanQty = prev.quantity.replace(/[^\d.]/g, "")
+                      const cleanMin = prev.minOrder.replace(/[^\d.]/g, "")
+                      return { 
+                        ...prev, 
+                        saleMethod: "standard", 
+                        packaging: prev.packaging === "Contenedores" ? "" : prev.packaging, 
+                        shippingUnit: "", 
+                        containerSize: "", 
+                        quantity: cleanQty,
+                        quantityUnit: prev.quantityUnit === "Contenedor(es)" ? "kg" : prev.quantityUnit,
+                        minOrder: cleanMin,
+                        minOrderUnit: prev.minOrderUnit === "Contenedor(es)" ? "kg" : prev.minOrderUnit
+                      }
+                    })}
                     className={`flex items-center gap-3 p-3 rounded-xl border-2 transition-all text-left ${
                       formData.saleMethod === "standard"
                         ? "border-primary bg-primary/5 ring-1 ring-primary/20"
@@ -757,16 +624,22 @@ export default function NuevaPublicacionPage() {
 
                   <button
                     type="button"
-                    onClick={() => setFormData(prev => ({ 
-                      ...prev, 
-                      saleMethod: "fcl", 
-                      packaging: "Contenedores", 
-                      shippingUnit: "FCL", 
-                      containerSize: "20ST", 
-                      minOrderUnit: "Contenedores",
-                      minOrder: "1",
-                      packagingSize: "21000"
-                    }))}
+                    onClick={() => setFormData(prev => {
+                      const cleanQty = prev.quantity.replace(/[^\d.]/g, "")
+                      const cleanMin = prev.minOrder.replace(/[^\d.]/g, "")
+                      return { 
+                        ...prev, 
+                        saleMethod: "fcl", 
+                        packaging: "Contenedores", 
+                        shippingUnit: "FCL", 
+                        containerSize: prev.containerSize || "20ST", 
+                        quantity: cleanQty,
+                        quantityUnit: "Contenedor(es)",
+                        minOrder: cleanMin || "1",
+                        minOrderUnit: "Contenedor(es)",
+                        packagingSize: prev.packagingSize || "21000"
+                      }
+                    })}
                     className={`flex items-center gap-3 p-3 rounded-xl border-2 transition-all text-left ${
                       formData.saleMethod === "fcl"
                         ? "border-primary bg-primary/5 ring-1 ring-primary/20"
@@ -783,120 +656,272 @@ export default function NuevaPublicacionPage() {
                   </button>
                 </div>
               </div>
-            </div>
 
-            <div className={`grid grid-cols-1 md:grid-cols-2 gap-6 pt-2 ${formData.saleMethod === "fcl" ? "animate-in fade-in slide-in-from-top-4 duration-500" : ""}`}>
-              {formData.saleMethod === "standard" ? (
-                <>
-                  <div>
-                    <label htmlFor="packaging" className="block text-sm font-medium mb-2">
-                      Tipo de Embalaje <span className="text-red-500">*</span>
-                    </label>
-                    <select
-                      id="packaging"
-                      name="packaging"
-                      value={formData.packaging}
-                      onChange={handleInputChange}
-                      className="w-full px-3 py-2 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary bg-background"
-                      disabled={isLoading}
-                      required
-                    >
-                      <option value="">Selecciona un tipo de embalaje</option>
-                      <option value="Sacos">Sacos</option>
-                      <option value="Cajas">Cajas</option>
-                      <option value="Bolsas">Bolsas</option>
-                      <option value="Pallets">Pallets</option>
-                      <option value="Barriles">Barriles</option>
-                      <option value="Canastillas">Canastillas</option>
-                      <option value="Empaques Frescos">Empaques Frescos</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label htmlFor="packagingSize" className="block text-sm font-medium mb-2">
-                      Tamaño del Embalaje <span className="text-red-500">*</span>
-                    </label>
-                    <div className="flex gap-2">
-                      <Input
-                        id="packagingSize"
-                        type="number"
-                        name="packagingSize"
-                        value={formData.packagingSize}
+              <div className={`grid grid-cols-1 md:grid-cols-2 gap-6 pt-2 ${formData.saleMethod === "fcl" ? "animate-in fade-in slide-in-from-top-4 duration-500" : ""}`}>
+                {formData.saleMethod === "standard" ? (
+                  <>
+                    <div>
+                      <label htmlFor="packaging" className="block text-sm font-medium mb-2">
+                        Tipo de Embalaje <span className="text-red-500">*</span>
+                      </label>
+                      <select
+                        id="packaging"
+                        name="packaging"
+                        value={formData.packaging}
                         onChange={handleInputChange}
-                        placeholder="Ej: 50, 25, 100"
-                        className="w-full"
-                        min="1"
+                        className="w-full px-3 py-2 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary bg-background"
                         disabled={isLoading}
                         required
-                      />
-                      <span className="flex items-center px-3 bg-primary/10 border border-primary/20 rounded-md font-semibold text-primary">
-                        kg
+                      >
+                        <option value="">Selecciona un tipo de embalaje</option>
+                        <option value="Sacos">Sacos</option>
+                        <option value="Cajas">Cajas</option>
+                        <option value="Bolsas">Bolsas</option>
+                        <option value="Pallets">Pallets</option>
+                        <option value="Barriles">Barriles</option>
+                        <option value="Canastillas">Canastillas</option>
+                        <option value="Empaques Frescos">Empaques Frescos</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label htmlFor="packagingSize" className="block text-sm font-medium mb-2">
+                        Tamaño del Embalaje <span className="text-red-500">*</span>
+                      </label>
+                      <div className="flex gap-2">
+                        <Input
+                          id="packagingSize"
+                          type="number"
+                          name="packagingSize"
+                          value={formData.packagingSize}
+                          onChange={handleInputChange}
+                          placeholder="Ej: 50, 25, 100"
+                          className="w-full"
+                          min="1"
+                          disabled={isLoading}
+                          required
+                        />
+                        <span className="flex items-center px-3 bg-primary/10 border border-primary/20 rounded-md font-semibold text-primary">
+                          kg
+                        </span>
+                      </div>
+                    </div>
+                  </>
+                ) : formData.saleMethod === "fcl" ? (
+                  <div className="md:col-span-2 space-y-4">
+                    <div className="flex items-center justify-between">
+                      <label className="block text-sm font-semibold">
+                        Opciones de Contenedor FCL
+                      </label>
+                      <span className="flex items-center gap-1.5 text-xs text-primary bg-primary/10 border border-primary/20 px-2.5 py-1 rounded-full font-medium">
+                        💡 El comprador verá que vendes por contenedor completo
                       </span>
                     </div>
-                  </div>
-                </>
-              ) : (
-                <div className="md:col-span-2 space-y-4">
-                  <div className="flex items-center justify-between">
-                    <label className="block text-sm font-semibold">
-                      Opciones de Contenedor FCL
-                    </label>
-                    <span className="flex items-center gap-1.5 text-xs text-primary bg-primary/10 border border-primary/20 px-2.5 py-1 rounded-full font-medium">
-                      💡 El comprador verá que vendes por contenedor completo
-                    </span>
-                  </div>
-                  
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <button
-                      type="button"
-                      onClick={() => setFormData(prev => ({ ...prev, containerSize: "20ST", packagingSize: "21000" }))}
-                      className={`relative flex flex-col items-center gap-2 rounded-xl border-2 p-5 text-center transition-all ${
-                        formData.containerSize === "20ST"
-                          ? "border-primary bg-primary/10 shadow-sm"
-                          : "border-border hover:border-primary/40 bg-background"
-                      }`}
-                    >
-                      <span className="text-3xl">🚢</span>
-                      <div>
-                        <p className="font-bold">20&apos; Standard</p>
-                        <p className="text-xs text-muted-foreground">Capacidad aprox. 21,000 kg</p>
-                      </div>
-                      {formData.containerSize === "20ST" && (
-                        <div className="absolute top-2 right-2 w-5 h-5 rounded-full bg-primary flex items-center justify-center">
-                          <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>
+                    
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                      <button
+                        type="button"
+                        onClick={() => setFormData(prev => ({ ...prev, containerSize: "20ST", packagingSize: "21000" }))}
+                        className={`relative flex flex-col items-center gap-2 rounded-xl border-2 p-5 text-center transition-all ${
+                          formData.containerSize === "20ST"
+                            ? "border-primary bg-primary/10 shadow-sm"
+                            : "border-border hover:border-primary/40 bg-background"
+                        }`}
+                      >
+                        <span className="text-3xl">🚢</span>
+                        <div>
+                          <p className="font-bold">20&apos; Standard</p>
+                          <p className="text-[10px] text-muted-foreground leading-tight">Capacidad aprox. 21,000 kg</p>
                         </div>
-                      )}
-                    </button>
+                        {formData.containerSize === "20ST" && (
+                          <div className="absolute top-2 right-2 w-5 h-5 rounded-full bg-primary flex items-center justify-center">
+                            <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>
+                          </div>
+                        )}
+                      </button>
 
-                    <button
-                      type="button"
-                      onClick={() => setFormData(prev => ({ ...prev, containerSize: "40HC", packagingSize: "26000" }))}
-                      className={`relative flex flex-col items-center gap-2 rounded-xl border-2 p-5 text-center transition-all ${
-                        formData.containerSize === "40HC"
-                          ? "border-primary bg-primary/10 shadow-sm"
-                          : "border-border hover:border-primary/40 bg-background"
-                      }`}
-                    >
-                      <span className="text-3xl">🏗️</span>
-                      <div>
-                        <p className="font-bold">40&apos; High Cube</p>
-                        <p className="text-xs text-muted-foreground">Capacidad aprox. 26,000 kg</p>
-                      </div>
-                      {formData.containerSize === "40HC" && (
-                        <div className="absolute top-2 right-2 w-5 h-5 rounded-full bg-primary flex items-center justify-center">
-                          <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>
+                      <button
+                        type="button"
+                        onClick={() => setFormData(prev => ({ ...prev, containerSize: "40HC", packagingSize: "26000" }))}
+                        className={`relative flex flex-col items-center gap-2 rounded-xl border-2 p-5 text-center transition-all ${
+                          formData.containerSize === "40HC"
+                            ? "border-primary bg-primary/10 shadow-sm"
+                            : "border-border hover:border-primary/40 bg-background"
+                        }`}
+                      >
+                        <span className="text-3xl">🏗️</span>
+                        <div>
+                          <p className="font-bold">40&apos; High Cube</p>
+                          <p className="text-[10px] text-muted-foreground leading-tight">Capacidad aprox. 26,000 kg</p>
                         </div>
-                      )}
-                    </button>
+                        {formData.containerSize === "40HC" && (
+                          <div className="absolute top-2 right-2 w-5 h-5 rounded-full bg-primary flex items-center justify-center">
+                            <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>
+                          </div>
+                        )}
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => setFormData(prev => ({ ...prev, containerSize: "Ambos", packagingSize: "21000,26000" }))}
+                        className={`relative flex flex-col items-center gap-2 rounded-xl border-2 p-5 text-center transition-all ${
+                          formData.containerSize === "Ambos"
+                            ? "border-primary bg-primary/10 shadow-sm"
+                            : "border-border hover:border-primary/40 bg-background"
+                        }`}
+                      >
+                        <div className="flex -space-x-2">
+                          <span className="text-2xl z-10">🚢</span>
+                          <span className="text-2xl">🏗️</span>
+                        </div>
+                        <div>
+                          <p className="font-bold">Ambas Opciones</p>
+                          <p className="text-[10px] text-muted-foreground leading-tight">El comprador elige el tamaño</p>
+                        </div>
+                        {formData.containerSize === "Ambos" && (
+                          <div className="absolute top-2 right-2 w-5 h-5 rounded-full bg-primary flex items-center justify-center">
+                            <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>
+                          </div>
+                        )}
+                      </button>
+                    </div>
                   </div>
+                ) : null}
+              </div>
+            </div>
+
+            {/* Precio, Cantidad Disponible y Pedido Mínimo */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
+                <label htmlFor="price" className="block text-sm font-medium mb-2">
+                  Precio <span className="text-red-500">*</span>
+                </label>
+
+                <div className="flex bg-muted p-1 rounded-lg mb-3">
+                  <button
+                    type="button"
+                    aria-pressed={isPriceOnRequest}
+                    onClick={() => {
+                      setIsPriceOnRequest(true)
+                      setFormData(prev => ({ ...prev, price: "Por Cotizar" }))
+                    }}
+                    className={`flex-1 py-2 text-sm font-medium rounded-md transition-all ${isPriceOnRequest
+                      ? "bg-primary text-primary-foreground shadow-sm"
+                      : "text-muted-foreground hover:text-foreground"
+                      }`}
+                  >
+                    Cotización
+                  </button>
+                  <button
+                    type="button"
+                    aria-pressed={!isPriceOnRequest}
+                    onClick={() => {
+                      setIsPriceOnRequest(false)
+                      setFormData(prev => ({ ...prev, price: "" }))
+                    }}
+                    className={`flex-1 py-2 text-sm font-medium rounded-md transition-all ${!isPriceOnRequest
+                      ? "bg-primary text-primary-foreground shadow-sm"
+                      : "text-muted-foreground hover:text-foreground"
+                      }`}
+                  >
+                    Precio
+                  </button>
                 </div>
-              )}
+
+                {!isPriceOnRequest ? (
+                  <div className="relative">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground font-semibold">$</span>
+                    <Input
+                      id="price"
+                      type="number"
+                      name="price"
+                      value={formData.price === "Por Cotizar" ? "" : formData.price}
+                      onChange={handleInputChange}
+                      placeholder="0.00"
+                      className="pl-7 pr-12"
+                      disabled={isLoading}
+                      required={!isPriceOnRequest}
+                      step="0.01"
+                      min="0"
+                    />
+                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">/{formData.saleMethod === "fcl" ? "contenedor" : "kg"}</span>
+                  </div>
+                ) : (
+                  <div className="p-3 bg-muted/50 border border-dashed border-muted-foreground/30 rounded-lg text-center text-sm text-muted-foreground">
+                    El precio se acordará directamente con el comprador
+                  </div>
+                )}
+              </div>
+
+              <div>
+                <label htmlFor="quantity" className="block text-sm font-medium mb-2">
+                  Cantidad Disponible <span className="text-red-500">*</span>
+                </label>
+                <div className="flex gap-2">
+                  <Input
+                    id="quantity"
+                    type="number"
+                    name="quantity"
+                    value={formData.quantity}
+                    onChange={handleInputChange}
+                    placeholder="Ej: 500"
+                    min="1"
+                    className="w-full"
+                    disabled={isLoading}
+                    required
+                  />
+                  <select
+                    name="quantityUnit"
+                    value={formData.saleMethod === "fcl" ? "Contenedor(es)" : (formData.quantityUnit === "Contenedor(es)" ? "kg" : (formData.quantityUnit || "kg"))}
+                    onChange={handleInputChange}
+                    className="px-3 py-2 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary bg-background text-sm min-w-[120px]"
+                    disabled={isLoading || formData.saleMethod === "fcl"}
+                  >
+                    <option value="kg">kg</option>
+                    <option value="TM">TM</option>
+                    <option value="Libras">Libras</option>
+                    {formData.saleMethod === "fcl" && <option value="Contenedor(es)">Contenedores</option>}
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <label htmlFor="minOrder" className="block text-sm font-medium mb-2">
+                  Pedido Mínimo <span className="text-red-500">*</span>
+                </label>
+                <div className="flex gap-2">
+                  <Input
+                    id="minOrder"
+                    type="number"
+                    name="minOrder"
+                    value={formData.minOrder}
+                    onChange={handleInputChange}
+                    placeholder="Ej: 100"
+                    min="1"
+                    className="w-full"
+                    disabled={isLoading}
+                    required
+                  />
+                  <select
+                    name="minOrderUnit"
+                    value={formData.saleMethod === "fcl" ? "Contenedor(es)" : (formData.minOrderUnit === "Contenedor(es)" ? "kg" : (formData.minOrderUnit || "kg"))}
+                    onChange={handleInputChange}
+                    className="px-3 py-2 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary bg-background text-sm min-w-[120px]"
+                    disabled={isLoading || formData.saleMethod === "fcl"}
+                  >
+                    <option value="kg">kg</option>
+                    <option value="TM">TM</option>
+                    <option value="Libras">Libras</option>
+                    {formData.saleMethod === "fcl" && <option value="Contenedor(es)">Contenedores</option>}
+                  </select>
+                </div>
+              </div>
             </div>
 
 
             {/* Capacidad de Abastecimiento */}
             <div>
               <label htmlFor="supplyCapacity" className="block text-sm font-medium mb-2">
-                Capacidad de Abastecimiento <span className="text-xs text-muted-foreground">(Opcional)</span>
+                Capacidad de Abastecimiento <span className="text-red-500">*</span>
               </label>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <div>
