@@ -159,15 +159,9 @@ export function Hero() {
             </Button>
             <button
               onClick={handleVenderClick}
-              className="relative inline-flex items-center justify-center px-6 h-14 rounded-2xl font-semibold text-base text-white cursor-pointer select-none overflow-hidden group hover:-translate-y-1 transition-transform duration-300"
-              style={{ WebkitBackdropFilter: "blur(8px)", backdropFilter: "blur(8px)" }}
+              className="relative inline-flex items-center justify-center px-6 h-14 rounded-2xl font-semibold text-base text-white bg-black hover:bg-neutral-900 cursor-pointer select-none group hover:-translate-y-1 transition-all duration-300 shadow-xl hover:shadow-2xl border border-neutral-800"
             >
-              <span className="absolute inset-0 rounded-2xl bg-white/10 group-hover:bg-white/20 transition-colors duration-400" />
-              <span className="absolute inset-0 rounded-2xl ring-1 ring-inset ring-white/40 group-hover:ring-white/60 transition-all duration-300" />
-              <span className="absolute inset-x-4 top-0 h-[1.5px] bg-gradient-to-r from-transparent via-white/80 to-transparent" />
-              <span className="absolute inset-x-0 top-0 h-1/2 rounded-t-2xl bg-gradient-to-b from-white/20 to-transparent pointer-events-none" />
-              <span className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 bg-gradient-to-br from-white/20 via-transparent to-transparent pointer-events-none" />
-              <span className="relative z-10 drop-shadow-md">Vender mis productos</span>
+              <span className="relative z-10">Vender mis productos</span>
             </button>
           </motion.div>
         </motion.div>

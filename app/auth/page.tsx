@@ -797,7 +797,12 @@ function AuthPageContent() {
                       </label>
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-foreground mb-2">Productos de Interés * <span className="text-muted-foreground font-normal">(Ingresa al menos 1)</span></label>
+                      <label className="block text-sm font-medium text-foreground mb-2">
+                        {formData.userType === 'vendedor' 
+                          ? "Productos que Ofreces / Cultivas *" 
+                          : "Productos que Buscas Comprar *"} 
+                        <span className="text-muted-foreground font-normal"> (Ingresa al menos 1)</span>
+                      </label>
                       <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                         <input
                           type="text"

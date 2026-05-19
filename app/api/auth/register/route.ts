@@ -35,6 +35,10 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Faltan campos requeridos" }, { status: 400 })
     }
 
+    if (!product1 && !product2 && !product3) {
+      return NextResponse.json({ error: "Debe proveer al menos un producto de interés" }, { status: 400 })
+    }
+
     // Validar que estado y dirección contengan letras o números (no solo puntos/símbolos)
     const alphanumericRegex = /[a-zA-Z0-9áéíóúÁÉÍÓÚñÑ]/
     if (state && !alphanumericRegex.test(state)) {

@@ -26,9 +26,11 @@ import {
   MousePointer2,
   UserMinus,
   Image as ImageIcon,
+  Activity,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Toaster } from "@/components/ui/toaster"
+import { useEffect } from "react"
 
 export default function AdminLayout({
   children,
@@ -38,10 +40,39 @@ export default function AdminLayout({
   const router = useRouter()
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
   const [isLoggingOut, setIsLoggingOut] = useState(false)
+  const [unreadContactCount, setUnreadContactCount] = useState(0)
+
+  // Fetch unread contact count
+  useEffect(() => {
+    const fetchUnreadCount = async () => {
+      try {
+        const res = await fetch('/api/admin/contact-clicks/unread-count')
+        if (res.ok) {
+          const data = await res.json()
+          if (typeof data.unreadCount === 'number') {
+            setUnreadContactCount(data.unreadCount)
+          }
+        }
+      } catch (error) {
+        console.error("Failed to fetch unread contact count:", error)
+      }
+    }
+    fetchUnreadCount()
+    
+    // Set up polling and event listener for instant updates
+    const interval = setInterval(fetchUnreadCount, 60000)
+    window.addEventListener('update-unread-count', fetchUnreadCount)
+    
+    return () => {
+        clearInterval(interval)
+        window.removeEventListener('update-unread-count', fetchUnreadCount)
+    }
+  }, [])
 
   const menuItems = [
     { href: "/", label: "Inicio", icon: Home },
     { href: "/admin", label: "Dashboard", icon: LayoutDashboard },
+    { href: "/admin/analitica", label: "Analítica", icon: Activity },
     { href: "/admin/hero", label: "Hero", icon: ImageIcon },
     { href: "/admin/usuarios", label: "Gestión de Usuarios", icon: Users },
     { href: "/admin/membresias", label: "Membresías", icon: Crown },
@@ -147,15 +178,23 @@ export default function AdminLayout({
             <nav className="space-y-2">
               {menuItems.map((item) => {
                 const Icon = item.icon
+                const isContactar = item.href === '/admin/contactar'
                 return (
                   <Link
                     key={item.href}
                     href={item.href}
-                    className="flex items-center gap-3 px-4 py-3 rounded-lg text-foreground hover:bg-muted transition-colors hover:text-primary group"
+                    className="flex items-center justify-between px-4 py-3 rounded-lg text-foreground hover:bg-muted transition-colors hover:text-primary group"
                     onClick={() => setIsSidebarOpen(false)}
                   >
-                    <Icon className="w-5 h-5" />
-                    <span className="font-medium">{item.label}</span>
+                    <div className="flex items-center gap-3">
+                      <Icon className="w-5 h-5" />
+                      <span className="font-medium">{item.label}</span>
+                    </div>
+                    {isContactar && unreadContactCount > 0 && (
+                      <span className="flex items-center justify-center min-w-[20px] h-[20px] text-[10px] font-bold text-white bg-red-500 rounded-full px-1.5">
+                        {unreadContactCount > 99 ? '99+' : unreadContactCount}
+                      </span>
+                    )}
                   </Link>
                 )
               })}

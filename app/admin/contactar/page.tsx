@@ -14,7 +14,8 @@ import {
     User,
     ArrowUpRight,
     ExternalLink,
-    Trash2
+    Trash2,
+    CheckCircle2
 } from "lucide-react"
 import {
     Card,
@@ -45,6 +46,7 @@ interface ContactClick {
     seller_email: string | null
     seller_company: string | null
     created_at: string
+    is_read?: boolean
 }
 
 export default function AdminContactClicksPage() {
@@ -131,6 +133,57 @@ export default function AdminContactClicksPage() {
         }
     }
 
+    const handleMarkAsRead = async (id: string) => {
+        try {
+            const response = await fetch(`/api/admin/contact-clicks/mark-read`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ ids: [id] }),
+            })
+
+            if (response.ok) {
+                toast.success("Marcado como leído")
+                
+                // Actualizar todo desde el servidor para garantizar coherencia
+                fetchClicks(false)
+                
+                // Avisar al menú lateral que se actualice
+                window.dispatchEvent(new Event('update-unread-count'))
+            } else {
+                toast.error("Error al marcar como leído")
+            }
+        } catch (error) {
+            console.error("Error marking as read:", error)
+        }
+    }
+
+    const handleBulkMarkAsRead = async () => {
+        if (selectedIds.length === 0) return
+        
+        try {
+            const response = await fetch(`/api/admin/contact-clicks/mark-read`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ ids: selectedIds }),
+            })
+
+            if (response.ok) {
+                setSelectedIds([])
+                toast.success(`${selectedIds.length} marcados como leídos`)
+                
+                // Actualizar todo desde el servidor
+                fetchClicks(false)
+                
+                // Avisar al menú lateral que se actualice
+                window.dispatchEvent(new Event('update-unread-count'))
+            } else {
+                toast.error("Error al marcar como leídos")
+            }
+        } catch (error) {
+            console.error("Error marking bulk as read:", error)
+        }
+    }
+
     const toggleSelectAll = () => {
         if (selectedIds.length === filteredClicks.length) {
             setSelectedIds([])
@@ -203,7 +256,26 @@ export default function AdminContactClicksPage() {
             </div>
 
             {/* Stats Grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+                <Card 
+                    className={`border-none shadow-sm cursor-pointer transition-all hover:scale-[1.02] active:scale-[0.98] bg-red-50 border-l-4 border-l-red-500`}
+                >
+                    <CardContent className="pt-6">
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest text-red-700">No Leídos</p>
+                                <h3 className="text-3xl font-black mt-2 text-red-600">{stats?.unreadCount || 0}</h3>
+                            </div>
+                            <div className="bg-red-100 p-3 rounded-2xl relative">
+                                <MessageCircle className="w-6 h-6 text-red-600" />
+                                {stats?.unreadCount > 0 && (
+                                    <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full border-2 border-white animate-pulse"></span>
+                                )}
+                            </div>
+                        </div>
+                    </CardContent>
+                </Card>
+
                 <Card 
                     className={`border-none shadow-sm cursor-pointer transition-all hover:scale-[1.02] active:scale-[0.98] ${typeFilter === 'all' ? 'bg-primary/10 ring-2 ring-primary border-l-4 border-l-primary' : 'bg-primary/5 border-l-4 border-l-primary'}`}
                     onClick={() => setTypeFilter('all')}
@@ -289,15 +361,26 @@ export default function AdminContactClicksPage() {
                             />
                         </div>
                         {selectedIds.length > 0 && (
-                            <Button 
-                                variant="destructive" 
-                                size="sm" 
-                                className="rounded-xl gap-2 ml-4 animate-in slide-in-from-right-4 duration-300"
-                                onClick={handleBulkDelete}
-                            >
-                                <Trash2 className="w-4 h-4" />
-                                Borrar seleccionados ({selectedIds.length})
-                            </Button>
+                            <div className="flex items-center gap-2 ml-4 animate-in slide-in-from-right-4 duration-300">
+                                <Button 
+                                    variant="outline" 
+                                    size="sm" 
+                                    className="rounded-xl gap-2"
+                                    onClick={handleBulkMarkAsRead}
+                                >
+                                    <CheckCircle2 className="w-4 h-4" />
+                                    Leídos
+                                </Button>
+                                <Button 
+                                    variant="destructive" 
+                                    size="sm" 
+                                    className="rounded-xl gap-2"
+                                    onClick={handleBulkDelete}
+                                >
+                                    <Trash2 className="w-4 h-4" />
+                                    <span className="hidden sm:inline">Borrar</span> ({selectedIds.length})
+                                </Button>
+                            </div>
                         )}
                     </div>
 
@@ -320,7 +403,7 @@ export default function AdminContactClicksPage() {
                         </CardHeader>
                         <div className="divide-y divide-border">
                             {filteredClicks.map((c) => (
-                                <div key={c.id} className={`p-4 hover:bg-muted/20 transition-all flex items-start justify-between gap-4 group ${selectedIds.includes(c.id) ? 'bg-primary/5' : ''}`}>
+                                <div key={c.id} className={`p-4 hover:bg-muted/20 transition-all flex items-start justify-between gap-4 group ${selectedIds.includes(c.id) ? 'bg-primary/5' : ''} ${!c.is_read ? 'bg-red-50/10' : ''}`}>
                                     <div className="flex items-start gap-4 min-w-0">
                                         <div className="pt-2">
                                             <Checkbox 
@@ -336,7 +419,10 @@ export default function AdminContactClicksPage() {
                                                         <MousePointer2 className="w-5 h-5 text-orange-500" />}
                                         </div>
                                         <div className="min-w-0">
-                                            <p className="font-bold text-foreground line-clamp-1">{c.product_title || "Producto desconocido"}</p>
+                                            <div className="flex items-center gap-2">
+                                                {!c.is_read && <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse flex-shrink-0"></span>}
+                                                <p className={`font-bold line-clamp-1 ${!c.is_read ? 'text-foreground' : 'text-foreground/70'}`}>{c.product_title || "Producto desconocido"}</p>
+                                            </div>
                                             <div className="flex items-center gap-2 mt-1">
                                                 <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">{formatDate(c.created_at)}</span>
                                                 <span className="text-muted-foreground/30">•</span>
@@ -363,7 +449,18 @@ export default function AdminContactClicksPage() {
                                         </div>
                                     </div>
                                     <div className="flex flex-col gap-2">
-                                        <Button variant="ghost" size="icon" className="rounded-full hover:bg-primary/10 hover:text-primary transition-colors h-8 w-8" asChild title="Ver producto">
+                                        {!c.is_read && (
+                                            <Button 
+                                                variant="ghost" 
+                                                size="icon" 
+                                                className="rounded-full hover:bg-green-100 hover:text-green-600 transition-colors h-8 w-8 text-muted-foreground"
+                                                onClick={() => handleMarkAsRead(c.id)}
+                                                title="Marcar como leído"
+                                            >
+                                                <CheckCircle2 className="w-4 h-4" />
+                                            </Button>
+                                        )}
+                                        <Button variant="ghost" size="icon" className="rounded-full hover:bg-primary/10 hover:text-primary transition-colors h-8 w-8 text-muted-foreground" asChild title="Ver producto">
                                             <Link href={`/producto/${c.product_id}`} target="_blank">
                                                 <ExternalLink className="w-4 h-4" />
                                             </Link>
@@ -371,7 +468,7 @@ export default function AdminContactClicksPage() {
                                         <Button 
                                             variant="ghost" 
                                             size="icon" 
-                                            className="rounded-full hover:bg-red-100 hover:text-red-600 transition-colors h-8 w-8"
+                                            className="rounded-full hover:bg-red-100 hover:text-red-600 transition-colors h-8 w-8 text-muted-foreground"
                                             onClick={() => handleDelete(c.id)}
                                             title="Eliminar registro"
                                         >
