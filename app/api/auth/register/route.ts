@@ -1,6 +1,6 @@
 import { createAdminClient } from "@/lib/supabase/admin"
 import { type NextRequest, NextResponse } from "next/server"
-import { sendWelcomeEmail } from "@/lib/email"
+import { sendEmailVerification } from "@/lib/email"
 
 export async function POST(request: NextRequest) {
   try {
@@ -125,11 +125,25 @@ export async function POST(request: NextRequest) {
       }, { status: 500 })
     }
 
-    // Enviar correo de bienvenida de forma asíncrona
-    sendWelcomeEmail({
-      recipientEmail: email,
-      recipientName: fullName
-    }).catch(err => console.error("[Email] Error asíncrono enviando correo de bienvenida:", err))
+    // Generate the email confirmation link via Supabase Admin
+    // (admin.createUser with email_confirm:false does NOT auto-send — we must do it manually)
+    const { data: linkData, error: linkError } = await adminClient.auth.admin.generateLink({
+      type: 'signup',
+      email,
+      password,
+    })
+
+    if (linkError || !linkData?.properties?.action_link) {
+      console.error("[Agrilpa] Error generating confirmation link:", linkError)
+      // Non-fatal: user was created, just warn
+    } else {
+      // Send confirmation email via Resend with Agrilpa branding
+      sendEmailVerification({
+        recipientEmail: email,
+        recipientName: fullName,
+        confirmationUrl: linkData.properties.action_link,
+      }).catch(err => console.error("[Email] Error enviando email de verificacion:", err))
+    }
 
     return NextResponse.json({
       success: true,

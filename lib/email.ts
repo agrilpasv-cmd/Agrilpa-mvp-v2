@@ -393,3 +393,51 @@ export async function sendProMembershipEmail({
         return { success: false, error: { message: err.message } }
     }
 }
+/**
+ * Send email verification link to a newly registered user
+ * The confirmationUrl comes from Supabase admin.generateLink()
+ */
+export async function sendEmailVerification({
+    recipientEmail,
+    recipientName,
+    confirmationUrl,
+}: {
+    recipientEmail: string
+    recipientName: string
+    confirmationUrl: string
+}) {
+    try {
+        const resend = getResendClient()
+
+        const content = `
+            <p>Hola <strong>${recipientName}</strong>,</p>
+            <p style="font-size: 18px; color: ${THEME.primary}; font-weight: 600;">¡Ya casi estás dentro! 🌱</p>
+            
+            <p>Gracias por registrarte en <strong>Agrilpa</strong>. Solo necesitas verificar tu correo electrónico para activar tu cuenta.</p>
+            
+            <p>Haz clic en el botón de abajo para confirmar tu dirección de correo y comenzar a operar en el mercado agrícola global:</p>
+
+            <p style="font-size: 13px; color: #6b7280; margin-top: 24px;">Si no creaste una cuenta en Agrilpa, puedes ignorar este correo de forma segura.</p>
+        `
+
+        const { data, error } = await resend.emails.send({
+            from: FROM_EMAIL,
+            to: recipientEmail,
+            subject: '✅ Confirma tu correo para activar tu cuenta en Agrilpa',
+            html: getMinimalistTemplate(
+                '¡Confirma tu cuenta de Agrilpa!',
+                content,
+                { text: 'Verificar mi correo', url: confirmationUrl }
+            ),
+        })
+
+        if (error) {
+            console.error('[Email] Error sending verification email:', error)
+            return { success: false, error }
+        }
+        return { success: true, data }
+    } catch (err: any) {
+        console.error('[Email] Failed to send verification email:', err)
+        return { success: false, error: { message: err.message } }
+    }
+}
