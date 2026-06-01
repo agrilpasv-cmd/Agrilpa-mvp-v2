@@ -1,0 +1,224 @@
+"use client"
+
+import type React from "react"
+import { useState } from "react"
+import Link from "next/link"
+import { useRouter } from "next/navigation"
+import Image from "next/image"
+import {
+  Menu,
+  X,
+  LogOut,
+  Users,
+  Shield,
+  Home,
+  Crown,
+  Star,
+  Mail,
+  DollarSign,
+  Truck,
+  ShoppingCart,
+  MessageSquare,
+  Package,
+  Eye,
+  LayoutDashboard,
+  ClipboardList,
+  MousePointer2,
+  UserMinus,
+  Image as ImageIcon,
+  Activity,
+} from "lucide-react"
+import { Button } from "@/components/ui/button"
+import { Toaster } from "@/components/ui/toaster"
+import { useEffect } from "react"
+
+export default function AdminLayout({
+  children,
+}: {
+  children: React.ReactNode
+}) {
+  const router = useRouter()
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false)
+  const [isLoggingOut, setIsLoggingOut] = useState(false)
+  const [unreadContactCount, setUnreadContactCount] = useState(0)
+
+  // Fetch unread contact count
+  useEffect(() => {
+    const fetchUnreadCount = async () => {
+      try {
+        const res = await fetch('/api/admin/contact-clicks/unread-count')
+        if (res.ok) {
+          const data = await res.json()
+          if (typeof data.unreadCount === 'number') {
+            setUnreadContactCount(data.unreadCount)
+          }
+        }
+      } catch (error) {
+        console.error("Failed to fetch unread contact count:", error)
+      }
+    }
+    fetchUnreadCount()
+    
+    // Set up polling and event listener for instant updates
+    const interval = setInterval(fetchUnreadCount, 60000)
+    window.addEventListener('update-unread-count', fetchUnreadCount)
+    
+    return () => {
+        clearInterval(interval)
+        window.removeEventListener('update-unread-count', fetchUnreadCount)
+    }
+  }, [])
+
+  const menuItems = [
+    { href: "/", label: "Inicio", icon: Home },
+    { href: "/admin", label: "Dashboard", icon: LayoutDashboard },
+    { href: "/admin/analitica", label: "Analítica", icon: Activity },
+    { href: "/admin/hero", label: "Hero", icon: ImageIcon },
+    { href: "/admin/usuarios", label: "Gestión de Usuarios", icon: Users },
+    { href: "/admin/membresias", label: "Membresías", icon: Crown },
+    { href: "/admin/cotizaciones", label: "Cotizaciones", icon: ClipboardList },
+    { href: "/admin/contactar", label: "Contactar", icon: MousePointer2 },
+    { href: "/admin/publicaciones", label: "Publicaciones", icon: Package },
+    { href: "/admin/visibilidad", label: "Visibilidad", icon: Eye },
+    { href: "/admin/reviews", label: "Reviews", icon: Star },
+    { href: "/admin/suscripciones", label: "Suscripciones", icon: Mail },
+    { href: "/admin/financiamiento", label: "Financiamiento", icon: DollarSign },
+    { href: "/admin/logistica", label: "Logística", icon: Truck },
+    { href: "/admin/compras", label: "Compras", icon: ShoppingCart },
+    { href: "/admin/actividad", label: "Registro de Actividad", icon: MousePointer2 },
+    { href: "/admin/contactanos", label: "Contáctanos", icon: MessageSquare },
+    { href: "/admin/newsletter", label: "Newsletter", icon: Mail },
+    { href: "/admin/bajas", label: "Reportes de Bajas", icon: UserMinus },
+  ]
+
+  const handleLogout = async () => {
+    if (isLoggingOut) return
+    setIsLoggingOut(true)
+
+    try {
+      const { createBrowserClient } = await import("@/lib/supabase/client")
+      const supabase = createBrowserClient()
+
+      // Sign out from Supabase and clear server-side session in parallel
+      await Promise.allSettled([
+        supabase.auth.signOut(),
+        fetch("/api/auth/logout", { method: "POST" })
+      ])
+
+      // Clear all local storage and session storage to ensure complete logout
+      localStorage.clear()
+      sessionStorage.clear()
+
+      // Use window.location.replace to prevent back button from restoring session
+      window.location.replace("/")
+    } catch (error) {
+      console.error("[Admin] Error al cerrar sesión:", error)
+      // Clear storage even on error
+      localStorage.clear()
+      sessionStorage.clear()
+      window.location.replace("/")
+    } finally {
+      setIsLoggingOut(false)
+    }
+  }
+
+  return (
+    <>
+    <div className="min-h-screen bg-background">
+      {/* Navbar */}
+      <nav className="sticky top-0 z-50 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center h-16">
+            <Link href="/" className="flex items-center space-x-3">
+              <Image src="/agrilpa-logo.svg" alt="Agrilpa Logo" width={100} height={100} priority />
+              <span className="hidden md:flex items-center gap-2 text-sm font-semibold text-primary">
+                <Shield className="w-4 h-4" />
+                Admin
+              </span>
+            </Link>
+
+            <div className="hidden md:flex items-center space-x-3">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleLogout}
+                disabled={isLoggingOut}
+                className="hover:bg-red-500 hover:text-white hover:border-red-500 active:bg-red-600 bg-transparent disabled:opacity-70"
+              >
+                <LogOut className={`w-4 h-4 mr-2 ${isLoggingOut ? "animate-spin" : ""}`} />
+                {isLoggingOut ? "Cerrando..." : "Cerrar Sesión"}
+              </Button>
+            </div>
+
+            <button
+              onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+              className="md:hidden inline-flex items-center justify-center p-2 rounded-md text-foreground hover:bg-muted"
+            >
+              {isSidebarOpen ? <X size={24} /> : <Menu size={24} />}
+            </button>
+          </div>
+        </div>
+      </nav>
+
+      <div className="flex">
+        {/* Sidebar - always visible on desktop */}
+        <aside
+          className={`${
+            isSidebarOpen ? "translate-x-0" : "-translate-x-full"
+          } md:translate-x-0 fixed md:sticky md:top-16 md:self-start w-64 h-[calc(100vh-64px)] bg-card border-r border-border transition-transform duration-300 ease-in-out z-40 overflow-y-auto shrink-0`}
+        >
+          <div className="p-6">
+            <div className="mb-6 p-4 bg-primary/10 rounded-lg border border-primary/20">
+              <div className="flex items-center gap-2 text-primary">
+                <Shield className="w-5 h-5" />
+                <span className="font-semibold">Panel de Admin</span>
+              </div>
+            </div>
+
+            <nav className="space-y-2">
+              {menuItems.map((item) => {
+                const Icon = item.icon
+                const isContactar = item.href === '/admin/contactar'
+                return (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    className="flex items-center justify-between px-4 py-3 rounded-lg text-foreground hover:bg-muted transition-colors hover:text-primary group"
+                    onClick={() => setIsSidebarOpen(false)}
+                  >
+                    <div className="flex items-center gap-3">
+                      <Icon className="w-5 h-5" />
+                      <span className="font-medium">{item.label}</span>
+                    </div>
+                    {isContactar && unreadContactCount > 0 && (
+                      <span className="flex items-center justify-center min-w-[20px] h-[20px] text-[10px] font-bold text-white bg-red-500 rounded-full px-1.5">
+                        {unreadContactCount > 99 ? '99+' : unreadContactCount}
+                      </span>
+                    )}
+                  </Link>
+                )
+              })}
+            </nav>
+
+            <div className="mt-8 pt-8 border-t border-border">
+              <Button
+                variant="outline"
+                disabled={isLoggingOut}
+                className="w-full justify-start hover:bg-red-500 hover:text-white hover:border-red-500 active:bg-red-600 bg-transparent disabled:opacity-70"
+                onClick={handleLogout}
+              >
+                <LogOut className={`w-4 h-4 mr-2 ${isLoggingOut ? "animate-spin" : ""}`} />
+                {isLoggingOut ? "Cerrando..." : "Cerrar Sesión"}
+              </Button>
+            </div>
+          </div>
+        </aside>
+
+        {/* Main Content */}
+        <main className="flex-1 overflow-auto">{children}</main>
+      </div>
+    </div>
+    <Toaster />
+    </>
+  )
+}
