@@ -50,11 +50,20 @@ export async function POST(request: NextRequest) {
 
     const adminClient = createAdminClient()
 
-    // Registrar usuario en Supabase Auth con email confirmado automáticamente
+    // Verificar que el email no esté ya registrado
+    const { data: existingUsers } = await adminClient.auth.admin.listUsers()
+    const alreadyExists = existingUsers?.users?.some(u => u.email === email)
+    if (alreadyExists) {
+      return NextResponse.json({ error: "Este correo ya está registrado" }, { status: 400 })
+    }
+
+    // Registrar usuario en Supabase Auth CON verificación de email obligatoria.
+    // email_confirm: false → Supabase enviará un email de confirmación al usuario.
+    // El usuario NO podrá iniciar sesión hasta hacer clic en el enlace de verificación.
     const { data: authData, error: authError } = await adminClient.auth.admin.createUser({
       email,
       password,
-      email_confirm: true, // Auto-confirmar email
+      email_confirm: false, // Requiere verificación real del correo
       user_metadata: {
         full_name: fullName,
         company_name: companyName,
@@ -124,6 +133,8 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
+      requiresEmailVerification: true,
+      message: "Registro exitoso. Revisa tu correo y haz clic en el enlace de verificación para activar tu cuenta.",
       user: {
         id: authData.user.id,
         email: authData.user.email,

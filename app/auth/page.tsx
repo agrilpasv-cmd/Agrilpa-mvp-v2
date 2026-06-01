@@ -48,6 +48,7 @@ function AuthPageContent() {
     howHeardOther: "",
   })
   const [submitted, setSubmitted] = useState(false)
+  const [requiresVerification, setRequiresVerification] = useState(false)
   const [error, setError] = useState("")
   const [loading, setLoading] = useState(false)
   // Show/hide password toggles
@@ -263,14 +264,13 @@ function AuthPageContent() {
           return
         }
 
-        setSubmitted(true)
-        console.log("[Agrilpa] Registration successful, redirecting to login...")
+        // Registration succeeded — user must verify email before logging in
+        console.log("[Agrilpa] Registration successful, email verification required")
         trackActivity('login', 'Registro de nuevo usuario exitoso', { email: formData.email, type: formData.userType })
-
-        setTimeout(() => {
-          console.log("[Agrilpa] Reloading page and redirecting to login")
-          window.location.href = `/auth?mode=login&email=${encodeURIComponent(formData.email)}`
-        }, 2000) // Show success message for 2 seconds before redirecting
+        setError("")
+        setLoading(false)
+        // Show a full-page confirmation message (handled below in JSX via requiresVerification state)
+        setRequiresVerification(true)
       } catch (err) {
         console.error("[Agrilpa] Auth error:", err)
         setError("Error de conexión. Intenta nuevamente.")
@@ -435,7 +435,31 @@ function AuthPageContent() {
           </div>
 
           <div className="w-full">
-            {!submitted ? (
+            {requiresVerification ? (
+              // ✅ Email verification pending screen
+              <div className="text-center py-6 space-y-4">
+                <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto">
+                  <svg className="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                  </svg>
+                </div>
+                <h3 className="text-xl font-bold text-foreground">¡Revisa tu correo!</h3>
+                <p className="text-muted-foreground text-sm max-w-sm mx-auto">
+                  Te enviamos un enlace de verificación a <strong>{formData.email}</strong>.
+                  Haz clic en ese enlace para activar tu cuenta e iniciar sesión.
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  ¿No lo ves? Revisa la carpeta de spam o correo no deseado.
+                </p>
+                <button
+                  type="button"
+                  onClick={() => { setRequiresVerification(false); setIsLogin(true); }}
+                  className="mt-4 text-primary hover:underline text-sm font-semibold"
+                >
+                  Volver al inicio de sesión
+                </button>
+              </div>
+            ) : !submitted ? (
               <form onSubmit={handleSubmit} className="space-y-5">
                 {error && (
                   <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">{error}</div>
