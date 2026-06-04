@@ -3,6 +3,8 @@ import { type NextRequest, NextResponse } from "next/server"
 import { sendEmailVerification } from "@/lib/email"
 
 export async function POST(request: NextRequest) {
+  // Use SITE_URL env var so email links always point to the deployed domain, never localhost
+  const siteUrl = process.env.SITE_URL || request.headers.get("origin") || "http://localhost:3000"
   try {
     const {
       email,
@@ -125,23 +127,28 @@ export async function POST(request: NextRequest) {
       }, { status: 500 })
     }
 
-    // Generate the email confirmation link via Supabase Admin
-    // (admin.createUser with email_confirm:false does NOT auto-send — we must do it manually)
+    // Generate the email confirmation link via Supabase Admin.
+    // We extract the token_hash from the action_link and build our OWN verification URL
+    // so we fully control where the user lands — no dependency on Supabase redirect whitelist.
     const { data: linkData, error: linkError } = await adminClient.auth.admin.generateLink({
       type: 'signup',
       email,
       password,
     })
 
-    if (linkError || !linkData?.properties?.action_link) {
+    if (linkError || !linkData?.properties?.hashed_token) {
       console.error("[Agrilpa] Error generating confirmation link:", linkError)
       // Non-fatal: user was created, just warn
     } else {
+      // Build our own verification URL: /auth/callback?token_hash=...&type=signup
+      const tokenHash = linkData.properties.hashed_token
+      const confirmationUrl = `${siteUrl}/auth/callback?token_hash=${tokenHash}&type=signup`
+
       // Send confirmation email via Resend with Agrilpa branding
       sendEmailVerification({
         recipientEmail: email,
         recipientName: fullName,
-        confirmationUrl: linkData.properties.action_link,
+        confirmationUrl,
       }).catch(err => console.error("[Email] Error enviando email de verificacion:", err))
     }
 

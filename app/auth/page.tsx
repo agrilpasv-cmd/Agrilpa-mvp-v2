@@ -55,6 +55,12 @@ function AuthPageContent() {
   const [showLoginPwd, setShowLoginPwd] = useState(false)
   const [showRegPwd, setShowRegPwd] = useState(false)
   const [showRegConfirmPwd, setShowRegConfirmPwd] = useState(false)
+  // Resend email cooldown
+  const [resendCooldown, setResendCooldown] = useState(0)
+  const [resendLoading, setResendLoading] = useState(false)
+  const [resendSuccess, setResendSuccess] = useState(false)
+  const [verifyLoading, setVerifyLoading] = useState(false)
+  const [verifyError, setVerifyError] = useState("")
 
   useEffect(() => {
     const checkExistingSession = async () => {
@@ -335,6 +341,96 @@ function AuthPageContent() {
     }
   }
 
+  // Resend verification email with 60s cooldown — uses our own API endpoint
+  const handleResendEmail = async () => {
+    if (resendCooldown > 0 || resendLoading) return
+    setResendLoading(true)
+    setResendSuccess(false)
+    setVerifyError("")
+    try {
+      const response = await fetch("/api/auth/resend-verification", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: formData.email,
+          name: formData.fullName,
+        }),
+      })
+      const data = await response.json()
+      if (!response.ok) {
+        setVerifyError(data.error || "No se pudo reenviar el correo. Intenta de nuevo.")
+      } else {
+        setResendSuccess(true)
+        // Start 60-second cooldown
+        setResendCooldown(60)
+        const interval = setInterval(() => {
+          setResendCooldown((prev) => {
+            if (prev <= 1) {
+              clearInterval(interval)
+              return 0
+            }
+            return prev - 1
+          })
+        }, 1000)
+      }
+    } catch {
+      setVerifyError("Error de conexión. Intenta nuevamente.")
+    } finally {
+      setResendLoading(false)
+    }
+  }
+
+  // Check if user already verified their email and redirect
+  const handleAlreadyVerified = async () => {
+    setVerifyLoading(true)
+    setVerifyError("")
+    try {
+      const { data: { session }, error: sessionError } = await supabaseRef.current.auth.getSession()
+      if (session?.user) {
+        // User is already logged in (verified), redirect to dashboard
+        const { data: profile } = await supabaseRef.current
+          .from("users")
+          .select("role")
+          .eq("id", session.user.id)
+          .maybeSingle()
+        const role = profile?.role || "user"
+        AuthStorage.setSession(session.user.id, session.user.email || "", role)
+        window.location.href = role === "admin" ? "/admin" : "/dashboard"
+        return
+      }
+      // Try signing in with stored credentials
+      if (formData.password) {
+        const { data, error: loginError } = await supabaseRef.current.auth.signInWithPassword({
+          email: formData.email,
+          password: formData.password,
+        })
+        if (!loginError && data?.user) {
+          const { data: profile } = await supabaseRef.current
+            .from("users")
+            .select("role")
+            .eq("id", data.user.id)
+            .maybeSingle()
+          const role = profile?.role || "user"
+          AuthStorage.setSession(data.user.id, data.user.email || "", role)
+          window.location.href = role === "admin" ? "/admin" : "/dashboard"
+          return
+        }
+        if (loginError?.message?.toLowerCase().includes("email not confirmed")) {
+          setVerifyError("Aún no has verificado tu correo. Revisa tu bandeja de entrada.")
+          setVerifyLoading(false)
+          return
+        }
+      }
+      // Fallback: go to login page
+      setRequiresVerification(false)
+      setIsLogin(true)
+    } catch {
+      setVerifyError("Error al verificar. Intenta nuevamente.")
+    } finally {
+      setVerifyLoading(false)
+    }
+  }
+
   const handleGoogleSignIn = async () => {
     setError("")
     setLoading(true)
@@ -437,24 +533,99 @@ function AuthPageContent() {
           <div className="w-full">
             {requiresVerification ? (
               // ✅ Email verification pending screen
-              <div className="text-center py-6 space-y-4">
+              <div className="text-center py-6 space-y-5">
+                {/* Icon */}
                 <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto">
                   <svg className="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                   </svg>
                 </div>
-                <h3 className="text-xl font-bold text-foreground">¡Revisa tu correo!</h3>
-                <p className="text-muted-foreground text-sm max-w-sm mx-auto">
-                  Te enviamos un enlace de verificación a <strong>{formData.email}</strong>.
-                  Haz clic en ese enlace para activar tu cuenta e iniciar sesión.
-                </p>
-                <p className="text-xs text-muted-foreground">
-                  ¿No lo ves? Revisa la carpeta de spam o correo no deseado.
-                </p>
+
+                <div>
+                  <h3 className="text-xl font-bold text-foreground">¡Revisa tu correo!</h3>
+                  <p className="text-muted-foreground text-sm mt-2 max-w-sm mx-auto">
+                    Te enviamos un enlace de verificación a{" "}
+                    <strong className="text-foreground">{formData.email}</strong>.
+                    Haz clic en ese enlace para activar tu cuenta e iniciar sesión.
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-2">
+                    ¿No lo ves? Revisa la carpeta de spam o correo no deseado.
+                  </p>
+                </div>
+
+                {/* Error / success feedback */}
+                {verifyError && (
+                  <div className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-4 py-3 max-w-sm mx-auto text-left">
+                    ⚠ {verifyError}
+                  </div>
+                )}
+                {resendSuccess && !verifyError && (
+                  <div className="text-sm text-green-700 bg-green-50 border border-green-200 rounded-lg px-4 py-3 max-w-sm mx-auto text-left">
+                    ✓ Correo reenviado. Revisa tu bandeja de entrada.
+                  </div>
+                )}
+
+                {/* CTA: Already verified */}
+                <button
+                  type="button"
+                  onClick={handleAlreadyVerified}
+                  disabled={verifyLoading}
+                  className="w-full max-w-sm mx-auto flex items-center justify-center gap-2 bg-primary text-white font-semibold py-3.5 rounded-lg hover:bg-primary/90 transition disabled:opacity-60 disabled:cursor-not-allowed"
+                >
+                  {verifyLoading ? (
+                    <>
+                      <svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/>
+                      </svg>
+                      Verificando...
+                    </>
+                  ) : (
+                    <>✓ Ya verifiqué mi correo — Entrar</>
+                  )}
+                </button>
+
+                {/* CTA: Resend email with visible countdown */}
+                <div className="max-w-sm mx-auto w-full space-y-2">
+                  <button
+                    type="button"
+                    onClick={handleResendEmail}
+                    disabled={resendCooldown > 0 || resendLoading}
+                    className="w-full flex items-center justify-center gap-2 border-2 border-primary text-primary font-semibold py-3.5 rounded-lg hover:bg-primary/5 transition disabled:border-gray-300 disabled:text-gray-400 disabled:cursor-not-allowed"
+                  >
+                    {resendLoading ? (
+                      <>
+                        <svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/>
+                        </svg>
+                        Enviando correo...
+                      </>
+                    ) : (
+                      <>↺ Reenviar correo de verificación</>
+                    )}
+                  </button>
+
+                  {/* Countdown bar — only visible during cooldown */}
+                  {resendCooldown > 0 && (
+                    <div className="space-y-1">
+                      <div className="w-full bg-gray-100 rounded-full h-1.5 overflow-hidden">
+                        <div
+                          className="h-full bg-primary rounded-full transition-all duration-1000"
+                          style={{ width: `${(resendCooldown / 60) * 100}%` }}
+                        />
+                      </div>
+                      <p className="text-xs text-center text-muted-foreground">
+                        Podrás reenviar en <span className="font-semibold text-primary">{resendCooldown}s</span>
+                      </p>
+                    </div>
+                  )}
+                </div>
+
                 <button
                   type="button"
                   onClick={() => { setRequiresVerification(false); setIsLogin(true); }}
-                  className="mt-4 text-primary hover:underline text-sm font-semibold"
+                  className="text-muted-foreground hover:text-foreground text-sm transition"
                 >
                   Volver al inicio de sesión
                 </button>
