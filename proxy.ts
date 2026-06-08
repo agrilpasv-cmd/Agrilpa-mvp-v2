@@ -92,26 +92,11 @@ export async function proxy(request: NextRequest) {
         return NextResponse.redirect(new URL("/dashboard", request.url))
     }
 
-    // Analytics Tracking (Async)
-    if (request.method === "GET" && !request.nextUrl.pathname.startsWith("/api") && !request.nextUrl.pathname.includes(".")) {
-        const country = request.headers.get("x-vercel-ip-country") || 
-                       request.headers.get("cf-ipcountry") || 
-                       "XX"
-        
-        const path = request.nextUrl.pathname
-        const userAgent = request.headers.get("user-agent") || "unknown"
-
-        // Fire and forget, but with catch to prevent middleware crash
-        supabase.from("page_analytics").insert({
-            path,
-            country,
-            referrer: request.headers.get("referer") || "",
-            user_agent: userAgent,
-            user_id: user?.id ?? null
-        }).then(({ error }) => {
-            if (error) console.warn("[Middleware] Analytics skipped:", error.message)
-        }).catch(() => {/* ignore */})
-    }
+    // Analytics Tracking DISABLED - re-enable when Supabase I/O budget is upgraded
+    // This was burning the free-tier daily I/O budget on every page visit
+    // if (request.method === "GET" && !request.nextUrl.pathname.startsWith("/api") && !request.nextUrl.pathname.includes(".")) {
+    //     supabase.from("page_analytics").insert({ ... }).catch(() => {})
+    // }
 
     return response
 }
