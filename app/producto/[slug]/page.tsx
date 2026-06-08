@@ -282,26 +282,44 @@ export default function ProductPage() {
     }
   }
 
-  const normalize = (str: string) => str?.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase() || ""
-  const currentName = normalize(product?.name || "")
+  const relatedData = React.useMemo(() => {
+    if (!product) return { relatedProducts: [], relatedTitle: "" }
 
-  const sameNameProducts = dynamicRelatedProducts
-    .filter((p) => {
-      const pName = normalize(p.name)
-      return (pName && currentName.includes(pName)) || (currentName && pName.includes(currentName))
-    })
+    const normalize = (str: string) => str?.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase() || ""
+    const currentName = normalize(product.name || "")
 
-  const sameCategoryProducts = dynamicRelatedProducts
-    .filter((p) => p.category === product?.category && !sameNameProducts.includes(p))
+    // Combine dynamic products and static products for a richer suggestion pool
+    const allAvailableProducts = [...dynamicRelatedProducts, ...allProducts].filter((p: any) => p.id !== slug && p.slug !== slug)
 
-  const otherProducts = dynamicRelatedProducts
-    .filter((p) => !sameNameProducts.includes(p) && !sameCategoryProducts.includes(p))
-    .sort(() => Math.random() - 0.5)
-  const relatedProducts = [...sameNameProducts, ...sameCategoryProducts, ...otherProducts].slice(0, 3)
+    const sameNameProducts = allAvailableProducts
+      .filter((p) => {
+        const pName = normalize(p.name)
+        return (pName && currentName.includes(pName)) || (currentName && pName.includes(currentName))
+      })
 
-  const relatedTitle = (sameNameProducts.length > 0 || sameCategoryProducts.length > 0)
-    ? "Productos relacionados"
-    : "Otros productos que te pueden interesar"
+    const sameCategoryProducts = allAvailableProducts
+      .filter((p) => p.category === product.category && !sameNameProducts.some(sp => sp.id === p.id))
+
+    const otherProducts = allAvailableProducts
+      .filter((p) => !sameNameProducts.some(sp => sp.id === p.id) && !sameCategoryProducts.some(sp => sp.id === p.id))
+      .sort((a, b) => {
+        const strA = a.id?.toString() || "";
+        const strB = b.id?.toString() || "";
+        const hashA = (a.name?.length || 0 + (strA.charCodeAt(0) || 0)) % 10;
+        const hashB = (b.name?.length || 0 + (strB.charCodeAt(0) || 0)) % 10;
+        return hashA - hashB;
+      })
+
+    const combinedProducts = [...sameNameProducts, ...sameCategoryProducts, ...otherProducts].slice(0, 3)
+    
+    const title = (sameNameProducts.length > 0 || sameCategoryProducts.length > 0)
+      ? "Productos relacionados"
+      : "Otros productos que te pueden interesar"
+
+    return { relatedProducts: combinedProducts, relatedTitle: title }
+  }, [product, dynamicRelatedProducts, slug])
+
+  const { relatedProducts, relatedTitle } = relatedData
 
   const handleContactVendor = () => {
     if (!currentUserId) {
@@ -658,15 +676,21 @@ export default function ProductPage() {
 
         {product.specifications && product.specifications.length > 0 && (
           <div className="mb-16">
-            <h2 className="text-2xl font-bold text-foreground mb-6">Especificaciones</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-              {product.specifications.map((spec: any, index: number) => (
-                <Card key={index} className="bg-card border border-border p-6">
-                  <p className="text-sm text-muted-foreground mb-2">{spec.label}</p>
-                  <p className="font-semibold text-foreground">{spec.value}</p>
-                </Card>
-              ))}
-            </div>
+            <Card className="bg-card border border-border p-6 md:p-8">
+              <h2 className="text-2xl font-bold text-foreground mb-6">Especificaciones</h2>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-8 gap-y-6">
+                {[...product.specifications].sort((a: any, b: any) => {
+                  if (a.label === "Vendedor") return -1;
+                  if (b.label === "Vendedor") return 1;
+                  return 0;
+                }).map((spec: any, index: number) => (
+                  <div key={index} className="border-b border-border pb-3">
+                    <p className="text-sm font-medium text-muted-foreground mb-1">{spec.label}</p>
+                    <p className="text-base font-semibold text-foreground">{spec.value}</p>
+                  </div>
+                ))}
+              </div>
+            </Card>
           </div>
         )}
 
@@ -782,20 +806,20 @@ export default function ProductPage() {
                           <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-0.5">Desde</p>
                           <div className="flex items-baseline gap-1">
                             {relProduct.price === "Por Cotizar" ? (
-                              <span className="text-xl font-black text-foreground">Por Cotizar</span>
+                              <span className="text-lg font-bold text-foreground">Por Cotizar</span>
                             ) : (
                               <>
-                                <span className="text-2xl font-black text-foreground">
+                                <span className="text-xl font-bold text-foreground">
                                   {relProduct.price?.includes('$') ? relProduct.price : `$${relProduct.price}`}
                                 </span>
-                                <span className="text-sm font-semibold text-muted-foreground">/kg</span>
+                                <span className="text-sm font-medium text-muted-foreground"> /kg</span>
                               </>
                             )}
                           </div>
                         </div>
                         <div className="text-right">
                           <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-0.5">Pedido Mín.</p>
-                          <p className="text-base font-bold text-foreground">
+                          <p className="text-base font-semibold text-foreground">
                             {relProduct.minOrder?.replace(/[^0-9.,]/g, '') || relProduct.minOrder}
                           </p>
                         </div>

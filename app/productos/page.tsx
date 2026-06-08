@@ -558,20 +558,20 @@ export default function ProductosPage() {
                           <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-0.5">Desde</p>
                           <div className="flex items-baseline gap-1">
                             {product.price === "Por Cotizar" ? (
-                              <span className="text-xl font-black text-foreground">Por Cotizar</span>
+                              <span className="text-lg font-bold text-foreground">Por Cotizar</span>
                             ) : (
                               <>
-                                <span className="text-2xl font-black text-foreground">
+                                <span className="text-xl font-bold text-foreground">
                                   {product.price?.includes('$') ? product.price : `$${product.price}`}
                                 </span>
-                                <span className="text-sm font-semibold text-muted-foreground">/kg</span>
+                                <span className="text-sm font-medium text-muted-foreground"> /kg</span>
                               </>
                             )}
                           </div>
                         </div>
                         <div className="text-right">
                           <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-0.5">Pedido Mín.</p>
-                          <p className="text-base font-bold text-foreground">
+                          <p className="text-base font-semibold text-foreground">
                             {product.minOrder?.replace(/[^0-9.,]/g, '') || product.minOrder}
                           </p>
                         </div>

@@ -133,9 +133,9 @@ export function ProductHero({
             {product.name}
           </h1>
           {(product.verified || product.sellerIsPro) && (
-            <div className="shrink-0 flex items-center gap-1.5 border border-primary/40 text-primary text-xs font-semibold px-3 py-1.5 rounded-full whitespace-nowrap mt-1">
-              <ShieldCheck className="w-3.5 h-3.5" />
-              Vendedor Verificado
+            <div className="shrink-0 flex items-center justify-center gap-1 bg-slate-900/90 backdrop-blur-sm text-white text-[10px] font-bold uppercase tracking-wider px-2.5 h-6 rounded-full shadow-sm leading-none mt-1.5">
+              <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
+              Verificado
             </div>
           )}
         </div>
@@ -211,9 +211,9 @@ export function ProductHero({
           {/* Precio */}
           <div className="p-3">
             <p className="text-xs text-slate-500 dark:text-slate-400 mb-1">Precio</p>
-            <p className="text-xl font-bold text-primary leading-none">
+            <p className="text-lg font-bold text-slate-900 dark:text-white leading-tight">
               {product.price === "Por Cotizar"
-                ? <span className="text-base">Por Cotizar</span>
+                ? "Por Cotizar"
                 : (product.price?.includes("$") ? product.price : `$${product.price}`)}
             </p>
             {product.price !== "Por Cotizar" && (
@@ -223,7 +223,7 @@ export function ProductHero({
           {/* Pedido mínimo */}
           <div className="p-3">
             <p className="text-xs text-slate-500 dark:text-slate-400 mb-1">Pedido mínimo</p>
-            <p className="text-xl font-bold text-slate-900 dark:text-white leading-none">{product.minOrder}</p>
+            <p className="text-lg font-bold text-slate-900 dark:text-white leading-tight">{product.minOrder}</p>
             <p className="text-[10px] text-slate-400 mt-1">
               {product.shippingUnitType === "FCL" ? "FCL" : product.shippingUnitType === "LCL" ? "LCL" : "kg"}
             </p>
@@ -231,13 +231,13 @@ export function ProductHero({
           {/* Tipo embalaje */}
           <div className="p-3">
             <p className="text-xs text-slate-500 dark:text-slate-400 mb-1">Tipo de Embalaje</p>
-            <p className="text-base font-bold text-slate-900 dark:text-white leading-snug">{product.packaging || "—"}</p>
+            <p className="text-lg font-bold text-slate-900 dark:text-white leading-tight">{product.packaging || "—"}</p>
             <p className="text-[10px] text-slate-400 mt-1">tipo de empaque</p>
           </div>
           {/* Tamaño embalaje */}
           <div className="p-3">
             <p className="text-xs text-slate-500 dark:text-slate-400 mb-1">Tamaño de Embalaje</p>
-            <p className="text-base font-bold text-slate-900 dark:text-white leading-snug">{product.packagingSize || "—"}</p>
+            <p className="text-lg font-bold text-slate-900 dark:text-white leading-tight">{product.packagingSize || "—"}</p>
             <p className="text-[10px] text-slate-400 mt-1">kg por embalaje</p>
           </div>
         </div>
