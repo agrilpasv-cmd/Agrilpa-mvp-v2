@@ -15,7 +15,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import { ChatOverlay } from "@/components/chat-overlay"
-import { Star, MapPin, MessageCircle, Check, ChevronLeft, FileText, ShoppingCart, Copy, Calendar, Package, Loader, AlertCircle, ArrowRight, ShieldCheck, X } from "lucide-react"
+import { Star, MapPin, MessageCircle, Check, ChevronLeft, FileText, ShoppingCart, Copy, Calendar, Package, Loader, AlertCircle, ArrowRight, ShieldCheck, X, Globe } from "lucide-react"
 import { getProductBySlug, getProductsByCategory, allProducts } from "@/lib/products-data"
 import { ProductHero } from "@/components/product-hero"
 import { createClient } from "@/lib/supabase/client"
@@ -217,6 +217,7 @@ export default function ProductPage() {
               incoterm: extractedIncoterm,
               shippingUnitType: data.product.shipping_unit_type || null,
               containerSize: data.product.container_size || null,
+              alcance_comercial: data.product.alcance_comercial || [],
               specifications: [
                 { label: "Origen", value: data.product.country },
                 { label: "Categoría", value: data.product.category },
@@ -639,6 +640,21 @@ export default function ProductPage() {
             </div>
           );
         })()}
+
+        {/* Alcance Comercial */}
+        {(product as any).alcance_comercial && (product as any).alcance_comercial.length > 0 && (
+          <div className="mb-16">
+            <h2 className="text-2xl font-bold text-foreground mb-6">Alcance Comercial</h2>
+            <div className="flex flex-wrap gap-3">
+              {(product as any).alcance_comercial.map((alcance: string, index: number) => (
+                <div key={index} className="flex items-center gap-2 bg-primary/10 border border-primary/20 text-primary px-4 py-2 rounded-full font-medium shadow-sm">
+                  <Globe className="w-4 h-4" />
+                  <span>{alcance}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         {product.specifications && product.specifications.length > 0 && (
           <div className="mb-16">

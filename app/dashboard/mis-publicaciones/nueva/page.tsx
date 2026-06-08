@@ -89,6 +89,15 @@ export default function NuevaPublicacionPage() {
   const [imagePreview, setImagePreview] = useState<string>("")
   const [imagePreview2, setImagePreview2] = useState<string>("")
   const [imagePreview3, setImagePreview3] = useState<string>("")
+  const [selectedAlcance, setSelectedAlcance] = useState<string[]>([])
+
+  const ALCANCE_OPTIONS = [
+    'Local (Mercado nacional)',
+    'Regional (Centroamérica)',
+    'Exportación: Norteamérica (EE.UU./Canadá)',
+    'Exportación: Europa',
+    'Exportación: Asia/Otros'
+  ]
 
   // Custom hook for sidebar updates
   const { refreshCounts } = useDashboard()
@@ -182,7 +191,7 @@ export default function NuevaPublicacionPage() {
       { key: "description", label: "Descripción del Producto" },
       { key: "country", label: "País de Origen" },
       { key: "minOrder", label: "Pedido Mínimo" },
-      {key: "packagingSize", label: "Tamaño del Embalaje" },
+      { key: "packagingSize", label: "Peso por Embalaje" },
       { key: "image", label: "Foto Principal del Producto" },
       { key: "supplyCapacity", label: "Capacidad de Abastecimiento" },
     ]
@@ -263,6 +272,7 @@ export default function NuevaPublicacionPage() {
           minOrder: `${formData.minOrder} ${formData.minOrderUnit || "kg"}`,
           shippingUnitType: formData.shippingUnit,
           containerSize: formData.containerSize || null,
+          alcanceComercial: selectedAlcance,
           // For WhatsApp, send country code and phone number separately
           ...(formData.contactMethod === "WhatsApp" && {
             countryCode: formData.countryCode,
@@ -685,7 +695,7 @@ export default function NuevaPublicacionPage() {
                     </div>
                     <div>
                       <label htmlFor="packagingSize" className="block text-sm font-medium mb-2">
-                        Tamaño del Embalaje <span className="text-red-500">*</span>
+                        Peso por Embalaje <span className="text-red-500">*</span>
                       </label>
                       <div className="flex gap-2">
                         <Input
@@ -1005,6 +1015,48 @@ export default function NuevaPublicacionPage() {
               <p className="text-xs text-muted-foreground/70 mt-0.5 italic">
                 Este valor es referencial y puede ajustarse con el comprador.
               </p>
+            </div>
+
+            {/* Alcance Comercial */}
+            <div>
+              <label className="block text-sm font-medium mb-1">
+                Alcance Comercial <span className="text-xs text-muted-foreground">(Opcional)</span>
+              </label>
+              <p className="text-xs text-muted-foreground mb-4">
+                Selecciona todas las opciones que apliquen a tu capacidad actual. Esta información será visible para los compradores.
+              </p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                {ALCANCE_OPTIONS.map((opcion) => {
+                  const isSelected = selectedAlcance.includes(opcion);
+                  return (
+                    <button
+                      key={opcion}
+                      type="button"
+                      onClick={() => {
+                        if (isSelected) {
+                          setSelectedAlcance(selectedAlcance.filter((item) => item !== opcion))
+                        } else {
+                          setSelectedAlcance([...selectedAlcance, opcion])
+                        }
+                      }}
+                      className={`relative flex items-center p-4 rounded-xl border-2 transition-all text-left ${
+                        isSelected
+                          ? "border-primary bg-primary/5 ring-1 ring-primary/20"
+                          : "border-border hover:border-primary/40 bg-background"
+                      }`}
+                    >
+                      <div className="flex-1">
+                        <p className={`text-sm font-semibold ${isSelected ? "text-primary" : "text-foreground"}`}>
+                          {opcion}
+                        </p>
+                      </div>
+                      <div className={`w-5 h-5 rounded-full flex items-center justify-center shrink-0 ml-2 transition-colors ${isSelected ? "bg-primary" : "border-2 border-muted-foreground/30"}`}>
+                        {isSelected && <Check className="w-3 h-3 text-white" />}
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
             </div>
 
             <div>

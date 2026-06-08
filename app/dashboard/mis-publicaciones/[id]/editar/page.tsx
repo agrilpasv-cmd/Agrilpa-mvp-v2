@@ -52,6 +52,7 @@ export default function EditarPublicacionPage({ params }: { params: Promise<{ id
   const [imagePreview, setImagePreview] = useState<string>("")
   const [imagePreview2, setImagePreview2] = useState<string>("")
   const [imagePreview3, setImagePreview3] = useState<string>("")
+  const [selectedAlcance, setSelectedAlcance] = useState<string[]>([])
 
   // Load existing product data
   useEffect(() => {
@@ -207,6 +208,7 @@ export default function EditarPublicacionPage({ params }: { params: Promise<{ id
           setImagePreview(p.image || "")
           setImagePreview2(p.image2 || "")
           setImagePreview3(p.image3 || "")
+          setSelectedAlcance(p.alcance_comercial || [])
           setIsPriceOnRequest(p.price === "Por Cotizar")
         } else {
           setStatusMessage({ type: 'error', text: "Producto no encontrado" })
@@ -228,6 +230,12 @@ export default function EditarPublicacionPage({ params }: { params: Promise<{ id
       ...prev,
       [name]: value,
     }))
+  }
+
+  const toggleAlcance = (option: string) => {
+    setSelectedAlcance((prev) =>
+      prev.includes(option) ? prev.filter((item) => item !== option) : [...prev, option]
+    )
   }
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>, imageKey: "image" | "image2" | "image3") => {
@@ -267,7 +275,7 @@ export default function EditarPublicacionPage({ params }: { params: Promise<{ id
       { key: "quantity", label: "Cantidad Disponible" },
       { key: "description", label: "Descripción del Producto" },
       { key: "country", label: "País de Origen" },
-      { key: "packagingSize", label: "Tamaño del Embalaje" },
+      { key: "packagingSize", label: "Peso por Embalaje" },
       { key: "supplyCapacity", label: "Capacidad de Abastecimiento" },
     ]
 
@@ -317,6 +325,7 @@ export default function EditarPublicacionPage({ params }: { params: Promise<{ id
           supplyCapacity: formData.supplyCapacity,
           supplyCapacityUnit: formData.supplyCapacityUnit,
           supplyCapacityPeriod: formData.supplyCapacityPeriod,
+          alcanceComercial: selectedAlcance,
         })
       })
 
@@ -721,7 +730,7 @@ export default function EditarPublicacionPage({ params }: { params: Promise<{ id
                     </div>
                     <div>
                       <label className="block text-sm font-medium mb-2">
-                        Tamaño del Embalaje <span className="text-red-500">*</span>
+                        Peso por Embalaje <span className="text-red-500">*</span>
                       </label>
                       <div className="flex gap-2">
                         <Input
@@ -1034,6 +1043,48 @@ export default function EditarPublicacionPage({ params }: { params: Promise<{ id
               <p className="text-xs text-muted-foreground/70 mt-0.5 italic">
                 Este valor es referencial y puede ajustarse con el comprador.
               </p>
+            </div>
+
+            {/* Alcance Comercial */}
+            <div className="bg-muted/10 p-5 rounded-xl border border-border mt-6">
+              <label className="block text-sm font-semibold mb-2">
+                Alcance Comercial (Opcional)
+              </label>
+              <p className="text-xs text-muted-foreground mb-4">
+                Selecciona todas las opciones que apliquen a tu capacidad actual. Esta información será visible para los compradores.
+              </p>
+              
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                {[
+                  "Local (Mercado nacional)",
+                  "Regional (Centroamérica)",
+                  "Exportación: Norteamérica (EE.UU./Canadá)",
+                  "Exportación: Europa",
+                  "Exportación: Asia/Otros",
+                ].map((option) => (
+                  <button
+                    key={option}
+                    type="button"
+                    onClick={() => toggleAlcance(option)}
+                    className={`relative flex items-center p-3 rounded-lg border-2 text-left transition-all duration-200 ${
+                      selectedAlcance.includes(option)
+                        ? "border-primary bg-primary/5 shadow-sm"
+                        : "border-border bg-background hover:border-primary/40 hover:bg-muted/20"
+                    }`}
+                  >
+                    <div className="flex-1">
+                      <p className={`text-sm font-medium ${selectedAlcance.includes(option) ? "text-primary" : "text-foreground"}`}>
+                        {option}
+                      </p>
+                    </div>
+                    {selectedAlcance.includes(option) && (
+                      <div className="flex-shrink-0 ml-2 w-5 h-5 rounded-full bg-primary flex items-center justify-center animate-in zoom-in duration-200">
+                        <Check className="w-3.5 h-3.5 text-white" />
+                      </div>
+                    )}
+                  </button>
+                ))}
+              </div>
             </div>
 
             <div>

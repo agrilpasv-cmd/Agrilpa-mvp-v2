@@ -34,6 +34,7 @@ export async function POST(request: NextRequest) {
       contactInfo,
       shippingUnitType,
       containerSize,
+      alcanceComercial,
     } = body
 
     if (
@@ -126,6 +127,7 @@ export async function POST(request: NextRequest) {
           certifications: body.certifications || null,
           shipping_unit_type: shippingUnitType || null,
           container_size: containerSize || null,
+          alcance_comercial: alcanceComercial || [],
           // Add WhatsApp specific fields if method is WhatsApp
           ...(contactMethod === "WhatsApp" && body.countryCode && body.phoneNumber && {
             country_code: body.countryCode,
