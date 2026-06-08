@@ -4,7 +4,8 @@ import { useEffect, useState, useCallback } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Button } from "@/components/ui/button"
-import { RefreshCw } from "lucide-react"
+import { RefreshCw, Trash2, CheckSquare, Square } from "lucide-react"
+import { Checkbox } from "@/components/ui/checkbox"
 
 interface ContactSubmission {
   id: string
@@ -16,6 +17,7 @@ interface ContactSubmission {
   user_type: string
   is_registered: boolean
   created_at: string
+  is_read?: boolean
 }
 
 export default function ContactanosPage() {
@@ -28,6 +30,8 @@ export default function ContactanosPage() {
     unregistered: 0,
   })
   const [selectedMessage, setSelectedMessage] = useState<ContactSubmission | null>(null)
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
+  const [isActionLoading, setIsActionLoading] = useState(false)
 
   const fetchData = useCallback(async (showLoading = false) => {
     if (showLoading) setLoading(true)
@@ -67,6 +71,71 @@ export default function ContactanosPage() {
 
   const handleManualRefresh = () => {
     fetchData(true)
+  }
+
+  const markAsRead = async (submission: ContactSubmission) => {
+    setSelectedMessage(submission)
+    // Avoid marking as read if it already is, or if the column doesn't exist yet (indicated by undefined if that's the case)
+    if (submission.is_read === false) {
+      try {
+        await fetch("/api/admin/contact-submissions/mark-read", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ id: submission.id })
+        })
+        setSubmissions(prev => prev.map(s => s.id === submission.id ? { ...s, is_read: true } : s))
+        window.dispatchEvent(new Event('update-contactanos-unread-count'))
+      } catch (error) {
+        console.error("Error marking as read", error)
+      }
+    }
+  }
+
+  const handleSelectAll = (checked: boolean) => {
+    if (checked) {
+      setSelectedIds(new Set(submissions.map(s => s.id)))
+    } else {
+      setSelectedIds(new Set())
+    }
+  }
+
+  const toggleSelection = (id: string, checked: boolean) => {
+    const newSet = new Set(selectedIds)
+    if (checked) {
+      newSet.add(id)
+    } else {
+      newSet.delete(id)
+    }
+    setSelectedIds(newSet)
+  }
+
+  const handleBulkAction = async (action: 'delete' | 'mark-read' | 'mark-unread') => {
+    if (selectedIds.size === 0) return
+    setIsActionLoading(true)
+    
+    try {
+      const response = await fetch("/api/admin/contact-submissions/bulk-action", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ids: Array.from(selectedIds), action })
+      })
+      
+      if (response.ok) {
+        if (action === 'delete') {
+          setSubmissions(prev => prev.filter(s => !selectedIds.has(s.id)))
+        } else {
+          const isReadState = action === 'mark-read'
+          setSubmissions(prev => prev.map(s => selectedIds.has(s.id) ? { ...s, is_read: isReadState } : s))
+        }
+        setSelectedIds(new Set())
+        window.dispatchEvent(new Event('update-contactanos-unread-count'))
+        fetchData(false)
+      }
+    } catch (error) {
+      console.error("Error en accion masiva:", error)
+    } finally {
+      setIsActionLoading(false)
+    }
   }
 
   return (
@@ -124,6 +193,25 @@ export default function ContactanosPage() {
           <CardDescription>Todos los mensajes de contacto recibidos</CardDescription>
         </CardHeader>
         <CardContent>
+          {selectedIds.size > 0 && (
+            <div className="flex items-center gap-2 mb-4 p-2 bg-muted/50 rounded-lg border border-border">
+              <span className="text-sm font-medium ml-2 mr-4">
+                {selectedIds.size} seleccionados
+              </span>
+              <Button size="sm" variant="outline" onClick={() => handleBulkAction('mark-read')} disabled={isActionLoading}>
+                <CheckSquare className="w-4 h-4 mr-2" />
+                Marcar leídos
+              </Button>
+              <Button size="sm" variant="outline" onClick={() => handleBulkAction('mark-unread')} disabled={isActionLoading}>
+                <Square className="w-4 h-4 mr-2" />
+                Marcar no leídos
+              </Button>
+              <Button size="sm" variant="destructive" onClick={() => handleBulkAction('delete')} disabled={isActionLoading}>
+                <Trash2 className="w-4 h-4 mr-2" />
+                Eliminar
+              </Button>
+            </div>
+          )}
           {loading && submissions.length === 0 ? (
             <p className="text-muted-foreground">Cargando datos...</p>
           ) : submissions.length === 0 ? (
@@ -132,6 +220,12 @@ export default function ContactanosPage() {
             <Table>
               <TableHeader>
                 <TableRow>
+                  <TableHead className="w-12">
+                    <Checkbox 
+                      checked={submissions.length > 0 && selectedIds.size === submissions.length}
+                      onCheckedChange={(checked) => handleSelectAll(checked as boolean)}
+                    />
+                  </TableHead>
                   <TableHead>Nombre</TableHead>
                   <TableHead>Email</TableHead>
                   <TableHead>Teléfono</TableHead>
@@ -144,15 +238,28 @@ export default function ContactanosPage() {
               </TableHeader>
               <TableBody>
                 {submissions.map((submission) => (
-                  <TableRow key={submission.id}>
-                    <TableCell>{submission.name}</TableCell>
+                  <TableRow key={submission.id} className={submission.is_read === false ? "bg-red-50/50 hover:bg-red-100/50 font-medium" : ""}>
+                    <TableCell>
+                      <Checkbox 
+                        checked={selectedIds.has(submission.id)}
+                        onCheckedChange={(checked) => toggleSelection(submission.id, checked as boolean)}
+                      />
+                    </TableCell>
+                    <TableCell>
+                      {submission.name}
+                      {submission.is_read === false && (
+                        <span className="ml-2 inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-medium bg-red-100 text-red-800">
+                          Nuevo
+                        </span>
+                      )}
+                    </TableCell>
                     <TableCell className="text-sm">{submission.email}</TableCell>
                     <TableCell className="text-sm">{submission.phone}</TableCell>
                     <TableCell className="text-sm">{submission.company || "N/A"}</TableCell>
                     <TableCell className="capitalize text-sm">{submission.user_type}</TableCell>
                     <TableCell>{submission.is_registered ? "Sí" : "No"}</TableCell>
                     <TableCell className="text-sm">
-                      <Button variant="outline" size="sm" onClick={() => setSelectedMessage(submission)}>
+                      <Button variant={submission.is_read === false ? "default" : "outline"} size="sm" onClick={() => markAsRead(submission)}>
                         Ver Mensaje
                       </Button>
                     </TableCell>

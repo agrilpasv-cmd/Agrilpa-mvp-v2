@@ -259,8 +259,8 @@ export default function ActividadAdminPage() {
               <p className="text-gray-500">No se encontró actividad reciente.</p>
             </div>
           ) : (
-            <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-sm">
-              <table className="w-full text-left border-collapse">
+            <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-x-auto">
+              <table className="w-full text-left border-collapse min-w-[800px]">
                 <thead>
                   <tr className="bg-gray-50 border-b border-gray-200">
                     <th className="p-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Usuario</th>

@@ -568,8 +568,6 @@ export default function ProductPage() {
           setIsQuotationDialogOpen={setIsQuotationDialogOpen}
         />
 
-
-
         <div className="mb-16">
           <Card className="bg-card border border-border p-8">
             <h2 className="text-2xl font-bold text-foreground mb-4">Descripción del Producto</h2>
@@ -597,27 +595,50 @@ export default function ProductPage() {
           </div>
         )}
 
-        {(product as any).incoterm && (
-          <div className="mb-16">
-            <Card className="bg-card border border-border p-8">
-              <h2 className="text-2xl font-bold text-foreground mb-4">Incoterm</h2>
-              <div className="flex items-center gap-3">
-                <div className="bg-primary/20 p-3 rounded-lg">
-                  <Package className="w-6 h-6 text-primary" />
+        {(product as any).incoterm && (() => {
+          const incotermValue = (product as any).incoterm as string;
+          const incotermsMeaning: Record<string, string> = {
+            "EXW": "En Fábrica",
+            "FCA": "Libre Transportista",
+            "FAS": "Libre al Costado del Buque",
+            "FOB": "Libre a Bordo",
+            "CFR": "Costo y Flete",
+            "CIF": "Costo, Seguro y Flete",
+            "CPT": "Transporte Pagado Hasta",
+            "CIP": "Transporte y Seguro Pagados Hasta",
+            "DAP": "Entregado en Lugar",
+            "DPU": "Entregado en Lugar Descargado",
+            "DDP": "Entregado Derechos Pagados",
+          };
+          const matchKey = Object.keys(incotermsMeaning).find(key => incotermValue.toUpperCase().includes(key));
+          const meaning = matchKey ? incotermsMeaning[matchKey] : null;
+
+          return (
+            <div className="mb-16">
+              <Card className="bg-card border border-border p-8">
+                <h2 className="text-2xl font-bold text-foreground mb-4">Condiciones de Entrega (Incoterm)</h2>
+                <div className="flex items-center gap-4">
+                  <div className="bg-primary/10 p-3 rounded-lg shrink-0">
+                    <Package className="w-8 h-8 text-primary" />
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <p className="text-xl font-bold text-foreground">{incotermValue}</p>
+                      {meaning && (
+                        <span className="text-lg font-medium text-muted-foreground">
+                          — {meaning}
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-sm text-muted-foreground mt-2 max-w-2xl">
+                      *El Incoterm determina quién asume los costos y riesgos del transporte, seguros y trámites aduaneros entre el comprador y el vendedor durante la entrega.
+                    </p>
+                  </div>
                 </div>
-                <div>
-                  <p className="text-xl font-bold text-foreground">{(product as any).incoterm}</p>
-                  <p className="text-sm text-muted-foreground mt-1">
-                    Define hasta dónde llega la responsabilidad del vendedor en el envío
-                  </p>
-                </div>
-              </div>
-              <p className="text-xs text-muted-foreground mt-4 italic border-t border-border pt-4">
-                * Este valor es referencial y puede ajustarse con el comprador.
-              </p>
-            </Card>
-          </div>
-        )}
+              </Card>
+            </div>
+          );
+        })()}
 
         {product.specifications && product.specifications.length > 0 && (
           <div className="mb-16">

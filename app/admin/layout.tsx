@@ -41,20 +41,32 @@ export default function AdminLayout({
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
   const [isLoggingOut, setIsLoggingOut] = useState(false)
   const [unreadContactCount, setUnreadContactCount] = useState(0)
+  const [unreadContactanosCount, setUnreadContactanosCount] = useState(0)
 
   // Fetch unread contact count
   useEffect(() => {
     const fetchUnreadCount = async () => {
       try {
-        const res = await fetch('/api/admin/contact-clicks/unread-count')
-        if (res.ok) {
-          const data = await res.json()
+        const [resContactar, resContactanos] = await Promise.all([
+          fetch('/api/admin/contact-clicks/unread-count'),
+          fetch('/api/admin/contact-submissions/unread-count')
+        ])
+        
+        if (resContactar.ok) {
+          const data = await resContactar.json()
           if (typeof data.unreadCount === 'number') {
             setUnreadContactCount(data.unreadCount)
           }
         }
+        
+        if (resContactanos.ok) {
+          const data2 = await resContactanos.json()
+          if (typeof data2.unreadCount === 'number') {
+            setUnreadContactanosCount(data2.unreadCount)
+          }
+        }
       } catch (error) {
-        console.error("Failed to fetch unread contact count:", error)
+        console.error("Failed to fetch unread contact counts:", error)
       }
     }
     fetchUnreadCount()
@@ -62,10 +74,12 @@ export default function AdminLayout({
     // Set up polling and event listener for instant updates
     const interval = setInterval(fetchUnreadCount, 60000)
     window.addEventListener('update-unread-count', fetchUnreadCount)
+    window.addEventListener('update-contactanos-unread-count', fetchUnreadCount)
     
     return () => {
         clearInterval(interval)
         window.removeEventListener('update-unread-count', fetchUnreadCount)
+        window.removeEventListener('update-contactanos-unread-count', fetchUnreadCount)
     }
   }, [])
 
@@ -179,6 +193,7 @@ export default function AdminLayout({
               {menuItems.map((item) => {
                 const Icon = item.icon
                 const isContactar = item.href === '/admin/contactar'
+                const isContactanos = item.href === '/admin/contactanos'
                 return (
                   <Link
                     key={item.href}
@@ -190,11 +205,18 @@ export default function AdminLayout({
                       <Icon className="w-5 h-5" />
                       <span className="font-medium">{item.label}</span>
                     </div>
-                    {isContactar && unreadContactCount > 0 && (
-                      <span className="flex items-center justify-center min-w-[20px] h-[20px] text-[10px] font-bold text-white bg-red-500 rounded-full px-1.5">
-                        {unreadContactCount > 99 ? '99+' : unreadContactCount}
-                      </span>
-                    )}
+                    <div className="flex items-center gap-2">
+                      {isContactar && unreadContactCount > 0 && (
+                        <span className="flex items-center justify-center min-w-[20px] h-[20px] text-[10px] font-bold text-white bg-red-500 rounded-full px-1.5">
+                          {unreadContactCount > 99 ? '99+' : unreadContactCount}
+                        </span>
+                      )}
+                      {isContactanos && unreadContactanosCount > 0 && (
+                        <span className="flex items-center justify-center min-w-[20px] h-[20px] text-[10px] font-bold text-white bg-red-500 rounded-full px-1.5">
+                          {unreadContactanosCount > 99 ? '99+' : unreadContactanosCount}
+                        </span>
+                      )}
+                    </div>
                   </Link>
                 )
               })}
