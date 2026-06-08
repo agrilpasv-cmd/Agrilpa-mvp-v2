@@ -82,6 +82,7 @@ export default function NuevaPublicacionPage() {
     supplyCapacity: "",
     supplyCapacityUnit: "toneladas",
     supplyCapacityPeriod: "mes",
+    currency: "US$",
   })
   const [isPriceOnRequest, setIsPriceOnRequest] = useState(true)
   const [certInput, setCertInput] = useState("")
@@ -268,6 +269,7 @@ export default function NuevaPublicacionPage() {
           userId,
           ...formData,
           price: isPriceOnRequest ? "Por Cotizar" : formData.price,
+          currency: formData.currency,
           quantity: `${formData.quantity} ${formData.quantityUnit || "kg"}`,
           minOrder: `${formData.minOrder} ${formData.minOrderUnit || "kg"}`,
           shippingUnitType: formData.shippingUnit,
@@ -838,22 +840,39 @@ export default function NuevaPublicacionPage() {
                 </div>
 
                 {!isPriceOnRequest ? (
-                  <div className="relative">
-                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground font-semibold">$</span>
-                    <Input
-                      id="price"
-                      type="number"
-                      name="price"
-                      value={formData.price === "Por Cotizar" ? "" : formData.price}
+                  <div className="flex gap-2">
+                    <select
+                      name="currency"
+                      value={formData.currency}
                       onChange={handleInputChange}
-                      placeholder="0.00"
-                      className="pl-7 pr-12"
+                      className="px-3 py-2 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary bg-background text-sm min-w-[140px]"
                       disabled={isLoading}
-                      required={!isPriceOnRequest}
-                      step="0.01"
-                      min="0"
-                    />
-                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">/{formData.saleMethod === "fcl" ? "contenedor" : "kg"}</span>
+                    >
+                      <option value="US$">🇺🇸 US$ (USD)</option>
+                      <option value="€">🇪🇺 € (EUR)</option>
+                      <option value="£">🇬🇧 £ (GBP)</option>
+                      <option value="¥">🇯🇵 ¥ (JPY)</option>
+                      <option value="Can$">🇨🇦 Can$ (CAD)</option>
+                      <option value="Mex$">🇲🇽 Mex$ (MXN)</option>
+                      <option value="CHF">🇨🇭 CHF (CHF)</option>
+                      <option value="CNY ¥">🇨🇳 ¥ (CNY)</option>
+                    </select>
+                    <div className="relative flex-1">
+                      <Input
+                        id="price"
+                        type="number"
+                        name="price"
+                        value={formData.price === "Por Cotizar" ? "" : formData.price}
+                        onChange={handleInputChange}
+                        placeholder="0.00"
+                        className="pr-12"
+                        disabled={isLoading}
+                        required={!isPriceOnRequest}
+                        step="0.01"
+                        min="0"
+                      />
+                      <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">/{formData.saleMethod === "fcl" ? "contenedor" : "kg"}</span>
+                    </div>
                   </div>
                 ) : (
                   <div className="p-3 bg-muted/50 border border-dashed border-muted-foreground/30 rounded-lg text-center text-sm text-muted-foreground">

@@ -11,6 +11,7 @@ export async function PUT(request: Request) {
             title,
             category,
             price,
+            currency,
             quantity,
             description,
             country,
@@ -57,6 +58,7 @@ export async function PUT(request: Request) {
         if (title !== undefined) updateData.title = title
         if (category !== undefined) updateData.category = category
         if (price !== undefined) updateData.price = price
+        if (currency !== undefined) updateData.currency = currency
         if (quantity !== undefined) updateData.quantity = quantity
         if (description !== undefined) updateData.description = fullDescription
         if (country !== undefined) updateData.country = country

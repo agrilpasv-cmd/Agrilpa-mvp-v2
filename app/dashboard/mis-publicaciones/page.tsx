@@ -23,6 +23,7 @@ interface Publication {
   title: string
   category: string
   price: string
+  currency?: string
   quantity: string
   description: string
   country: string
@@ -239,7 +240,7 @@ export default function PublicacionesPage() {
                         </p>
                         <div className="flex flex-wrap items-center gap-4 mt-3">
                           <span className="font-semibold text-primary">
-                            {pub.price === "Por Cotizar" ? pub.price : `$${pub.price}`}
+                            {pub.price === "Por Cotizar" ? pub.price : `${pub.currency || "US$"} ${pub.price}`}
                           </span>
                           <span className="text-sm text-muted-foreground">Stock: {pub.quantity}</span>
                           <span className="text-sm text-muted-foreground">{pub.country}</span>

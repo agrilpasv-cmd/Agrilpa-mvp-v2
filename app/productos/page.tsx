@@ -24,6 +24,7 @@ interface UserProduct {
   title: string
   category: string
   price: string
+  currency?: string
   quantity: string
   description: string
   country: string
@@ -102,7 +103,7 @@ export default function ProductosPage() {
     slug: up.id,
     name: up.title,
     category: up.category,
-    price: up.price,
+    price: up.price === "Por Cotizar" ? "Por Cotizar" : `${up.currency || "US$"} ${up.price}`,
     quantity: up.quantity,
     description: up.description,
     seller: up.company_name || "Productor Local",
