@@ -460,8 +460,10 @@ function AuthPageContent() {
         {/* Capa de fondo con imagen */}
         <div 
           className="absolute inset-0 bg-no-repeat bg-center"
-          style={{ backgroundImage: 'url("/auth-bg-cornfield.jpg")', backgroundSize: '100% 100%' }}
+          style={{ backgroundImage: 'url("/auth-bg-vineyard.jpg")', backgroundSize: '100% 100%' }}
         />
+        {/* Degradado superpuesto para oscurecer la base y resaltar el texto */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
 
         
         {/* Contenido superior de la columna izquierda */}
