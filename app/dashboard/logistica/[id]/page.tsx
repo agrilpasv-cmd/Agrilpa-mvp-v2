@@ -6,7 +6,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { ArrowLeft, Package, Check } from "lucide-react"
 import Link from "next/link"
 import Image from "next/image"
-import { allProducts } from "@/lib/products-data"
 
 export default function OrderDetailsPage() {
   const params = useParams()
@@ -85,11 +84,9 @@ export default function OrderDetailsPage() {
     )
   }
 
-  const product = allProducts.find(
-    (p) =>
-      shipment.product.toLowerCase().includes(p.name.toLowerCase()) ||
-      p.name.toLowerCase().includes(shipment.product.toLowerCase()),
-  )
+  const getProductImage = (productName: string) => {
+    return "/placeholder.svg"
+  }
 
   const subtotal = shipment.quantity * shipment.unitPrice
   const tax = subtotal * 0.12 // 12% tax
@@ -134,11 +131,9 @@ export default function OrderDetailsPage() {
             </CardHeader>
             <CardContent>
               <div className="flex gap-4">
-                {product && (
                   <div className="relative w-24 h-24 bg-muted rounded-lg overflow-hidden flex-shrink-0">
-                    <Image src={product.image || "/placeholder.svg"} alt={product.name} fill className="object-cover" />
+                    <Image src={getProductImage(shipment.product)} alt={shipment.product} fill className="object-cover" />
                   </div>
-                )}
                 <div className="flex-1">
                   <h3 className="text-lg font-semibold mb-2">{shipment.product}</h3>
                   <p className="text-sm text-muted-foreground mb-2">

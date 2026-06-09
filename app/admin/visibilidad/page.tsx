@@ -10,7 +10,6 @@ import { Input } from "@/components/ui/input"
 import { useToast } from "@/hooks/use-toast"
 import { Button } from "@/components/ui/button"
 import { Eye, EyeOff, Loader2, Search, Star, Save, ArrowUp, ArrowDown, AlertCircle } from "lucide-react"
-import { allProducts } from "@/lib/products-data"
 
 interface UserProduct {
     id: string
@@ -25,14 +24,8 @@ interface UserProduct {
     }
 }
 
-interface StaticProductVisibility {
-    product_id: number
-    is_visible: boolean
-}
-
 export default function VisibilityPage() {
     const [userProducts, setUserProducts] = useState<UserProduct[]>([])
-    const [staticVisibility, setStaticVisibility] = useState<Record<number, boolean>>({})
     const [featuredIds, setFeaturedIds] = useState<string[]>([])
     const [loading, setLoading] = useState(true)
     const [updating, setUpdating] = useState<string | null>(null)
@@ -54,16 +47,7 @@ export default function VisibilityPage() {
                 setUserProducts(userData || [])
             }
 
-            // Fetch static product visibility
-            const staticRes = await fetch("/api/admin/visibility/static-products")
-            if (staticRes.ok) {
-                const staticData = await staticRes.json()
-                const visibilityMap: Record<number, boolean> = {}
-                staticData.visibility.forEach((item: StaticProductVisibility) => {
-                    visibilityMap[item.product_id] = item.is_visible
-                })
-                setStaticVisibility(visibilityMap)
-            }
+            // Removed static product visibility fetch
 
             // Fetch featured products configuration
             const featuredRes = await fetch("/api/admin/visibility/featured-products")
@@ -184,50 +168,7 @@ export default function VisibilityPage() {
         }
     }
 
-    const toggleStaticProductVisibility = async (productId: number, currentVisibility: boolean) => {
-        setUpdating(`static-${productId}`)
-        console.log(`[DEBUG] Toggling static product ${productId} from ${currentVisibility} to ${!currentVisibility}`)
 
-        try {
-            const payload = {
-                productId,
-                isVisible: !currentVisibility,
-            }
-            console.log("[DEBUG] Sending payload:", payload)
-
-            const res = await fetch("/api/admin/visibility/static-products", {
-                method: "PATCH",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(payload),
-            })
-
-            console.log("[DEBUG] Response status:", res.status)
-            const data = await res.json()
-            console.log("[DEBUG] Response data:", data)
-
-            if (res.ok) {
-                setStaticVisibility((prev) => ({
-                    ...prev,
-                    [productId]: !currentVisibility,
-                }))
-                toast({
-                    title: "Visibilidad actualizada",
-                    description: `Producto ${!currentVisibility ? "visible" : "oculto"} correctamente`,
-                })
-            } else {
-                throw new Error(data.error || "Failed to update")
-            }
-        } catch (error) {
-            console.error("[ERROR] Error updating visibility:", error)
-            toast({
-                title: "Error",
-                description: error instanceof Error ? error.message : "No se pudo actualizar la visibilidad. Verifica que hayas ejecutado el script SQL en Supabase.",
-                variant: "destructive",
-            })
-        } finally {
-            setUpdating(null)
-        }
-    }
 
     const filteredUserProducts = userProducts.filter(
         (p) =>
@@ -235,17 +176,8 @@ export default function VisibilityPage() {
             p.category.toLowerCase().includes(searchQuery.toLowerCase()),
     )
 
-    const filteredStaticProducts = allProducts.filter(
-        (p) =>
-            p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            p.category.toLowerCase().includes(searchQuery.toLowerCase()),
-    )
-
     const userVisibleCount = userProducts.filter((p) => p.is_visible).length
     const userHiddenCount = userProducts.length - userVisibleCount
-
-    const staticVisibleCount = allProducts.filter((p) => staticVisibility[p.id] !== false).length
-    const staticHiddenCount = allProducts.length - staticVisibleCount
 
     if (loading) {
         return (
@@ -279,9 +211,6 @@ export default function VisibilityPage() {
                     </TabsTrigger>
                     <TabsTrigger value="featured">
                         Destacados en Inicio ({featuredIds.length}/4)
-                    </TabsTrigger>
-                    <TabsTrigger value="static">
-                        Productos Estáticos ({allProducts.length})
                     </TabsTrigger>
                 </TabsList>
 
@@ -560,73 +489,7 @@ export default function VisibilityPage() {
                     </Card>
                 </TabsContent>
 
-                <TabsContent value="static" className="space-y-4">
-                    <Card>
-                        <CardHeader>
-                            <CardTitle>Productos Estáticos</CardTitle>
-                            <CardDescription>
-                                Visibles: {staticVisibleCount} | Ocultos: {staticHiddenCount}
-                            </CardDescription>
-                        </CardHeader>
-                        <CardContent>
-                            {filteredStaticProducts.length === 0 ? (
-                                <div className="text-center py-8 text-muted-foreground">
-                                    No se encontraron productos
-                                </div>
-                            ) : (
-                                <div className="space-y-3">
-                                    {filteredStaticProducts.map((product) => {
-                                        const isVisible = staticVisibility[product.id] !== false
-                                        return (
-                                            <div
-                                                key={product.id}
-                                                className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/50"
-                                            >
-                                                <div className="flex items-center gap-4 flex-1">
-                                                    <div className="w-12 h-12 rounded bg-muted overflow-hidden flex-shrink-0">
-                                                        <img
-                                                            src={product.image || "/placeholder.svg"}
-                                                            alt={product.name}
-                                                            className="w-full h-full object-cover"
-                                                        />
-                                                    </div>
-                                                    <div className="flex-1 min-w-0">
-                                                        <h3 className="font-medium truncate">{product.name}</h3>
-                                                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                                                            <span>{product.category}</span>
-                                                            <span>•</span>
-                                                            <span>{product.price}</span>
-                                                            <span>•</span>
-                                                            <span className="truncate">{product.producer}</span>
-                                                        </div>
-                                                    </div>
-                                                    <div className="flex items-center gap-2">
-                                                        {isVisible ? (
-                                                            <Eye className="w-4 h-4 text-green-600" />
-                                                        ) : (
-                                                            <EyeOff className="w-4 h-4 text-red-600" />
-                                                        )}
-                                                        <span className="text-sm font-medium">
-                                                            {isVisible ? "Visible" : "Oculto"}
-                                                        </span>
-                                                    </div>
-                                                </div>
-                                                <Switch
-                                                    checked={isVisible}
-                                                    onCheckedChange={() =>
-                                                        toggleStaticProductVisibility(product.id, isVisible)
-                                                    }
-                                                    disabled={updating === `static-${product.id}`}
-                                                    className="ml-4"
-                                                />
-                                            </div>
-                                        )
-                                    })}
-                                </div>
-                            )}
-                        </CardContent>
-                    </Card>
-                </TabsContent>
+
             </Tabs>
         </div>
     )

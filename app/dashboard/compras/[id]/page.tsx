@@ -6,8 +6,7 @@ import Image from "next/image"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { ArrowLeft, Download, Printer, Loader, Eye, Check, Star } from "lucide-react"
-import { allProducts } from "@/lib/products-data"
+import { ArrowLeft, Download, Printer, Loader, Eye, ChevronDown, Check, Star } from "lucide-react"
 import { useEffect, useState } from "react"
 import { format } from "date-fns"
 import { es } from "date-fns/locale"
@@ -210,16 +209,7 @@ export default function CompraDetailPage() {
     }, [orderId])
 
     const getProductImage = (productName: string, slug?: string) => {
-        if (slug) {
-            const productBySlug = allProducts.find(p => String(p.id) === slug)
-            if (productBySlug) return productBySlug.image
-        }
-        const product = allProducts.find(
-            (p) =>
-                productName.toLowerCase().includes(p.name.toLowerCase()) ||
-                p.name.toLowerCase().includes(productName.toLowerCase()),
-        )
-        return product?.image || "/placeholder.svg"
+        return "/placeholder.svg"
     }
 
     const getEstadoColor = (estado: string) => {

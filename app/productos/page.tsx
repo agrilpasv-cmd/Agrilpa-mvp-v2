@@ -5,7 +5,6 @@ import { useState, useEffect } from "react"
 import Link from "next/link"
 import { Card } from "@/components/ui/card"
 import { Search, Filter, Star, MapPin, MessageCircle, X, AlertCircle, ShieldCheck, Ship } from "lucide-react"
-import { allProducts } from "@/lib/products-data"
 import { createClient } from "@/lib/supabase/client"
 import { PRODUCT_CATEGORIES } from "@/lib/constants"
 import { useToast } from "@/hooks/use-toast"
@@ -65,7 +64,6 @@ export default function ProductosPage() {
   const [searchContent, setSearchContent] = useState("")
   const [containerFilter, setContainerFilter] = useState("todos")
   const [userProducts, setUserProducts] = useState<UserProduct[]>([])
-  const [staticVisibility, setStaticVisibility] = useState<Record<number, boolean>>({})
   const [isLoading, setIsLoading] = useState(true)
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [currentUserId, setCurrentUserId] = useState<string | null>(null)
@@ -90,12 +88,8 @@ export default function ProductosPage() {
 
   const countries = [
     "todos",
-    ...new Set(allProducts.map((p) => p.country)),
     ...new Set(userProducts.map((up) => up.country)),
   ].sort()
-
-  // Filter static products by visibility
-  const visibleStaticProducts = allProducts.filter((product) => staticVisibility[product.id] !== false)
 
   // Map user products and sort Pro sellers first
   const mappedUserProducts = userProducts.map((up) => ({
@@ -123,13 +117,12 @@ export default function ProductosPage() {
     containerSize: up.container_size || null,
   }))
 
-  // Priority Positioning: Pro sellers first, then static, then free
+  // Priority Positioning: Pro sellers first, then free
   const proUserProducts = mappedUserProducts.filter(p => p.sellerIsPro)
   const freeUserProducts = mappedUserProducts.filter(p => !p.sellerIsPro)
 
   const allProductsToDisplay = [
     ...proUserProducts,
-    ...visibleStaticProducts,
     ...freeUserProducts,
   ]
 
@@ -198,25 +191,12 @@ export default function ProductosPage() {
   const fetchUserProducts = async () => {
     setIsLoading(true)
     try {
-      // Fetch both in parallel for speed
-      const [userResponse, visResponse] = await Promise.all([
-        fetch("/api/products/get-user-products", { cache: 'no-store' }),
-        fetch(`/api/products/static-visibility?t=${Date.now()}`, { cache: 'no-store' })
-      ])
+      const userResponse = await fetch("/api/products/get-user-products", { cache: 'no-store' })
 
       if (userResponse.ok) {
         const data = await userResponse.json()
         console.log("Fetched user products:", data.products?.length)
         setUserProducts(data.products || [])
-      }
-
-      if (visResponse.ok) {
-        const visData = await visResponse.json()
-        const visibilityMap: Record<number, boolean> = {}
-        visData.visibility.forEach((item: { product_id: number; is_visible: boolean }) => {
-          visibilityMap[item.product_id] = item.is_visible
-        })
-        setStaticVisibility(visibilityMap)
       }
     } catch (error) {
       console.error("[Agrilpa] Error fetching user products:", error)

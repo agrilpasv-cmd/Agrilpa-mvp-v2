@@ -1,6 +1,5 @@
 import { createClient } from "@supabase/supabase-js"
 import { NextResponse } from "next/server"
-import { allProducts } from "@/lib/products-data"
 
 export const dynamic = 'force-dynamic'
 
@@ -50,19 +49,6 @@ export async function GET() {
             const buyer = click.user_id ? usersById[click.user_id] : null
             let seller = click.seller_id && isUuid(click.seller_id) ? usersById[click.seller_id] : null
             
-            // Fallback for static products (e.g., vendor_021)
-            let staticSellerName = null
-            let staticSellerEmail = null
-            
-            if (!seller && click.seller_id && !isUuid(click.seller_id)) {
-                // Try to find the static product to get producer info
-                const staticProduct = allProducts.find(p => p.vendorId === click.seller_id || p.id.toString() === click.product_id)
-                if (staticProduct) {
-                    staticSellerName = staticProduct.producer
-                    staticSellerEmail = staticProduct.contactInfo || null
-                }
-            }
-
             return {
                 ...click,
                 is_read: click.is_read || false,
@@ -70,9 +56,9 @@ export async function GET() {
                 buyer_email: buyer?.email || null,
                 buyer_company: buyer?.company_name || null,
                 buyer_type: buyer?.user_type || null,
-                seller_name: seller?.full_name || staticSellerName,
-                seller_email: seller?.email || staticSellerEmail,
-                seller_company: seller?.company_name || staticSellerName,
+                seller_name: seller?.full_name || null,
+                seller_email: seller?.email || null,
+                seller_company: seller?.company_name || null,
             }
         })
 

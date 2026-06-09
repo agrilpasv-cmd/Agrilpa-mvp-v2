@@ -2,7 +2,7 @@
 
 import { notFound, useRouter, useParams } from "next/navigation"
 import Link from "next/link"
-import { useState, useEffect } from "react"
+import { useState, useEffect, useMemo } from "react"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -16,7 +16,6 @@ import {
 } from "@/components/ui/dialog"
 import { ChatOverlay } from "@/components/chat-overlay"
 import { Star, MapPin, MessageCircle, Check, ChevronLeft, FileText, ShoppingCart, Copy, Calendar, Package, Loader, AlertCircle, ArrowRight, ShieldCheck, X, Globe } from "lucide-react"
-import { getProductBySlug, getProductsByCategory, allProducts } from "@/lib/products-data"
 import { ProductHero } from "@/components/product-hero"
 import { createClient } from "@/lib/supabase/client"
 import { format } from "date-fns"
@@ -61,12 +60,9 @@ export default function ProductPage() {
     })
   }, [])
 
-  // State for static and user products
-  const staticProduct = getProductBySlug(slug)
+  // State for user products
   const [userProduct, setUserProduct] = useState<any>(null)
-  // Determine if we need to fetch: Valid ID and not a static product
-  const shouldFetch = isValidId(slug) && !staticProduct
-  const [isLoading, setIsLoading] = useState(shouldFetch)
+  const [isLoading, setIsLoading] = useState(true)
   const [notFoundError, setNotFoundError] = useState(false)
   const [dynamicRelatedProducts, setDynamicRelatedProducts] = useState<any[]>([])
 
@@ -100,7 +96,6 @@ export default function ProductPage() {
     console.log('=== PRODUCT PAGE LOADED ===')
     console.log('Slug:', slug)
     console.log('isValidId:', isValidId(slug))
-    console.log('staticProduct:', !!staticProduct)
 
     window.scrollTo(0, 0)
 
@@ -249,47 +244,22 @@ export default function ProductPage() {
         .finally(() => {
           setIsLoading(false)
         })
+    } else {
+      setIsLoading(false)
+      setNotFoundError(true)
     }
   }, [slug])
 
-  // Determine which product to display
-  const product = staticProduct || userProduct
+  const product = userProduct
 
-  // Show loading state for user products
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Cargando producto...</p>
-        </div>
-      </div>
-    )
-  }
-
-  // Show 404 if product not found - only after loading is complete
-  if (!isLoading && !product && slug) {
-    if (notFoundError) {
-      notFound()
-    }
-    // If it's a valid ID and we're not loading but have no product, it's a 404
-    if (isValidId(slug) && !userProduct) {
-      notFound()
-    }
-    // If it's not a valid ID and not a static product, it's a 404
-    if (!isValidId(slug) && !staticProduct) {
-      notFound()
-    }
-  }
-
-  const relatedData = React.useMemo(() => {
+  const relatedData = useMemo(() => {
     if (!product) return { relatedProducts: [], relatedTitle: "" }
 
     const normalize = (str: string) => str?.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase() || ""
     const currentName = normalize(product.name || "")
 
-    // Combine dynamic products and static products for a richer suggestion pool
-    const allAvailableProducts = [...dynamicRelatedProducts, ...allProducts].filter((p: any) => p.id !== slug && p.slug !== slug)
+    // Combine dynamic products for suggestion pool
+    const allAvailableProducts = dynamicRelatedProducts.filter((p: any) => p.id !== slug && p.slug !== slug)
 
     const sameNameProducts = allAvailableProducts
       .filter((p) => {
@@ -320,6 +290,33 @@ export default function ProductPage() {
   }, [product, dynamicRelatedProducts, slug])
 
   const { relatedProducts, relatedTitle } = relatedData
+
+  // Show loading state for user products
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Cargando producto...</p>
+        </div>
+      </div>
+    )
+  }
+
+  // Show 404 if product not found - only after loading is complete
+  if (!isLoading && !product && slug) {
+    if (notFoundError) {
+      notFound()
+    }
+    // If it's a valid ID and we're not loading but have no product, it's a 404
+    if (isValidId(slug) && !userProduct) {
+      notFound()
+    }
+    // If it's not a valid ID and not a static product, it's a 404
+    if (!isValidId(slug) && !staticProduct) {
+      notFound()
+    }
+  }
 
   const handleContactVendor = () => {
     if (!currentUserId) {

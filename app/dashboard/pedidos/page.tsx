@@ -8,7 +8,6 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { Search, Calendar, Loader, CheckCheck } from "lucide-react"
-import { allProducts } from "@/lib/products-data"
 import { format } from "date-fns"
 import { es } from "date-fns/locale"
 import { useDashboard } from "../context"
@@ -125,19 +124,7 @@ export default function PedidosPage() {
   }
 
   const getProductImage = (productName: string, slug?: string) => {
-    // Try to find by slug first if available
-    if (slug) {
-      const productBySlug = allProducts.find(p => String(p.id) === slug)
-      if (productBySlug) return productBySlug.image
-    }
-
-    // Fallback to name match
-    const product = allProducts.find(
-      (p) =>
-        productName.toLowerCase().includes(p.name.toLowerCase()) ||
-        p.name.toLowerCase().includes(productName.toLowerCase()),
-    )
-    return product?.image || "/placeholder.svg"
+    return "/placeholder.svg"
   }
 
   const filteredPedidos = pedidos.filter((ped) => {
