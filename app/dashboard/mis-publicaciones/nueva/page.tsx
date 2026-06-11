@@ -93,6 +93,17 @@ export default function NuevaPublicacionPage() {
   const [imagePreview3, setImagePreview3] = useState<string>("")
   const [selectedAlcance, setSelectedAlcance] = useState<string[]>([])
 
+  const ALL_COUNTRIES = [
+    "El Salvador", "Guatemala", "Honduras", "Nicaragua", "Costa Rica", "Panamá", "Belice",
+    "México", "Estados Unidos", "Canadá",
+    "Argentina", "Bolivia", "Brasil", "Chile", "Colombia", "Ecuador", "Paraguay", "Perú", "Uruguay", "Venezuela", "Guyana", "Surinam",
+    "Cuba", "República Dominicana", "Jamaica", "Haití", "Trinidad y Tobago", "Puerto Rico",
+    "España", "Francia", "Alemania", "Italia", "Portugal", "Países Bajos", "Bélgica", "Polonia", "Reino Unido",
+    "China", "India", "Japón", "Corea del Sur", "Tailandia", "Vietnam", "Indonesia", "Filipinas", "Malasia", "Turquía",
+    "Sudáfrica", "Nigeria", "Kenia", "Etiopía", "Ghana", "Costa de Marfil", "Tanzania", "Uganda", "Marruecos", "Egipto",
+    "Australia", "Nueva Zelanda"
+  ]
+
   const ALCANCE_OPTIONS = {
     nacional: [
       { value: 'Nacional (Cobertura en todo el país)', label: 'Nacional (Cobertura en todo el país)' }
@@ -1089,31 +1100,65 @@ export default function NuevaPublicacionPage() {
                   <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
                     Mercado Nacional
                   </h4>
-                  <div className="space-y-2 bg-background p-3 rounded-lg border border-border">
-                    {ALCANCE_OPTIONS.nacional.map((opcion) => {
-                      const isChecked = selectedAlcance.includes(opcion.value);
-                      return (
-                        <label key={opcion.value} className="flex items-center gap-3 cursor-pointer py-1 select-none">
-                          <input
-                            type="checkbox"
-                            checked={isChecked}
+                  <div className="space-y-3 bg-background p-3 rounded-lg border border-border">
+                    <div className="flex flex-col gap-2.5">
+                      <label className="flex items-center gap-3 cursor-pointer select-none">
+                        <input
+                          type="checkbox"
+                          checked={selectedAlcance.some(item => item.startsWith("Nacional") || item.includes("nacional") || item.includes("Local"))}
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              const defaultCountry = formData.country || "El Salvador"
+                              setSelectedAlcance([
+                                ...selectedAlcance.filter(item => !item.startsWith("Nacional") && !item.includes("nacional") && !item.includes("Local")),
+                                `Nacional (Cobertura en todo ${defaultCountry})`
+                              ])
+                            } else {
+                              setSelectedAlcance(selectedAlcance.filter((item) => !item.startsWith("Nacional") && !item.includes("nacional") && !item.includes("Local")))
+                            }
+                          }}
+                          className="w-4 h-4 rounded border-gray-300 text-primary focus:ring-primary cursor-pointer"
+                        />
+                        <span className="text-sm font-medium text-foreground">
+                          Nacional (Cobertura en todo el país)
+                        </span>
+                      </label>
+
+                      {selectedAlcance.some(item => item.startsWith("Nacional") || item.includes("nacional") || item.includes("Local")) && (
+                        <div className="pl-7 space-y-1 animate-in slide-in-from-top-2 duration-200">
+                          <label className="block text-xs text-muted-foreground font-medium">
+                            Selecciona el país de cobertura nacional:
+                          </label>
+                          <select
+                            value={
+                              (() => {
+                                const currentNacional = selectedAlcance.find(item => item.startsWith("Nacional") || item.includes("nacional") || item.includes("Local"))
+                                if (currentNacional) {
+                                  const match = currentNacional.match(/Nacional \(Cobertura en todo (.*?)\)/)
+                                  return match ? match[1] : (formData.country || "El Salvador")
+                                }
+                                return formData.country || "El Salvador"
+                              })()
+                            }
                             onChange={(e) => {
-                              if (e.target.checked) {
-                                setSelectedAlcance([...selectedAlcance, opcion.value])
-                              } else {
-                                setSelectedAlcance(selectedAlcance.filter((item) => item !== opcion.value))
-                              }
+                              const countryVal = e.target.value
+                              setSelectedAlcance([
+                                ...selectedAlcance.filter(item => !item.startsWith("Nacional") && !item.includes("nacional") && !item.includes("Local")),
+                                `Nacional (Cobertura en todo ${countryVal})`
+                              ])
                             }}
-                            className="w-4 h-4 rounded border-gray-300 text-primary focus:ring-primary cursor-pointer"
-                          />
-                          <span className="text-sm font-medium text-foreground">
-                            {opcion.label}
-                          </span>
-                        </label>
-                      );
-                    })}
+                            className="w-full max-w-[280px] px-3 py-1.5 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary bg-background text-sm"
+                          >
+                            {ALL_COUNTRIES.map((c) => (
+                              <option key={c} value={c}>{c}</option>
+                            ))}
+                          </select>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
+
 
                 {/* Mercado Internacional */}
                 <div>
