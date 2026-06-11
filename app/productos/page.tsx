@@ -27,6 +27,7 @@ interface UserProduct {
   quantity: string
   description: string
   country: string
+  state?: string
   min_order: string
   maturity?: string
   packaging: string
@@ -101,13 +102,14 @@ export default function ProductosPage() {
     quantity: up.quantity,
     description: up.description,
     seller: up.company_name || "Productor Local",
-    location: up.country,
+    location: up.state ? `${up.country}, ${up.state}` : up.country,
     image: up.image || "/placeholder.svg",
     verified: up.seller_is_pro || false,
     rating: up.rating || 0,
     reviews: up.reviews || 0,
     minOrder: up.min_order,
     country: up.country,
+    state: up.state,
     isUserProduct: true,
     contactMethod: up.contact_method,
     contactInfo: up.contact_info,

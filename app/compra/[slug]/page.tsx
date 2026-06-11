@@ -88,7 +88,7 @@ export default function PurchasePage() {
               name: data.product.title,
               category: data.product.category,
               producer: "Productor Local",
-              location: data.product.country,
+              location: data.product.state ? `${data.product.country}, ${data.product.state}` : data.product.country,
               country: data.product.country,
               description: data.product.description,
               fullDescription: data.product.description,

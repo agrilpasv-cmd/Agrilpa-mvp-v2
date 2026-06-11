@@ -38,11 +38,13 @@ interface Product {
   category: string
   price: string
   country: string
+  state?: string
   image: string
   min_order: string
   packaging: string
   views: number
   created_at: string
+  rating?: number
 }
 
 export default function VendedorPage() {
@@ -367,7 +369,7 @@ export default function VendedorPage() {
 
                       <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
                         <MapPin className="w-3 h-3 shrink-0" />
-                        {product.country}
+                        {product.state ? `${product.country}, ${product.state}` : product.country}
                       </div>
 
                       {/* Price + views row */}

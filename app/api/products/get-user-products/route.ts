@@ -33,7 +33,7 @@ export async function GET(request: Request) {
     if (onlyFeatured && featuredIds.length > 0) {
       const { data, error } = await supabase
         .from("user_products")
-        .select("id, title, category, description, country, image, price, quantity, min_order, contact_method, contact_info, shipping_unit_type, container_size, user_id")
+        .select("id, title, category, description, country, state, image, price, currency, quantity, min_order, contact_method, contact_info, shipping_unit_type, container_size, user_id")
         .eq("is_visible", true)
         .in("id", featuredIds)
       
@@ -47,7 +47,7 @@ export async function GET(request: Request) {
       // Fetch latest products dynamically for general listing (e.g. catalog page)
       const { data, error } = await supabase
         .from("user_products")
-        .select("id, title, category, description, country, image, price, quantity, min_order, contact_method, contact_info, shipping_unit_type, container_size, user_id")
+        .select("id, title, category, description, country, state, image, price, currency, quantity, min_order, contact_method, contact_info, shipping_unit_type, container_size, user_id")
         .eq("is_visible", true)
         .order("created_at", { ascending: false })
         .limit(onlyFeatured ? 4 : 100)
@@ -126,8 +126,10 @@ export async function GET(request: Request) {
         category: p.category,
         description: p.description,
         country: p.country,
+        state: p.state || null,
         image: p.image,
         price: p.price,
+        currency: p.currency || "US$",
         quantity: p.quantity,
         min_order: p.min_order,
         contact_method: p.contact_method,

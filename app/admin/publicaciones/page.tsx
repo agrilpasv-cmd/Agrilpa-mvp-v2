@@ -34,6 +34,7 @@ interface Product {
     quantity: string
     description: string
     country: string
+    state?: string
     min_order: string
     packaging: string
     packaging_size: number
@@ -139,6 +140,7 @@ export default function AdminPublicationsPage() {
             quantity: product.quantity,
             description: cleanDesc,
             country: product.country,
+            state: product.state || "",
             min_order: product.min_order,
             packaging: product.packaging,
             packaging_size: product.packaging_size,
@@ -149,7 +151,20 @@ export default function AdminPublicationsPage() {
     }
 
     const handleEditInput = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
-        setEditForm(prev => ({ ...prev, [e.target.name]: e.target.value }))
+        const { name, value } = e.target
+        let processedValue = value
+
+        if (name === "state") {
+            // Allow only letters, spaces, and Spanish characters (áéíóúÁÉÍÓÚñÑüÜ)
+            const cleanVal = value.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s]/g, "")
+            // Capitalize first letter of each word
+            processedValue = cleanVal
+                .split(" ")
+                .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+                .join(" ")
+        }
+
+        setEditForm(prev => ({ ...prev, [name]: processedValue }))
     }
 
     const handleEditImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -182,6 +197,7 @@ export default function AdminPublicationsPage() {
                     quantity: editForm.quantity,
                     description: editForm.description,
                     country: editForm.country,
+                    state: editForm.state,
                     min_order: editForm.min_order,
                     packaging: editForm.packaging,
                     packaging_size: editForm.packaging_size,
@@ -415,8 +431,8 @@ export default function AdminPublicationsPage() {
                             </div>
                         </div>
 
-                        {/* Country + Min Order */}
-                        <div className="grid grid-cols-2 gap-4">
+                        {/* Country, State + Min Order */}
+                        <div className="grid grid-cols-3 gap-4">
                             <div>
                                 <label className="block text-sm font-medium mb-1">País de Origen</label>
                                 <select
@@ -428,6 +444,15 @@ export default function AdminPublicationsPage() {
                                     <option value="">Selecciona un país</option>
                                     {ALL_COUNTRIES.map(c => <option key={c} value={c}>{c}</option>)}
                                 </select>
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium mb-1">Estado / Región</label>
+                                <Input
+                                    name="state"
+                                    value={editForm.state || ""}
+                                    onChange={handleEditInput}
+                                    placeholder="Ej: Jalisco"
+                                />
                             </div>
                             <div>
                                 <label className="block text-sm font-medium mb-1">Pedido Mínimo</label>

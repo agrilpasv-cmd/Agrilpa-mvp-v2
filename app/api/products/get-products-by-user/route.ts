@@ -21,7 +21,7 @@ export async function GET(request: Request) {
         const [productsResult, profileResult] = await Promise.all([
             supabaseAdmin
                 .from("user_products")
-                .select("id, title, category, price, country, image, min_order, packaging, views, created_at, shipping_unit_type, container_size")
+                .select("id, title, category, price, country, state, image, min_order, packaging, views, created_at, shipping_unit_type, container_size")
                 .eq("user_id", userId)
                 .order("created_at", { ascending: false }),
             supabaseAdmin

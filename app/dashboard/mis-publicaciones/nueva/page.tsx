@@ -61,6 +61,7 @@ export default function NuevaPublicacionPage() {
     quantityUnit: "kg",
     description: "",
     country: "",
+    state: "",
     minOrder: "",
     minOrderUnit: "kg",
     maturity: "",
@@ -147,9 +148,21 @@ export default function NuevaPublicacionPage() {
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target
+    let processedValue = value
+
+    if (name === "state") {
+      // Allow only letters, spaces, and Spanish characters (áéíóúÁÉÍÓÚñÑüÜ)
+      const cleanVal = value.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s]/g, "")
+      // Capitalize first letter of each word
+      processedValue = cleanVal
+        .split(" ")
+        .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+        .join(" ")
+    }
+
     setFormData((prev) => ({
       ...prev,
-      [name]: value,
+      [name]: processedValue,
     }))
   }
 
@@ -479,8 +492,8 @@ export default function NuevaPublicacionPage() {
               </div>
             </div>
 
-            {/* País de Origen y Tipo de Maduración */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* País de Origen, Estado/Región y Tipo de Maduración */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
                 <label htmlFor="country" className="block text-sm font-medium mb-2">
                   País de Origen <span className="text-red-500">*</span>
@@ -571,6 +584,20 @@ export default function NuevaPublicacionPage() {
                     <option value="Nueva Zelanda">Nueva Zelanda</option>
                   </optgroup>
                 </select>
+              </div>
+              <div>
+                <label htmlFor="state" className="block text-sm font-medium mb-2">
+                  Estado / Región
+                </label>
+                <Input
+                  id="state"
+                  type="text"
+                  name="state"
+                  value={formData.state}
+                  onChange={handleInputChange}
+                  placeholder="Ej: Jalisco, San Salvador, Alajuela"
+                  disabled={isLoading}
+                />
               </div>
               <div>
                 <label htmlFor="maturity" className="block text-sm font-medium mb-2">

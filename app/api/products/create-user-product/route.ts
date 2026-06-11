@@ -23,6 +23,7 @@ export async function POST(request: NextRequest) {
       quantity,
       description,
       country,
+      state,
       minOrder,
       maturity,
       packaging,
@@ -115,8 +116,9 @@ export async function POST(request: NextRequest) {
           price,
           currency,
           quantity,
-          description: fullDescription,
+           description: fullDescription,
           country,
+          state: state || null,
           min_order: minOrder,
           maturity: maturity || null,
           packaging,
@@ -141,6 +143,36 @@ export async function POST(request: NextRequest) {
 
     if (error) {
       console.error("[Agrilpa] Database insert error:", error)
+      const isMissingCurrency = error.message && 
+        (error.message.includes("column") && error.message.includes("currency") && error.message.includes("schema cache"))
+      const isMissingState = error.message && 
+        (error.message.includes("column") && error.message.includes("state") && error.message.includes("schema cache"))
+      
+      if (isMissingCurrency) {
+        return NextResponse.json({
+          error: "Falta la columna 'currency' en la tabla 'user_products'. Por favor ejecuta el script SQL en Supabase para agregarla.",
+          sqlToRun: `
+-- Ejecuta esto en el SQL Editor de Supabase:
+ALTER TABLE user_products ADD COLUMN IF NOT EXISTS currency TEXT DEFAULT 'US$';
+
+-- Notifica a PostgREST del cambio
+NOTIFY pgrst, 'reload schema';
+`
+        }, { status: 500 })
+      }
+
+      if (isMissingState) {
+        return NextResponse.json({
+          error: "Falta la columna 'state' en la tabla 'user_products'. Por favor ejecuta el script SQL en Supabase para agregarla.",
+          sqlToRun: `
+-- Ejecuta esto en el SQL Editor de Supabase:
+ALTER TABLE user_products ADD COLUMN IF NOT EXISTS state TEXT;
+
+-- Notifica a PostgREST del cambio
+NOTIFY pgrst, 'reload schema';
+`
+        }, { status: 500 })
+      }
       return NextResponse.json({ error: `Database error: ${error.message || JSON.stringify(error)}` }, { status: 500 })
     }
 

@@ -158,7 +158,7 @@ export function ProductPreview() {
                         </h3>
                         <div className="flex items-center gap-1 text-sm text-muted-foreground">
                           <MapPin className="w-3.5 h-3.5 shrink-0" />
-                          <span className="truncate">{product.country}</span>
+                          <span className="truncate">{product.state ? `${product.country}, ${product.state}` : product.country}</span>
                         </div>
                       </div>
                       <p className="text-sm text-muted-foreground line-clamp-3 flex-1 leading-relaxed">
