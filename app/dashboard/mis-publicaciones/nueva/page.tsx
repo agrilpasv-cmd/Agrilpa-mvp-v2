@@ -16,6 +16,7 @@ import { v4 as uuidv4 } from "uuid"
 import { PRODUCT_CATEGORIES } from "@/lib/constants"
 import { useDashboard } from "../../context"
 import { PhoneCodePicker } from "@/components/ui/country-picker"
+import { CurrencyPicker } from "@/components/ui/currency-picker"
 
 const exportRequirementsByCountry: Record<string, Array<{ name: string; description: string }>> = {
   "Estados Unidos": [
@@ -890,22 +891,11 @@ export default function NuevaPublicacionPage() {
 
                 {!isPriceOnRequest ? (
                   <div className="flex gap-2">
-                    <select
-                      name="currency"
+                    <CurrencyPicker
                       value={formData.currency}
-                      onChange={handleInputChange}
-                      className="px-3 py-2 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary bg-background text-sm min-w-[140px]"
+                      onChange={(val) => setFormData(prev => ({ ...prev, currency: val }))}
                       disabled={isLoading}
-                    >
-                      <option value="US$">🇺🇸 US$ (USD)</option>
-                      <option value="€">🇪🇺 € (EUR)</option>
-                      <option value="£">🇬🇧 £ (GBP)</option>
-                      <option value="¥">🇯🇵 ¥ (JPY)</option>
-                      <option value="Can$">🇨🇦 Can$ (CAD)</option>
-                      <option value="Mex$">🇲🇽 Mex$ (MXN)</option>
-                      <option value="CHF">🇨🇭 CHF (CHF)</option>
-                      <option value="CNY ¥">🇨🇳 ¥ (CNY)</option>
-                    </select>
+                    />
                     <div className="relative flex-1">
                       <Input
                         id="price"

@@ -214,10 +214,17 @@ export default function ProductPage() {
               containerSize: data.product.container_size || null,
               alcance_comercial: data.product.alcance_comercial || [],
               specifications: [
-                { label: "Origen", value: data.product.state ? `${data.product.country}, ${data.product.state}` : data.product.country },
+                { label: "País de Origen", value: data.product.state ? `${data.product.country}, ${data.product.state}` : data.product.country },
                 { label: "Categoría", value: data.product.category },
-                { label: "Embalaje", value: data.product.packaging },
-                { label: "Tamaño Embalaje", value: `${data.product.packaging_size} kg` },
+                { label: "Método de Venta", value: data.product.shipping_unit_type === "FCL" ? "Por Contenedor (FCL)" : "Por Embalaje Estándar" },
+                ...(data.product.shipping_unit_type === "FCL"
+                  ? (data.product.container_size ? [{ label: "Tipo de Contenedor", value: data.product.container_size === "20ST" ? "20' Standard (~21 TM)" : data.product.container_size === "40HC" ? "40' High Cube (~26 TM)" : data.product.container_size === "Ambos" ? "20' Standard y 40' High Cube" : data.product.container_size }] : [])
+                  : [
+                      ...(data.product.packaging ? [{ label: "Tipo de Embalaje", value: data.product.packaging }] : []),
+                      ...(data.product.packaging_size ? [{ label: "Peso por Embalaje", value: `${data.product.packaging_size} kg` }] : [])
+                    ]
+                ),
+                ...(data.product.maturity ? [{ label: "Tipo de Maduración", value: data.product.maturity }] : []),
                 { label: "Vendedor", value: producerName },
                 ...(extractedSupplyCapacity ? [{ label: "Capacidad de Abastecimiento", value: extractedSupplyCapacity }] : []),
                 ...(data.product.shipping_unit_type ? [{ 

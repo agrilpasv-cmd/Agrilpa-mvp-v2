@@ -11,6 +11,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { ArrowLeft, Check, Loader, X, Plus } from "lucide-react"
 import { PRODUCT_CATEGORIES } from "@/lib/constants"
 import { PhoneCodePicker } from "@/components/ui/country-picker"
+import { CurrencyPicker } from "@/components/ui/currency-picker"
 
 export default function EditarPublicacionPage({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = use(params)
@@ -935,22 +936,11 @@ export default function EditarPublicacionPage({ params }: { params: Promise<{ id
 
                 {!isPriceOnRequest ? (
                   <div className="flex gap-2">
-                    <select
-                      name="currency"
+                    <CurrencyPicker
                       value={formData.currency}
-                      onChange={handleInputChange}
-                      className="px-3 py-2 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary bg-background text-sm min-w-[140px]"
+                      onChange={(val) => setFormData(prev => ({ ...prev, currency: val }))}
                       disabled={isLoading}
-                    >
-                      <option value="US$">🇺🇸 US$ (USD)</option>
-                      <option value="€">🇪🇺 € (EUR)</option>
-                      <option value="£">🇬🇧 £ (GBP)</option>
-                      <option value="¥">🇯🇵 ¥ (JPY)</option>
-                      <option value="Can$">🇨🇦 Can$ (CAD)</option>
-                      <option value="Mex$">🇲🇽 Mex$ (MXN)</option>
-                      <option value="CHF">🇨🇭 CHF (CHF)</option>
-                      <option value="CNY ¥">🇨🇳 ¥ (CNY)</option>
-                    </select>
+                    />
                     <div className="relative flex-1">
                       <Input
                         type="number"
