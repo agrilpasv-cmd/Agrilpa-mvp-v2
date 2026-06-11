@@ -227,11 +227,9 @@ export default function ProductPage() {
                 ...(data.product.maturity ? [{ label: "Tipo de Maduración", value: data.product.maturity }] : []),
                 { label: "Vendedor", value: producerName },
                 ...(extractedSupplyCapacity ? [{ label: "Capacidad de Abastecimiento", value: extractedSupplyCapacity }] : []),
-                ...(data.product.shipping_unit_type ? [{ 
+                ...(data.product.shipping_unit_type && data.product.shipping_unit_type !== "FCL" ? [{ 
                   label: "Unidad de Envío", 
-                  value: data.product.shipping_unit_type === "FCL" 
-                    ? `FCL${data.product.container_size === "20ST" ? " – 20' Standard (~21 TM)" : data.product.container_size === "40HC" ? " – 40' High Cube (~26 TM)" : ""}` 
-                    : data.product.shipping_unit_type === "LCL" 
+                  value: data.product.shipping_unit_type === "LCL" 
                       ? "Carga Consolidada (LCL)" 
                       : "Cantidad Personalizada" 
                 }] : []),
