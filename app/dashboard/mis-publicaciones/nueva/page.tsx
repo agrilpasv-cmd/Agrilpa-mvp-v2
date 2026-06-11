@@ -93,13 +93,18 @@ export default function NuevaPublicacionPage() {
   const [imagePreview3, setImagePreview3] = useState<string>("")
   const [selectedAlcance, setSelectedAlcance] = useState<string[]>([])
 
-  const ALCANCE_OPTIONS = [
-    'Local (Mercado nacional)',
-    'Regional (Centroamérica)',
-    'Exportación: Norteamérica (EE.UU./Canadá)',
-    'Exportación: Europa',
-    'Exportación: Asia/Otros'
-  ]
+  const ALCANCE_OPTIONS = {
+    nacional: [
+      { value: 'Nacional (Cobertura en todo el país)', label: 'Nacional (Cobertura en todo el país)' }
+    ],
+    internacional: [
+      { value: 'Regional (Centroamérica)', label: 'Regional (Centroamérica)' },
+      { value: 'Norteamérica (EE.UU./Canadá)', label: 'Norteamérica (EE.UU./Canadá)' },
+      { value: 'Europa', label: 'Europa' },
+      { value: 'Mercado Global (Otros destinos)', label: 'Mercado Global (Otros destinos)' }
+    ]
+  }
+
 
   // Custom hook for sidebar updates
   const { refreshCounts } = useDashboard()
@@ -234,6 +239,12 @@ export default function NuevaPublicacionPage() {
         return
       }
     }
+
+    if (selectedAlcance.length === 0) {
+      setStatusMessage({ type: 'error', text: "Debe seleccionar al menos una opción en 'Alcance Comercial'." })
+      return
+    }
+
 
     setIsLoading(true)
     setStatusMessage({ type: 'loading', text: "Enviando producto..." })
@@ -1064,46 +1075,79 @@ export default function NuevaPublicacionPage() {
             </div>
 
             {/* Alcance Comercial */}
-            <div>
-              <label className="block text-sm font-medium mb-1">
-                Alcance Comercial <span className="text-xs text-muted-foreground">(Opcional)</span>
+            <div className="bg-muted/10 p-5 rounded-xl border border-border mt-6">
+              <label className="block text-sm font-semibold mb-1">
+                Alcance Comercial <span className="text-red-500">*</span>
               </label>
               <p className="text-xs text-muted-foreground mb-4">
-                Selecciona todas las opciones que apliquen a tu capacidad actual. Esta información será visible para los compradores.
+                Selecciona todas las opciones que apliquen a tu capacidad actual. Esta información es obligatoria para conectar con compradores internacionales.
               </p>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                {ALCANCE_OPTIONS.map((opcion) => {
-                  const isSelected = selectedAlcance.includes(opcion);
-                  return (
-                    <button
-                      key={opcion}
-                      type="button"
-                      onClick={() => {
-                        if (isSelected) {
-                          setSelectedAlcance(selectedAlcance.filter((item) => item !== opcion))
-                        } else {
-                          setSelectedAlcance([...selectedAlcance, opcion])
-                        }
-                      }}
-                      className={`relative flex items-center p-4 rounded-xl border-2 transition-all text-left ${
-                        isSelected
-                          ? "border-primary bg-primary/5 ring-1 ring-primary/20"
-                          : "border-border hover:border-primary/40 bg-background"
-                      }`}
-                    >
-                      <div className="flex-1">
-                        <p className={`text-sm font-semibold ${isSelected ? "text-primary" : "text-foreground"}`}>
-                          {opcion}
-                        </p>
-                      </div>
-                      <div className={`w-5 h-5 rounded-full flex items-center justify-center shrink-0 ml-2 transition-colors ${isSelected ? "bg-primary" : "border-2 border-muted-foreground/30"}`}>
-                        {isSelected && <Check className="w-3 h-3 text-white" />}
-                      </div>
-                    </button>
-                  );
-                })}
+
+              <div className="space-y-4">
+                {/* Mercado Nacional */}
+                <div>
+                  <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
+                    Mercado Nacional
+                  </h4>
+                  <div className="space-y-2 bg-background p-3 rounded-lg border border-border">
+                    {ALCANCE_OPTIONS.nacional.map((opcion) => {
+                      const isChecked = selectedAlcance.includes(opcion.value);
+                      return (
+                        <label key={opcion.value} className="flex items-center gap-3 cursor-pointer py-1 select-none">
+                          <input
+                            type="checkbox"
+                            checked={isChecked}
+                            onChange={(e) => {
+                              if (e.target.checked) {
+                                setSelectedAlcance([...selectedAlcance, opcion.value])
+                              } else {
+                                setSelectedAlcance(selectedAlcance.filter((item) => item !== opcion.value))
+                              }
+                            }}
+                            className="w-4 h-4 rounded border-gray-300 text-primary focus:ring-primary cursor-pointer"
+                          />
+                          <span className="text-sm font-medium text-foreground">
+                            {opcion.label}
+                          </span>
+                        </label>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Mercado Internacional */}
+                <div>
+                  <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
+                    Mercado Internacional
+                  </h4>
+                  <div className="space-y-3 bg-background p-3 rounded-lg border border-border">
+                    {ALCANCE_OPTIONS.internacional.map((opcion) => {
+                      const isChecked = selectedAlcance.includes(opcion.value);
+                      return (
+                        <label key={opcion.value} className="flex items-center gap-3 cursor-pointer py-1 select-none">
+                          <input
+                            type="checkbox"
+                            checked={isChecked}
+                            onChange={(e) => {
+                              if (e.target.checked) {
+                                setSelectedAlcance([...selectedAlcance, opcion.value])
+                              } else {
+                                setSelectedAlcance(selectedAlcance.filter((item) => item !== opcion.value))
+                              }
+                            }}
+                            className="w-4 h-4 rounded border-gray-300 text-primary focus:ring-primary cursor-pointer"
+                          />
+                          <span className="text-sm font-medium text-foreground">
+                            {opcion.label}
+                          </span>
+                        </label>
+                      );
+                    })}
+                  </div>
+                </div>
               </div>
             </div>
+
 
             <div>
               <label htmlFor="description" className="block text-sm font-medium mb-2">

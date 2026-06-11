@@ -32,6 +32,7 @@ export async function PUT(request: Request) {
             incoterm,
             shipping_unit_type,
             container_size,
+            alcanceComercial,
         } = body
 
         if (!id) {
@@ -78,6 +79,7 @@ export async function PUT(request: Request) {
         if (certifications !== undefined) updateData.certifications = certifications
         if (shipping_unit_type !== undefined) updateData.shipping_unit_type = shipping_unit_type
         if (container_size !== undefined) updateData.container_size = container_size
+        if (alcanceComercial !== undefined) updateData.alcance_comercial = alcanceComercial
 
         const { data, error } = await supabaseAdmin
             .from("user_products")
