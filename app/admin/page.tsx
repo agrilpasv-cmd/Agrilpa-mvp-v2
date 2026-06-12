@@ -14,6 +14,13 @@ interface Stats {
   proUsers: number
   freeUsers: number
   totalQuotations: number
+  compradorUsers: number
+  vendedorUsers: number
+  industrialUsers: number
+  activeRegisteredToday: number
+  activeGuestsToday: number
+  activeUsersToday: number
+  last7DaysActive: { date: string; registered: number; guests: number; total: number }[]
 }
 
 export default function AdminDashboardPage() {
@@ -24,6 +31,13 @@ export default function AdminDashboardPage() {
     proUsers: 0,
     freeUsers: 0,
     totalQuotations: 0,
+    compradorUsers: 0,
+    vendedorUsers: 0,
+    industrialUsers: 0,
+    activeRegisteredToday: 0,
+    activeGuestsToday: 0,
+    activeUsersToday: 0,
+    last7DaysActive: []
   })
   const [analyticsData, setAnalyticsData] = useState<any>(null)
   const [loading, setLoading] = useState(true)
@@ -69,6 +83,13 @@ export default function AdminDashboardPage() {
             proUsers: data.proUsers || 0,
             freeUsers: data.freeUsers || 0,
             totalQuotations: data.totalQuotations || 0,
+            compradorUsers: data.compradorUsers || 0,
+            vendedorUsers: data.vendedorUsers || 0,
+            industrialUsers: data.industrialUsers || 0,
+            activeRegisteredToday: data.activeRegisteredToday || 0,
+            activeGuestsToday: data.activeGuestsToday || 0,
+            activeUsersToday: data.activeUsersToday || 0,
+            last7DaysActive: data.last7DaysActive || []
           })
           if (data.detailedAnalytics) {
             setAnalyticsData(data.detailedAnalytics)
@@ -208,6 +229,71 @@ export default function AdminDashboardPage() {
               </div>
             </Card>
           </Link>
+        </div>
+
+        {/* Nueva sección: Métricas de Usuarios y Actividad Diaria */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-12">
+          {/* Card 1: Roles de Usuarios */}
+          <Card className="p-6 border-l-4 border-l-primary bg-card">
+            <h3 className="text-lg font-bold text-foreground mb-4 flex items-center gap-2">
+              <Users className="w-5 h-5 text-primary" />
+              Distribución por Roles
+            </h3>
+            <div className="space-y-4">
+              <div className="flex items-center justify-between p-3 bg-muted/20 rounded-lg">
+                <span className="text-sm font-medium">Vendedores</span>
+                <span className="text-lg font-bold text-primary">{stats.vendedorUsers}</span>
+              </div>
+              <div className="flex items-center justify-between p-3 bg-muted/20 rounded-lg">
+                <span className="text-sm font-medium">Compradores</span>
+                <span className="text-lg font-bold text-primary">{stats.compradorUsers}</span>
+              </div>
+              <div className="flex items-center justify-between p-3 bg-muted/20 rounded-lg">
+                <span className="text-sm font-medium">Empresas Industriales</span>
+                <span className="text-lg font-bold text-primary">{stats.industrialUsers}</span>
+              </div>
+            </div>
+          </Card>
+
+          {/* Card 2: Actividad de Usuarios */}
+          <Card className="p-6 border-l-4 border-l-amber-500 bg-card">
+            <h3 className="text-lg font-bold text-foreground mb-4 flex items-center gap-2">
+              <Activity className="w-5 h-5 text-amber-500" />
+              Usuarios Activos (Únicos al día)
+            </h3>
+            <div className="grid grid-cols-3 gap-4 mb-6 text-center">
+              <div className="bg-muted/10 p-3 rounded-lg border border-border">
+                <p className="text-xs text-muted-foreground mb-1">Registrados Hoy</p>
+                <p className="text-xl font-bold text-foreground">{stats.activeRegisteredToday}</p>
+              </div>
+              <div className="bg-muted/10 p-3 rounded-lg border border-border">
+                <p className="text-xs text-muted-foreground mb-1">Invitados Hoy</p>
+                <p className="text-xl font-bold text-foreground">{stats.activeGuestsToday}</p>
+              </div>
+              <div className="bg-muted/10 p-3 rounded-lg border border-border">
+                <p className="text-xs text-muted-foreground mb-1">Total Hoy</p>
+                <p className="text-xl font-bold text-amber-600">{stats.activeUsersToday}</p>
+              </div>
+            </div>
+            
+            <div>
+              <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2">Historial últimos 7 días</p>
+              <div className="space-y-1.5 max-h-40 overflow-y-auto pr-1">
+                {stats.last7DaysActive && stats.last7DaysActive.length > 0 ? (
+                  stats.last7DaysActive.map((day, idx) => (
+                    <div key={idx} className="flex items-center justify-between text-xs p-2 bg-muted/5 hover:bg-muted/10 rounded border border-border/40">
+                      <span className="font-medium">{day.date}</span>
+                      <span className="text-muted-foreground">
+                        <strong className="text-foreground">{day.total}</strong> activos ({day.registered} reg / {day.guests} inv)
+                      </span>
+                    </div>
+                  ))
+                ) : (
+                  <p className="text-xs text-muted-foreground">No hay datos históricos disponibles</p>
+                )}
+              </div>
+            </div>
+          </Card>
         </div>
 
         {/* Vercel-Style Analytics Section */}

@@ -16,6 +16,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
+import { formatMinOrder } from "@/lib/utils"
 
 interface UserProduct {
   id: string
@@ -545,7 +546,7 @@ export default function ProductosPage() {
                             ) : (
                               <>
                                 <span className="text-xl font-bold text-foreground">
-                                  {product.price?.includes('$') ? product.price : `$${product.price}`}
+                                  {product.price}
                                 </span>
                                 <span className="text-sm font-medium text-muted-foreground"> /kg</span>
                               </>
@@ -555,7 +556,7 @@ export default function ProductosPage() {
                         <div className="text-right">
                           <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-0.5">Pedido Mín.</p>
                           <p className="text-base font-semibold text-foreground">
-                            {product.minOrder?.replace(/[^0-9.,]/g, '') || product.minOrder}
+                            {formatMinOrder(product.minOrder)}
                           </p>
                         </div>
                       </div>

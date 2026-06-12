@@ -212,9 +212,7 @@ export function ProductHero({
           <div className="p-3">
             <p className="text-xs text-slate-500 dark:text-slate-400 mb-1">Precio</p>
             <p className="text-lg font-bold text-slate-900 dark:text-white leading-tight">
-              {product.price === "Por Cotizar"
-                ? "Por Cotizar"
-                : (product.price?.includes("$") ? product.price : `$${product.price}`)}
+              {product.price}
             </p>
             {product.price !== "Por Cotizar" && (
               <p className="text-[10px] text-slate-400 mt-1">por kg</p>

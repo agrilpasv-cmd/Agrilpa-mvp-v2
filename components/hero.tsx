@@ -141,9 +141,8 @@ export function Hero() {
           </motion.h1>
 
           {/* Description */}
-          <motion.p variants={itemVariants} className="text-base sm:text-lg text-white/90 leading-relaxed max-w-xl drop-shadow-md">
-            La plataforma B2B para promocionar tus productos agrícolas y negociar directamente con compradores
-            internacionales. Sin intermediarios, sin complicaciones.
+          <motion.p variants={itemVariants} className="text-base sm:text-lg text-white leading-relaxed max-w-xl drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]">
+            La plataforma B2B agrícola global que conecta directamente a productores y compradores internacionales, simplificando la cadena de suministro para negociar con total transparencia y sin intermediarios.
           </motion.p>
 
           {/* Buttons */}

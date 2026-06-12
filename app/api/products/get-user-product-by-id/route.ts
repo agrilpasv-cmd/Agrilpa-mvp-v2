@@ -50,20 +50,29 @@ export async function GET(request: NextRequest) {
              revalidatePath('/dashboard/mis-publicaciones')
         }
 
-        // Check if seller is Pro
+        // Check if seller is Pro and get company details
         let sellerIsPro = false
+        let sellerCompany = null
+        let sellerCountry = null
+        let sellerAddress = null
         if (data.user_id) {
             const { data: sellerProfile } = await supabase
                 .from("users")
-                .select("plan_type, plan_expires_at")
+                .select("plan_type, plan_expires_at, company_name, full_name, country, address")
                 .eq("id", data.user_id)
                 .single()
 
-            if (sellerProfile?.plan_type === "pro") {
-                if (sellerProfile.plan_expires_at) {
-                    sellerIsPro = new Date(sellerProfile.plan_expires_at) > new Date()
-                } else {
-                    sellerIsPro = true
+            if (sellerProfile) {
+                sellerCompany = sellerProfile.company_name || sellerProfile.full_name
+                sellerCountry = sellerProfile.country
+                sellerAddress = sellerProfile.address
+
+                if (sellerProfile.plan_type === "pro") {
+                    if (sellerProfile.plan_expires_at) {
+                        sellerIsPro = new Date(sellerProfile.plan_expires_at) > new Date()
+                    } else {
+                        sellerIsPro = true
+                    }
                 }
             }
         }
@@ -107,7 +116,10 @@ export async function GET(request: NextRequest) {
                 seller_is_pro: sellerIsPro,
                 rating: Number(averageRating.toFixed(1)),
                 reviews: reviewCount,
-                reviews_data: formattedReviews
+                reviews_data: formattedReviews,
+                seller_company: sellerCompany,
+                seller_country: sellerCountry,
+                seller_address: sellerAddress
             }
         }, { status: 200 })
     } catch (error) {

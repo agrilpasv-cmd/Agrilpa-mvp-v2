@@ -140,6 +140,7 @@ export async function GET(request: Request) {
         seller_is_pro: sellerIsPro,
         rating: Number(averageRating),
         reviews: reviewsCount,
+        user_id: p.user_id,
       }
     })
 

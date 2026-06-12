@@ -48,6 +48,7 @@ export default function EditarPublicacionPage({ params }: { params: Promise<{ id
     supplyCapacityUnit: "toneladas",
     supplyCapacityPeriod: "mes",
     currency: "US$",
+    saleMethod: "standard",
   })
   const [isPriceOnRequest, setIsPriceOnRequest] = useState(false)
   const [certInput, setCertInput] = useState("")
@@ -163,11 +164,13 @@ export default function EditarPublicacionPage({ params }: { params: Promise<{ id
               if (unitMatch && unitMatch[1]) {
                 const rawUnit = unitMatch[1].trim()
                 if (rawUnit.toLowerCase().includes("contenedor")) {
-                  parsedQuantityUnit = "Contenedor(es)"
+                  parsedQuantityUnit = rawUnit.includes("40") ? "Contenedor 40'" : "Contenedor 20'"
                 } else if (rawUnit.toLowerCase() === "tm" || rawUnit.toLowerCase().includes("tonelada")) {
                   parsedQuantityUnit = "TM"
                 } else if (rawUnit.toLowerCase().includes("libra")) {
-                  parsedQuantityUnit = "Libras"
+                  parsedQuantityUnit = "lb"
+                } else if (rawUnit.toLowerCase() === "qq" || rawUnit.toLowerCase().includes("quintal")) {
+                  parsedQuantityUnit = "qq"
                 } else {
                   parsedQuantityUnit = rawUnit
                 }
@@ -188,11 +191,13 @@ export default function EditarPublicacionPage({ params }: { params: Promise<{ id
               if (unitMatch && unitMatch[1]) {
                 const rawUnit = unitMatch[1].trim()
                 if (rawUnit.toLowerCase().includes("contenedor")) {
-                  parsedMinOrderUnit = "Contenedor(es)"
+                  parsedMinOrderUnit = rawUnit.includes("40") ? "Contenedor 40'" : "Contenedor 20'"
                 } else if (rawUnit.toLowerCase() === "tm" || rawUnit.toLowerCase().includes("tonelada")) {
                   parsedMinOrderUnit = "TM"
                 } else if (rawUnit.toLowerCase().includes("libra")) {
-                  parsedMinOrderUnit = "Libras"
+                  parsedMinOrderUnit = "lb"
+                } else if (rawUnit.toLowerCase() === "qq" || rawUnit.toLowerCase().includes("quintal")) {
+                  parsedMinOrderUnit = "qq"
                 } else {
                   parsedMinOrderUnit = rawUnit
                 }
@@ -713,9 +718,9 @@ export default function EditarPublicacionPage({ params }: { params: Promise<{ id
                         shippingUnit: "", 
                         containerSize: "", 
                         quantity: cleanQty,
-                        quantityUnit: prev.quantityUnit === "Contenedor(es)" ? "kg" : prev.quantityUnit,
+                        quantityUnit: prev.quantityUnit.startsWith("Contenedor") ? "kg" : prev.quantityUnit,
                         minOrder: cleanMin,
-                        minOrderUnit: prev.minOrderUnit === "Contenedor(es)" ? "kg" : prev.minOrderUnit
+                        minOrderUnit: prev.minOrderUnit.startsWith("Contenedor") ? "kg" : prev.minOrderUnit
                       }
                     })}
                     className={`flex items-center gap-3 p-3 rounded-xl border-2 transition-all text-left ${
@@ -745,9 +750,9 @@ export default function EditarPublicacionPage({ params }: { params: Promise<{ id
                         shippingUnit: "FCL", 
                         containerSize: prev.containerSize || "20ST", 
                         quantity: cleanQty,
-                        quantityUnit: "Contenedor(es)",
+                        quantityUnit: "Contenedor 20'",
                         minOrder: cleanMin || "1",
-                        minOrderUnit: "Contenedor(es)",
+                        minOrderUnit: "Contenedor 20'",
                         packagingSize: prev.packagingSize || "21000"
                       }
                     })}
@@ -982,15 +987,23 @@ export default function EditarPublicacionPage({ params }: { params: Promise<{ id
                   />
                   <select
                     name="quantityUnit"
-                    value={formData.saleMethod === "fcl" ? "Contenedor(es)" : (formData.quantityUnit === "Contenedor(es)" ? "kg" : (formData.quantityUnit || "kg"))}
+                    value={formData.quantityUnit}
                     onChange={handleInputChange}
                     className="px-3 py-2 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary bg-background text-sm min-w-[120px]"
-                    disabled={isLoading || formData.saleMethod === "fcl"}
+                    disabled={isLoading}
                   >
-                    <option value="kg">kg</option>
-                    <option value="TM">TM</option>
-                    <option value="Libras">Libras</option>
-                    {formData.saleMethod === "fcl" && <option value="Contenedor(es)">Contenedores</option>}
+                    {formData.saleMethod === "fcl" ? (
+                      <>
+                        <option value="Contenedor 20'">Contenedor 20'</option>
+                        <option value="Contenedor 40'">Contenedor 40'</option>
+                      </>
+                    ) : (
+                      <>
+                        <option value="kg">kg (Kilogramos)</option>
+                        <option value="lb">lb (Libras)</option>
+                        <option value="qq">qq (Quintales)</option>
+                      </>
+                    )}
                   </select>
                 </div>
               </div>
@@ -1013,15 +1026,23 @@ export default function EditarPublicacionPage({ params }: { params: Promise<{ id
                   />
                   <select
                     name="minOrderUnit"
-                    value={formData.saleMethod === "fcl" ? "Contenedor(es)" : (formData.minOrderUnit === "Contenedor(es)" ? "kg" : (formData.minOrderUnit || "kg"))}
+                    value={formData.minOrderUnit}
                     onChange={handleInputChange}
                     className="px-3 py-2 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary bg-background text-sm min-w-[120px]"
-                    disabled={isLoading || formData.saleMethod === "fcl"}
+                    disabled={isLoading}
                   >
-                    <option value="kg">kg</option>
-                    <option value="TM">TM</option>
-                    <option value="Libras">Libras</option>
-                    {formData.saleMethod === "fcl" && <option value="Contenedor(es)">Contenedores</option>}
+                    {formData.saleMethod === "fcl" ? (
+                      <>
+                        <option value="Contenedor 20'">Contenedor 20'</option>
+                        <option value="Contenedor 40'">Contenedor 40'</option>
+                      </>
+                    ) : (
+                      <>
+                        <option value="kg">kg (Kilogramos)</option>
+                        <option value="lb">lb (Libras)</option>
+                        <option value="qq">qq (Quintales)</option>
+                      </>
+                    )}
                   </select>
                 </div>
               </div>

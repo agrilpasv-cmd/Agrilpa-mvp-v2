@@ -21,6 +21,7 @@ import { createClient } from "@/lib/supabase/client"
 import { format } from "date-fns"
 import { es } from "date-fns/locale"
 import { trackActivity } from "@/lib/track"
+import { formatMinOrder } from "@/lib/utils"
 
 // Helper function to check if a string is a valid UUID or numeric ID
 const isValidId = (str: string): boolean => {
@@ -150,15 +151,17 @@ export default function ProductPage() {
               })
               .catch(err => console.error('View tracking failed:', err))
 
-            // Parse company info from description if available
-            let producerName = "Productor Local"
+            // Parse company info from description if available, fallback to live profile info
+            let producerName = data.product.seller_company || "Productor Local"
             let contactMethod = ""
             let contactInfo = ""
 
             const desc = data.product.description || ""
-            const companyMatch = desc.match(/Empresa: (.*?)(\n|$)/)
-            if (companyMatch) {
-              producerName = companyMatch[1].trim()
+            if (!data.product.seller_company) {
+              const companyMatch = desc.match(/Empresa: (.*?)(\n|$)/)
+              if (companyMatch) {
+                producerName = companyMatch[1].trim()
+              }
             }
 
             const contactMatch = desc.match(/Contacto: (.*?) - (.*)/)
@@ -188,7 +191,7 @@ export default function ProductPage() {
               category: data.product.category,
               producer: producerName,
               vendorId: data.product.user_id,
-              location: data.product.state ? `${data.product.country}, ${data.product.state}` : data.product.country,
+              location: data.product.seller_country || data.product.country,
               country: data.product.country,
               description: data.product.description,
               fullDescription: data.product.description,
@@ -317,8 +320,8 @@ export default function ProductPage() {
     if (isValidId(slug) && !userProduct) {
       notFound()
     }
-    // If it's not a valid ID and not a static product, it's a 404
-    if (!isValidId(slug) && !staticProduct) {
+    // If it's not a valid ID, it's a 404
+    if (!isValidId(slug)) {
       notFound()
     }
   }
@@ -812,7 +815,7 @@ export default function ProductPage() {
                             ) : (
                               <>
                                 <span className="text-xl font-bold text-foreground">
-                                  {relProduct.price?.includes('$') ? relProduct.price : `$${relProduct.price}`}
+                                  {relProduct.price}
                                 </span>
                                 <span className="text-sm font-medium text-muted-foreground"> /kg</span>
                               </>
@@ -822,7 +825,7 @@ export default function ProductPage() {
                         <div className="text-right">
                           <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-0.5">Pedido Mín.</p>
                           <p className="text-base font-semibold text-foreground">
-                            {relProduct.minOrder?.replace(/[^0-9.,]/g, '') || relProduct.minOrder}
+                            {formatMinOrder(relProduct.minOrder)}
                           </p>
                         </div>
                       </div>
@@ -1044,7 +1047,9 @@ export default function ProductPage() {
                       <div className="grid grid-cols-3 gap-4 mt-2">
                         <div className="bg-background rounded-md p-2 border border-border">
                           <p className="text-xs text-muted-foreground">Pedido mín</p>
-                          <p className="font-semibold">{product.minOrder} kg</p>
+                          <p className="font-semibold">
+                            {formatMinOrder(product.minOrder)}
+                          </p>
                         </div>
                         <div className="bg-background rounded-md p-2 border border-border">
                           <p className="text-xs text-muted-foreground">Embalaje</p>

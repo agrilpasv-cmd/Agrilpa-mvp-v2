@@ -20,7 +20,7 @@ export async function GET(request: Request) {
         // 1. Fetch Users Count & Breakdown
         const { data: profiles, error: usersError } = await supabaseAdmin
             .from("users")
-            .select("id, created_at, plan_type")
+            .select("id, created_at, plan_type, user_type")
 
         // If users table fails, try auth users as fallback for count
         let usersData = profiles || []
@@ -70,6 +70,11 @@ export async function GET(request: Request) {
         // 1b. Plan Breakdown
         const proUsers = usersData.filter((u: any) => u.plan_type === 'pro').length
         const freeUsers = totalUsers - proUsers
+
+        // User type breakdown (role comprador / vendedor / industrial)
+        const compradorUsers = usersData.filter((u: any) => u.user_type === 'comprador').length
+        const vendedorUsers = usersData.filter((u: any) => u.user_type === 'vendedor').length
+        const industrialUsers = usersData.filter((u: any) => u.user_type === 'empresa').length
 
         // 2. Fetch Subscriptions Count
         const { count: subscriptionsCount, error: subsError } = await supabaseAdmin
@@ -323,6 +328,66 @@ export async function GET(request: Request) {
             topDevices: top(counts.devices)
         }
 
+        // Calculate daily active users for today (in local server time or UTC, last 30 days of activities)
+        const thirtyDaysAgo = new Date()
+        thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
+
+        let activeRegisteredToday = 0
+        let activeGuestsToday = 0
+        let activeUsersToday = 0
+        let last7DaysActive: { date: string; registered: number; guests: number; total: number }[] = []
+
+        try {
+            const { data: activityRows, error: activityError } = await supabaseAdmin
+                .from("user_activities")
+                .select("user_id, ip_address, user_agent, created_at")
+                .gte("created_at", thirtyDaysAgo.toISOString())
+
+            const dailyActiveMap: Record<string, { registered: Set<string>, guests: Set<string> }> = {}
+
+            if (!activityError && activityRows) {
+                activityRows.forEach((row: any) => {
+                    const dateStr = new Date(row.created_at).toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' })
+                    if (!dailyActiveMap[dateStr]) {
+                        dailyActiveMap[dateStr] = { registered: new Set(), guests: new Set() }
+                    }
+
+                    if (row.user_id) {
+                        dailyActiveMap[dateStr].registered.add(row.user_id)
+                    } else {
+                        const guestId = row.ip_address || (row.user_agent || "")
+                        if (guestId) {
+                            dailyActiveMap[dateStr].guests.add(guestId)
+                        }
+                    }
+                })
+            }
+
+            // Get today's key in 'es-ES' format
+            const todayStr = new Date().toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' })
+            const todayData = dailyActiveMap[todayStr] || { registered: new Set(), guests: new Set() }
+            
+            activeRegisteredToday = todayData.registered.size
+            activeGuestsToday = todayData.guests.size
+            activeUsersToday = activeRegisteredToday + activeGuestsToday
+
+            // Build list of last 7 days of daily active users for display
+            for (let i = 6; i >= 0; i--) {
+                const d = new Date()
+                d.setDate(d.getDate() - i)
+                const dStr = d.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' })
+                const dayData = dailyActiveMap[dStr] || { registered: new Set(), guests: new Set() }
+                last7DaysActive.push({
+                    date: dStr,
+                    registered: dayData.registered.size,
+                    guests: dayData.guests.size,
+                    total: dayData.registered.size + dayData.guests.size
+                })
+            }
+        } catch (e) {
+            console.error("[Stats API] Error fetching user activities:", e)
+        }
+
         return NextResponse.json({
             totalUsers,
             totalSubscriptions: subscriptionsCount || 0,
@@ -334,7 +399,14 @@ export async function GET(request: Request) {
             monthlyData,
             analyticsData: detailedAnalytics.topCountries, // Keeping legacy prop for safety
             detailedAnalytics, // New Full Data
-            databaseStatus: "Activa"
+            databaseStatus: "Activa",
+            compradorUsers,
+            vendedorUsers,
+            industrialUsers,
+            activeRegisteredToday,
+            activeGuestsToday,
+            activeUsersToday,
+            last7DaysActive
         }, {
             headers: {
                 "Cache-Control": "no-store, no-cache, must-revalidate",
