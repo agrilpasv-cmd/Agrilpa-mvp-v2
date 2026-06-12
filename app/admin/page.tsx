@@ -5,8 +5,6 @@ import { Card } from "@/components/ui/card"
 import { Users, MessageSquare, Shield, Database, ClipboardList, Package, Crown, MousePointer2, Image as ImageIcon, Activity } from "lucide-react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
-import { AnalyticsDashboard } from "./components/analytics-dashboard"
-
 interface Stats {
   totalUsers: number
   adminUsers: number
@@ -39,18 +37,10 @@ export default function AdminDashboardPage() {
     activeUsersToday: 0,
     last7DaysActive: []
   })
-  const [analyticsData, setAnalyticsData] = useState<any>(null)
   const [loading, setLoading] = useState(true)
-  const [analyticsLoading, setAnalyticsLoading] = useState(false)
-  const [range, setRange] = useState("7d")
-
-  // Refs to handle race conditions
-  const rangeRef = useRef(range)
   const abortControllerRef = useRef<AbortController | null>(null)
 
-  const fetchData = useCallback(async (currentRange?: string) => {
-    const fetchRange = currentRange || rangeRef.current
-
+  const fetchData = useCallback(async () => {
     // Cancel any in-flight request
     if (abortControllerRef.current) {
       abortControllerRef.current.abort()
@@ -59,7 +49,7 @@ export default function AdminDashboardPage() {
     abortControllerRef.current = controller
 
     try {
-      const response = await fetch(`/api/admin/stats?range=${fetchRange}&t=${Date.now()}`, {
+      const response = await fetch(`/api/admin/stats?t=${Date.now()}`, {
         cache: "no-store",
         signal: controller.signal,
         headers: {
@@ -74,27 +64,21 @@ export default function AdminDashboardPage() {
       if (response.ok) {
         const data = await response.json()
 
-        // Only update if this is still the active range
-        if (rangeRef.current === fetchRange) {
-          setStats({
-            totalUsers: data.totalUsers,
-            adminUsers: data.adminUsers,
-            regularUsers: data.regularUsers,
-            proUsers: data.proUsers || 0,
-            freeUsers: data.freeUsers || 0,
-            totalQuotations: data.totalQuotations || 0,
-            compradorUsers: data.compradorUsers || 0,
-            vendedorUsers: data.vendedorUsers || 0,
-            industrialUsers: data.industrialUsers || 0,
-            activeRegisteredToday: data.activeRegisteredToday || 0,
-            activeGuestsToday: data.activeGuestsToday || 0,
-            activeUsersToday: data.activeUsersToday || 0,
-            last7DaysActive: data.last7DaysActive || []
-          })
-          if (data.detailedAnalytics) {
-            setAnalyticsData(data.detailedAnalytics)
-          }
-        }
+        setStats({
+          totalUsers: data.totalUsers,
+          adminUsers: data.adminUsers,
+          regularUsers: data.regularUsers,
+          proUsers: data.proUsers || 0,
+          freeUsers: data.freeUsers || 0,
+          totalQuotations: data.totalQuotations || 0,
+          compradorUsers: data.compradorUsers || 0,
+          vendedorUsers: data.vendedorUsers || 0,
+          industrialUsers: data.industrialUsers || 0,
+          activeRegisteredToday: data.activeRegisteredToday || 0,
+          activeGuestsToday: data.activeGuestsToday || 0,
+          activeUsersToday: data.activeUsersToday || 0,
+          last7DaysActive: data.last7DaysActive || []
+        })
       }
     } catch (error: any) {
       if (error?.name === "AbortError") return
@@ -102,7 +86,6 @@ export default function AdminDashboardPage() {
     } finally {
       if (!controller.signal.aborted) {
         setLoading(false)
-        setAnalyticsLoading(false)
       }
     }
   }, [])
@@ -294,33 +277,6 @@ export default function AdminDashboardPage() {
               </div>
             </div>
           </Card>
-        </div>
-
-        {/* Vercel-Style Analytics Section */}
-        <div className="mb-12">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-2xl font-bold">Web Analytics</h2>
-            <div className="flex items-center gap-2">
-              <span className="flex h-2 w-2 rounded-full bg-green-500"></span>
-              <span className="text-sm text-muted-foreground">Live</span>
-            </div>
-          </div>
-
-          {analyticsData ? (
-            <AnalyticsDashboard
-              data={analyticsData}
-              currentRange={range}
-              loading={analyticsLoading}
-              onRangeChange={(newRange) => {
-                setRange(newRange)
-                rangeRef.current = newRange
-                setAnalyticsLoading(true)
-                fetchData(newRange)
-              }}
-            />
-          ) : (
-            <div className="p-12 text-center border rounded-lg bg-muted/10">Cargando analíticas...</div>
-          )}
         </div>
 
         <Card className="p-6">
