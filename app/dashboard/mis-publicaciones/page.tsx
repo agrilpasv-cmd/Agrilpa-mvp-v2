@@ -219,10 +219,10 @@ export default function PublicacionesPage() {
             <Card key={pub.id} className="hover:shadow-md transition-shadow">
               <CardContent className="pt-6">
                 <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                  {pub.image && (
+                  {true && (
                     <div className="w-32 h-32 rounded-lg overflow-hidden border border-border flex-shrink-0">
                       <img
-                        src={pub.image || "/placeholder.svg"}
+                        src={`/api/products/${pub.id}/thumb`}
                         alt={pub.title}
                         className="w-full h-full object-cover hover:scale-105 transition-transform"
                       />

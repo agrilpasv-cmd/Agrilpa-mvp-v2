@@ -177,7 +177,7 @@ export default function AdminPublicationsPage() {
                                             <td className="p-4">
                                                 <div className="w-12 h-12 rounded-lg bg-muted overflow-hidden">
                                                     <img
-                                                        src={product.image || "/placeholder.svg"}
+                                                        src={`/api/products/${product.id}/thumb`}
                                                         alt={product.title}
                                                         className="w-full h-full object-cover"
                                                     />

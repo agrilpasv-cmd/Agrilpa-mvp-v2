@@ -271,7 +271,7 @@ export default function VisibilityPage() {
                                                             </div>
                                                             <div className="w-12 h-12 rounded bg-muted overflow-hidden flex-shrink-0 border border-amber-500/10">
                                                                 <img
-                                                                    src={product.image || "/placeholder.svg"}
+                                                                    src={`/api/products/${product.id}/thumb`}
                                                                     alt={product.title}
                                                                     className="w-full h-full object-cover"
                                                                 />
@@ -382,7 +382,7 @@ export default function VisibilityPage() {
                                                     <div className="flex items-center gap-4 flex-1 min-w-0">
                                                         <div className="w-12 h-12 rounded bg-muted overflow-hidden flex-shrink-0">
                                                             <img
-                                                                src={product.image || "/placeholder.svg"}
+                                                                src={`/api/products/${product.id}/thumb`}
                                                                 alt={product.title}
                                                                 className="w-full h-full object-cover"
                                                             />
@@ -445,7 +445,7 @@ export default function VisibilityPage() {
                                             <div className="flex items-center gap-4 flex-1">
                                                 <div className="w-12 h-12 rounded bg-muted overflow-hidden flex-shrink-0">
                                                     <img
-                                                        src={product.image || "/placeholder.svg"}
+                                                        src={`/api/products/${product.id}/thumb`}
                                                         alt={product.title}
                                                         className="w-full h-full object-cover"
                                                     />
