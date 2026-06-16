@@ -63,7 +63,7 @@ export async function POST(request: Request) {
             // Get product info for the order
             const { data: productData, error: productError } = await supabaseAdmin
                 .from("user_products")
-                .select("title, image, user_id, id, category, country, maturity, packaging, packaging_size, certifications, contact_method, contact_info, price")
+                .select("title, user_id, id, category, country, maturity, packaging, packaging_size, certifications, contact_method, contact_info, price")
                 .eq("id", quotation.product_id)
                 .single()
                 

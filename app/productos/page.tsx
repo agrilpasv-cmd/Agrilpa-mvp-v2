@@ -104,7 +104,7 @@ export default function ProductosPage() {
     description: up.description,
     seller: up.company_name || "Productor Local",
     location: up.state ? `${up.country}, ${up.state}` : up.country,
-    image: up.image || "/placeholder.svg",
+    image: `/api/products/${up.id}/thumb`,
     verified: up.seller_is_pro || false,
     rating: up.rating || 0,
     reviews: up.reviews || 0,

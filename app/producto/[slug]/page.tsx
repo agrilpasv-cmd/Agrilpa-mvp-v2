@@ -117,7 +117,7 @@ export default function ProductPage() {
              rating: p.rating || 0,
              reviews: p.reviews || 0,
              minOrder: p.min_order || "N/A",
-             image: p.image || "/placeholder.svg",
+             image: `/api/products/${p.id}/thumb`,
              slug: p.id,
              verified: false,
              contactMethod: p.contact_method,

@@ -10,7 +10,7 @@ export async function GET(
     const { id } = await context.params
 
     if (!id) {
-      return NextResponse.json({ image: null }, { status: 200 })
+      return NextResponse.redirect(new URL("/placeholder.svg", _request.url))
     }
 
     const supabase = createClient(
@@ -25,13 +25,27 @@ export async function GET(
       .maybeSingle()
 
     if (!data?.image) {
-      return NextResponse.json({ image: null }, { status: 200 })
+      return NextResponse.redirect(new URL("/placeholder.svg", _request.url))
     }
 
-    const response = NextResponse.json({ image: data.image }, { status: 200 })
-    response.headers.set("Cache-Control", "public, s-maxage=600, stale-while-revalidate=120")
-    return response
+    // data.image is likely "data:image/jpeg;base64,/9j/4AAQ..."
+    const match = data.image.match(/^data:(image\/\w+);base64,(.+)$/)
+    if (match) {
+        const mimeType = match[1]
+        const base64Data = match[2]
+        const buffer = Buffer.from(base64Data, "base64")
+        
+        return new NextResponse(buffer, {
+            headers: {
+                "Content-Type": mimeType,
+                "Cache-Control": "public, max-age=86400, stale-while-revalidate=43200",
+            }
+        })
+    }
+
+    // Fallback if not a data URI
+    return NextResponse.redirect(new URL("/placeholder.svg", _request.url))
   } catch {
-    return NextResponse.json({ image: null }, { status: 200 })
+    return NextResponse.redirect(new URL("/placeholder.svg", _request.url))
   }
 }

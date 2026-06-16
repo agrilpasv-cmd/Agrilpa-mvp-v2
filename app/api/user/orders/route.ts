@@ -83,25 +83,7 @@ export async function GET() {
             });
         }
 
-        // 5. Collect all product IDs to fetch their images
-        const productIds = Array.from(new Set([
-            ...(orders || []).map(o => o.product_id).filter(Boolean),
-            ...(purchases || []).map(p => p.product_slug || p.product_id).filter(Boolean)
-        ]));
 
-        let productImages: Record<string, string> = {};
-        if (productIds.length > 0) {
-            const { data: products } = await supabaseAdmin
-                .from("user_products")
-                .select("id, image")
-                .in("id", productIds);
-
-            products?.forEach(p => {
-                if (p.image) {
-                    productImages[p.id] = p.image;
-                }
-            });
-        }
 
         // 6. Fetch reviews made by this buyer to mark which purchases/orders are already reviewed
         const purchaseIds = Array.from(new Set([
@@ -135,7 +117,7 @@ export async function GET() {
                 quantity_kg: order.quantity,
                 price_usd: typeof order.total_price === 'string' ? parseFloat(order.total_price) : (order.total_price || 0),
                 product_slug: order.product_id,
-                product_image: order.product_image || productImages[order.product_id] || null,
+                product_image: order.product_image || null,
                 origin_table: 'orders',
                 is_reviewed: !!reviewedPurchases[order.id],
                 container_size: containerSize
@@ -150,7 +132,7 @@ export async function GET() {
                 seller_name: seller?.full_name || "Vendedor Agrilpa",
                 seller_company: seller?.company_name || "Empresa Verificada",
                 full_name: seller?.company_name || seller?.full_name || "Vendedor Agrilpa",
-                product_image: purchase.product_image || (pSlug ? productImages[pSlug] : null) || null,
+                product_image: purchase.product_image || null,
                 origin_table: 'purchases',
                 is_reviewed: !!reviewedPurchases[purchase.id]
             };
