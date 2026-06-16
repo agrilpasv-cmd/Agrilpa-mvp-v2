@@ -4,7 +4,7 @@ import { useEffect, useState, useCallback } from "react"
 import { useRouter } from "next/navigation"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { useToast } from "@/hooks/use-toast"
-import { Loader2, RefreshCw, Eye, Trash2, Pencil, X, Save } from "lucide-react"
+import { Loader2, RefreshCw, Eye, Trash2, Pencil, X, Save, Plus } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import {
     AlertDialog,
@@ -16,13 +16,6 @@ import {
     AlertDialogHeader,
     AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
-import {
-    Dialog,
-    DialogContent,
-    DialogHeader,
-    DialogTitle,
-    DialogDescription,
-} from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { PRODUCT_CATEGORIES } from "@/lib/constants"
 
@@ -73,11 +66,7 @@ export default function AdminPublicationsPage() {
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
     const [productToDelete, setProductToDelete] = useState<string | null>(null)
 
-    // Edit
-    const [editProduct, setEditProduct] = useState<Product | null>(null)
-    const [editForm, setEditForm] = useState<Partial<Product>>({})
-    const [isSaving, setIsSaving] = useState(false)
-    const [imagePreview, setImagePreview] = useState<string>("")
+
 
     const fetchProducts = useCallback(async (showLoading = false) => {
         if (showLoading) setLoading(true)
@@ -126,104 +115,6 @@ export default function AdminPublicationsPage() {
         }
     }
 
-    // ── Edit ──
-    const openEdit = (product: Product) => {
-        setEditProduct(product)
-        // Strip vendor info from description if present
-        const cleanDesc = product.description?.includes("---\nInformación del Vendedor:")
-            ? product.description.split("---\nInformación del Vendedor:")[0].trim()
-            : product.description || ""
-        setEditForm({
-            title: product.title,
-            category: product.category,
-            price: product.price,
-            quantity: product.quantity,
-            description: cleanDesc,
-            country: product.country,
-            state: product.state || "",
-            min_order: product.min_order,
-            packaging: product.packaging,
-            packaging_size: product.packaging_size,
-            certifications: product.certifications,
-            maturity: product.maturity,
-        })
-        setImagePreview(product.image || "")
-    }
-
-    const handleEditInput = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
-        const { name, value } = e.target
-        let processedValue = value
-
-        if (name === "state") {
-            // Allow only letters, spaces, and Spanish characters (áéíóúÁÉÍÓÚñÑüÜ)
-            const cleanVal = value.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s]/g, "")
-            // Capitalize first letter of each word
-            processedValue = cleanVal
-                .split(" ")
-                .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-                .join(" ")
-        }
-
-        setEditForm(prev => ({ ...prev, [name]: processedValue }))
-    }
-
-    const handleEditImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files?.[0]
-        if (!file) return
-        if (file.size > 5 * 1024 * 1024) {
-            toast({ title: "Imagen muy grande", description: "Máximo 5MB", variant: "destructive" }); return
-        }
-        const reader = new FileReader()
-        reader.onload = (ev) => {
-            const result = ev.target?.result as string
-            setImagePreview(result)
-            setEditForm(prev => ({ ...prev, image: result }))
-        }
-        reader.readAsDataURL(file)
-    }
-
-    const handleSaveEdit = async () => {
-        if (!editProduct) return
-        setIsSaving(true)
-        try {
-            const response = await fetch("/api/products/update-product", {
-                method: "PUT",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    id: editProduct.id,
-                    title: editForm.title,
-                    category: editForm.category,
-                    price: editForm.price,
-                    quantity: editForm.quantity,
-                    description: editForm.description,
-                    country: editForm.country,
-                    state: editForm.state,
-                    min_order: editForm.min_order,
-                    packaging: editForm.packaging,
-                    packaging_size: editForm.packaging_size,
-                    certifications: editForm.certifications,
-                    maturity: editForm.maturity,
-                    ...(editForm.image ? { image: editForm.image } : {}),
-                }),
-            })
-            if (!response.ok) {
-                const err = await response.json()
-                throw new Error(err.error || "Error al actualizar")
-            }
-            // Update local state
-            setProducts(prev => prev.map(p =>
-                p.id === editProduct.id
-                    ? { ...p, ...editForm, image: imagePreview || p.image } as Product
-                    : p
-            ))
-            toast({ title: "✅ Publicación actualizada", description: `"${editForm.title}" fue guardada correctamente.` })
-            setEditProduct(null)
-        } catch (error: any) {
-            toast({ title: "Error", description: error.message, variant: "destructive" })
-        } finally {
-            setIsSaving(false)
-        }
-    }
 
     if (loading && products.length === 0) {
         return (
@@ -249,6 +140,10 @@ export default function AdminPublicationsPage() {
                     <Button variant="outline" size="sm" onClick={() => fetchProducts(true)} disabled={loading}>
                         <RefreshCw className={`w-4 h-4 mr-2 ${loading ? "animate-spin" : ""}`} />
                         Actualizar
+                    </Button>
+                    <Button size="sm" onClick={() => router.push("/admin/publicaciones/nueva")} disabled={loading} className="gap-2">
+                        <Plus className="w-4 h-4" />
+                        Nueva Publicación
                     </Button>
                 </div>
             </div>
@@ -306,7 +201,7 @@ export default function AdminPublicationsPage() {
                                                     <Button
                                                         variant="ghost"
                                                         size="icon"
-                                                        onClick={() => openEdit(product)}
+                                                        onClick={() => router.push(`/admin/publicaciones/${product.id}/editar`)}
                                                         title="Editar producto"
                                                         className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
                                                     >
@@ -345,213 +240,7 @@ export default function AdminPublicationsPage() {
                 </CardContent>
             </Card>
 
-            {/* ── Edit Dialog ── */}
-            <Dialog open={!!editProduct} onOpenChange={(open) => { if (!open) setEditProduct(null) }}>
-                <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-                    <DialogHeader>
-                        <DialogTitle className="flex items-center gap-2">
-                            <Pencil className="w-5 h-5 text-primary" />
-                            Editar Publicación
-                        </DialogTitle>
-                        <DialogDescription>
-                            Modifica los datos del producto. Los cambios se guardarán inmediatamente.
-                        </DialogDescription>
-                    </DialogHeader>
 
-                    <div className="space-y-4 py-2">
-                        {/* Image */}
-                        <div>
-                            <label className="block text-sm font-medium mb-2">Imagen del Producto</label>
-                            <div className="flex gap-4 items-start">
-                                <div className="flex-1">
-                                    <label className="flex flex-col items-center justify-center w-full h-24 border-2 border-dashed border-border rounded-lg cursor-pointer hover:bg-muted/50 transition-colors">
-                                        <p className="text-sm text-muted-foreground">
-                                            <span className="font-semibold">Haz clic para cambiar</span> (máx. 5MB)
-                                        </p>
-                                        <input
-                                            type="file"
-                                            accept="image/*"
-                                            onChange={handleEditImageUpload}
-                                            className="hidden"
-                                        />
-                                    </label>
-                                </div>
-                                {imagePreview && (
-                                    <div className="w-24 h-24 rounded-lg overflow-hidden border border-border flex-shrink-0">
-                                        <img src={imagePreview} alt="Preview" className="w-full h-full object-cover" />
-                                    </div>
-                                )}
-                            </div>
-                        </div>
-
-                        {/* Title + Category */}
-                        <div className="grid grid-cols-2 gap-4">
-                            <div>
-                                <label className="block text-sm font-medium mb-1">Título <span className="text-red-500">*</span></label>
-                                <Input
-                                    name="title"
-                                    value={editForm.title || ""}
-                                    onChange={handleEditInput}
-                                    placeholder="Título del producto"
-                                />
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium mb-1">Categoría <span className="text-red-500">*</span></label>
-                                <select
-                                    name="category"
-                                    value={editForm.category || ""}
-                                    onChange={handleEditInput}
-                                    className="w-full px-3 py-2 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary bg-background text-sm"
-                                >
-                                    <option value="">Selecciona categoría</option>
-                                    {PRODUCT_CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
-                                </select>
-                            </div>
-                        </div>
-
-                        {/* Price + Quantity */}
-                        <div className="grid grid-cols-2 gap-4">
-                            <div>
-                                <label className="block text-sm font-medium mb-1">Precio</label>
-                                <Input
-                                    name="price"
-                                    value={editForm.price || ""}
-                                    onChange={handleEditInput}
-                                    placeholder="Ej: 1.50 o Por Cotizar"
-                                />
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium mb-1">Cantidad Disponible</label>
-                                <Input
-                                    name="quantity"
-                                    value={editForm.quantity || ""}
-                                    onChange={handleEditInput}
-                                    placeholder="Ej: 500 kg"
-                                />
-                            </div>
-                        </div>
-
-                        {/* Country, State + Min Order */}
-                        <div className="grid grid-cols-3 gap-4">
-                            <div>
-                                <label className="block text-sm font-medium mb-1">País de Origen</label>
-                                <select
-                                    name="country"
-                                    value={editForm.country || ""}
-                                    onChange={handleEditInput}
-                                    className="w-full px-3 py-2 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary bg-background text-sm"
-                                >
-                                    <option value="">Selecciona un país</option>
-                                    {ALL_COUNTRIES.map(c => <option key={c} value={c}>{c}</option>)}
-                                </select>
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium mb-1">Estado / Región</label>
-                                <Input
-                                    name="state"
-                                    value={editForm.state || ""}
-                                    onChange={handleEditInput}
-                                    placeholder="Ej: Jalisco"
-                                />
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium mb-1">Pedido Mínimo</label>
-                                <Input
-                                    name="min_order"
-                                    value={editForm.min_order || ""}
-                                    onChange={handleEditInput}
-                                    placeholder="Ej: 100 kg"
-                                />
-                            </div>
-                        </div>
-
-                        {/* Packaging + Maturity */}
-                        <div className="grid grid-cols-2 gap-4">
-                            <div>
-                                <label className="block text-sm font-medium mb-1">Tipo de Embalaje</label>
-                                <select
-                                    name="packaging"
-                                    value={editForm.packaging || ""}
-                                    onChange={handleEditInput}
-                                    className="w-full px-3 py-2 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary bg-background text-sm"
-                                >
-                                    <option value="">Selecciona</option>
-                                    <option value="Sacos">Sacos</option>
-                                    <option value="Cajas">Cajas</option>
-                                    <option value="Bolsas">Bolsas</option>
-                                    <option value="Pallets">Pallets</option>
-                                    <option value="Barriles">Barriles</option>
-                                    <option value="Canastillas">Canastillas</option>
-                                    <option value="Empaques Frescos">Empaques Frescos</option>
-                                    <option value="Contenedores">Contenedores</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label className="block text-sm font-medium mb-1">Maduración</label>
-                                <select
-                                    name="maturity"
-                                    value={editForm.maturity || ""}
-                                    onChange={handleEditInput}
-                                    className="w-full px-3 py-2 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary bg-background text-sm"
-                                >
-                                    <option value="">Sin especificar</option>
-                                    <option value="No aplica">No aplica</option>
-                                    <option value="Verde">Verde</option>
-                                    <option value="Semi-maduro">Semi-maduro</option>
-                                    <option value="Maduro">Maduro</option>
-                                    <option value="Sobre-maduro">Sobre-maduro</option>
-                                </select>
-                            </div>
-                        </div>
-
-                        {/* Certifications */}
-                        <div>
-                            <label className="block text-sm font-medium mb-1">Certificaciones</label>
-                            <Input
-                                name="certifications"
-                                value={editForm.certifications || ""}
-                                onChange={handleEditInput}
-                                placeholder="Ej: HACCP, Global GAP, ISO 9001"
-                            />
-                            <p className="text-xs text-muted-foreground mt-1">Separa con comas</p>
-                        </div>
-
-                        {/* Description */}
-                        <div>
-                            <label className="block text-sm font-medium mb-1">Descripción <span className="text-red-500">*</span></label>
-                            <textarea
-                                name="description"
-                                value={editForm.description || ""}
-                                onChange={handleEditInput}
-                                rows={4}
-                                className="w-full px-3 py-2 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary bg-background text-sm resize-none"
-                                placeholder="Describe el producto..."
-                            />
-                        </div>
-
-                        {/* Info banner */}
-                        <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-                            <p className="text-xs text-blue-700">
-                                <strong>Nota:</strong> El vendedor, contacto e incoterm se conservan tal como fueron registrados por el usuario. Solo puedes editar la información del producto.
-                            </p>
-                        </div>
-                    </div>
-
-                    {/* Footer buttons */}
-                    <div className="flex justify-end gap-2 pt-2 border-t">
-                        <Button variant="outline" onClick={() => setEditProduct(null)} disabled={isSaving}>
-                            <X className="w-4 h-4 mr-2" />Cancelar
-                        </Button>
-                        <Button onClick={handleSaveEdit} disabled={isSaving} className="gap-2">
-                            {isSaving ? (
-                                <><Loader2 className="w-4 h-4 animate-spin" />Guardando...</>
-                            ) : (
-                                <><Save className="w-4 h-4" />Guardar Cambios</>
-                            )}
-                        </Button>
-                    </div>
-                </DialogContent>
-            </Dialog>
 
             {/* ── Delete Dialog ── */}
             <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
