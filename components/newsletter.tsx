@@ -97,71 +97,108 @@ export function Newsletter() {
   }
 
   return (
-    <section className="relative py-16 px-4 overflow-hidden">
-      <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-primary/5 to-transparent -z-10" />
-      <div className="absolute top-0 right-0 w-96 h-96 bg-primary/5 rounded-full blur-3xl -z-10" />
-      <div className="absolute bottom-0 left-0 w-96 h-96 bg-emerald-500/5 rounded-full blur-3xl -z-10" />
+    <section className="relative py-16 md:py-24 bg-background overflow-hidden">
+      {/* Soft background glow */}
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[500px] bg-primary/5 rounded-full blur-[120px] pointer-events-none -z-10" />
 
-      <motion.div 
-        initial={{ opacity: 0, y: 40 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true, margin: "-50px" }}
-        transition={{ duration: 0.7 }}
-        className="container max-w-2xl mx-auto relative z-10"
-      >
-        {isSubscribed ? (
-          <div className="flex items-center justify-center gap-3 animate-in fade-in slide-in-from-bottom-2 duration-300">
-            <CheckCircle2 className="w-7 h-7 text-emerald-600" />
-            <p className="text-lg font-semibold text-foreground">
-              ¡Gracias por suscribirte! Revisa tu correo para confirmar.
-            </p>
-          </div>
-        ) : (
-          <div className="space-y-6">
-            <div className="space-y-3 text-center">
-              <div className="flex items-center justify-center gap-2 mb-3">
-                <div className="bg-primary/10 p-2 rounded-lg">
-                  <Leaf className="w-5 h-5 text-primary" />
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+        <motion.div 
+          initial={{ opacity: 0, y: 40 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-50px" }}
+          transition={{ duration: 0.7 }}
+          className="grid md:grid-cols-2 gap-12 lg:gap-20 items-center"
+        >
+          
+          {/* ── LEFT: Text & Form ── */}
+          <div className="order-2 md:order-1">
+            {isSubscribed ? (
+              <div className="flex flex-col items-start gap-4 animate-in fade-in slide-in-from-bottom-2 duration-300">
+                <div className="flex items-center gap-3">
+                  <CheckCircle2 className="w-8 h-8 text-emerald-600" />
+                  <h3 className="text-2xl font-bold text-foreground">¡Gracias por suscribirte!</h3>
                 </div>
+                <p className="text-lg text-muted-foreground">
+                  Revisa tu correo electrónico para confirmar tu suscripción.
+                </p>
               </div>
-              <h3 className="text-3xl md:text-4xl font-bold text-balance leading-tight">
-                Sé parte de nuestra <span className="text-primary">comunidad agrícola</span>
-              </h3>
-              <p className="text-base text-muted-foreground text-pretty max-w-xl mx-auto leading-relaxed">
-                Accede a tendencias del mercado, oportunidades exclusivas y conecta con exportadores e importadores en
-                toda Latinoamérica.
-              </p>
-            </div>
+            ) : (
+              <div className="space-y-6">
+                <div>
+                  <h3 className="text-3xl md:text-4xl lg:text-5xl font-extrabold text-foreground leading-[1.1] mb-4">
+                    Sé parte de nuestra <br className="hidden lg:block"/>
+                    <span className="text-primary">comunidad agrícola</span>
+                  </h3>
+                  <p className="text-base md:text-lg text-muted-foreground leading-relaxed max-w-md">
+                    Accede a tendencias del mercado, oportunidades exclusivas y conecta con exportadores e importadores en
+                    toda Latinoamérica.
+                  </p>
+                </div>
 
-            <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row gap-4 max-w-lg mx-auto w-full">
-              <div className="flex-1 relative">
-                <Input
-                  type="email"
-                  placeholder="tu@email.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                  disabled={isSubmitting}
-                  className="bg-background/80 backdrop-blur-[2px] border-2 border-border/50 hover:border-primary/30 focus:border-primary transition-all h-14 rounded-2xl text-base shadow-sm"
-                />
-              </div>
-              <Button type="submit" disabled={isSubmitting} className="h-14 px-8 font-semibold text-base rounded-2xl shadow-lg hover:shadow-primary/25 hover:-translate-y-1 transition-all duration-300">
-                {isSubmitting ? "Enviando..." : "Suscribirse"}
-              </Button>
-            </form>
+                <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row gap-3 max-w-md w-full pt-2">
+                  <Input
+                    type="email"
+                    placeholder="tu@email.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
+                    disabled={isSubmitting}
+                    className="h-12 sm:h-14 flex-1 rounded-xl border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 focus:border-primary shadow-sm px-4"
+                  />
+                  <Button 
+                    type="submit" 
+                    disabled={isSubmitting} 
+                    className="h-12 sm:h-14 px-8 rounded-xl font-bold text-base bg-slate-900 text-white hover:bg-slate-800 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-200 shadow-md whitespace-nowrap transition-all"
+                  >
+                    {isSubmitting ? "Enviando..." : "Suscribirse"}
+                  </Button>
+                </form>
 
-            {error && (
-              <div className="mt-3 text-center text-red-600 text-sm bg-red-50 border border-red-200 rounded-lg px-4 py-2">
-                {error}
+                {error && (
+                  <div className="text-red-600 text-sm bg-red-50 border border-red-200 rounded-lg px-4 py-2 max-w-md">
+                    {error}
+                  </div>
+                )}
+
+                <p className="text-sm text-muted-foreground pt-2">
+                  Tu información es segura. Cancela tu suscripción cuando quieras.
+                </p>
               </div>
             )}
-
-            <p className="text-sm text-muted-foreground text-center">
-              🔒 Tu información es segura. Cancela tu suscripción cuando quieras.
-            </p>
           </div>
-        )}
-      </motion.div>
+
+          {/* ── RIGHT: Image Stack ── */}
+          <div className="order-1 md:order-2 relative flex justify-center md:justify-end">
+            <div className="relative w-full max-w-sm lg:max-w-md">
+              {/* Stacked background cards */}
+              <div className="absolute inset-0 rounded-3xl transform rotate-6 translate-x-4 translate-y-3 opacity-80 overflow-hidden shadow-xl border border-white/10">
+                <img
+                  src="/manos-cultivando-en-la-tierra.jpg"
+                  alt=""
+                  className="w-full h-full object-cover"
+                />
+              </div>
+              <div className="absolute inset-0 rounded-3xl transform -rotate-3 -translate-x-2 -translate-y-2 opacity-60 overflow-hidden shadow-xl border border-white/10">
+                <img
+                  src="/exportaci-n-de-productos-agr-colas-en-contenedores.jpg"
+                  alt=""
+                  className="w-full h-full object-cover"
+                />
+              </div>
+              
+              {/* Main image */}
+              <div className="relative z-10 rounded-3xl overflow-hidden shadow-2xl border border-white/10">
+                <img
+                  src="/agricultural-landscape-modern-farm.jpg"
+                  alt="Comunidad Agrilpa"
+                  className="w-full h-auto object-cover aspect-[4/3]"
+                />
+              </div>
+            </div>
+          </div>
+
+        </motion.div>
+      </div>
     </section>
   )
 }

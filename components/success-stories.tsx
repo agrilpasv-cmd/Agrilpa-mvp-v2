@@ -1,351 +1,383 @@
 "use client"
+import React, { useState, useEffect, useRef } from 'react';
+import { motion } from 'framer-motion';
+import { ChevronLeft, ChevronRight, Quote } from 'lucide-react';
 
-import type React from "react"
-import { useRef, useState } from "react"
-import { motion } from "framer-motion"
+const testimonials = [
+  {
+    company: "Finca El Roble",
+    type: "Granja Familiar",
+    country: "Guatemala",
+    quote: "Gracias a Agrilpa, logramos exportar nuestro café orgánico a Francia. En 3 meses duplicamos nuestros ingresos.",
+    achievement: "Acceso al mercado europeo",
+    logo: "/finca-el-roble-logo.jpg",
+  },
+  {
+    company: "Agroindustrias del Pacífico",
+    type: "Procesadora de Frutas",
+    country: "Ecuador",
+    quote: "Conectamos con compradores en Alemania que buscaban piña golden. Ahora exportamos 100 toneladas mensuales.",
+    achievement: "Nuevo mercado en Alemania",
+    logo: "/agroindustrias-pacifico-logo.jpg",
+  },
+  {
+    company: "Cooperativa Los Andes",
+    type: "Cooperativa Agrícola",
+    country: "Perú",
+    quote: "Encontramos compradores para nuestra quinoa orgánica en España e Italia. La plataforma nos cambió el negocio.",
+    achievement: "Expansión a 2 países europeos",
+    logo: "/cooperativa-los-andes-logo.jpg",
+  },
+  {
+    company: "Finca Verde S.A.",
+    type: "Productora de Aguacate",
+    country: "México",
+    quote: "Agrilpa nos ayudó a llegar a distribuidores en Reino Unido. Nuestra producción tiene ahora un mercado asegurado.",
+    achievement: "Contrato anual en UK",
+    logo: "/finca-verde-logo.jpg",
+  },
+  {
+    company: "Tropical Exports",
+    type: "Exportadora",
+    country: "Honduras",
+    quote: "Cerramos un acuerdo con una cadena hotelera en Dubái para suministrar frutas tropicales todo el año.",
+    achievement: "Mercado en Medio Oriente",
+    logo: "/tropical-exports-logo.jpg",
+  },
+  {
+    company: "Hacienda San Martín",
+    type: "Granja Ganadera",
+    country: "Colombia",
+    quote: "Vendemos carne premium a restaurantes en Suiza. La trazabilidad de Agrilpa nos dio credibilidad internacional.",
+    achievement: "Exportación a Suiza",
+    logo: "/hacienda-san-martin-logo.jpg",
+  },
+  {
+    company: "BioFarms Nicaragua",
+    type: "Cultivos Orgánicos",
+    country: "Nicaragua",
+    quote: "Accedimos a certificadores y compradores europeos que valoraron nuestras prácticas sostenibles.",
+    achievement: "Certificación europea",
+    logo: "/biofarms-nicaragua-logo.jpg",
+  },
+  {
+    company: "Azúcar del Valle",
+    type: "Ingenio Azucarero",
+    country: "El Salvador",
+    quote: "Negociamos directamente con importadores en Japón. Eliminamos 3 intermediarios y mejoramos nuestros márgenes.",
+    achievement: "Comercio directo con Japón",
+    logo: "/azucar-del-valle-logo.jpg",
+  },
+  {
+    company: "Finca Los Cerezos",
+    type: "Granja Familiar",
+    country: "Costa Rica",
+    quote: "Exportamos mango a Canadá por primera vez. Agrilpa nos conectó con el comprador ideal en menos de 2 semanas.",
+    achievement: "Primer envío a Canadá",
+    logo: "/finca-los-cerezos-logo.jpg",
+  },
+  {
+    company: "Grupo Agrícola del Sur",
+    type: "Holding Agroindustrial",
+    country: "Chile",
+    quote: "Consolidamos ventas de arándanos a 5 países europeos. La plataforma centralizó toda nuestra operación de exportación.",
+    achievement: "5 mercados europeos",
+    logo: "/grupo-agricola-del-sur-logo.jpg",
+  },
+  {
+    company: "Procesadora Andina",
+    type: "Industria de Alimentos",
+    country: "Bolivia",
+    quote: "Vendemos harina de quinoa a distribuidores en Australia. Nunca pensamos llegar tan lejos.",
+    achievement: "Expansión a Oceanía",
+    logo: "/procesadora-andina-logo.jpg",
+  },
+  {
+    company: "Viñedos del Sol",
+    type: "Bodega",
+    country: "Argentina",
+    quote: "Conectamos con importadores premium en Dinamarca y Noruega. Nuestros vinos ya están en tiendas escandinavas.",
+    achievement: "Mercados nórdicos",
+    logo: "/vinedos-del-sol-logo.jpg",
+  },
+];
+
+const getVisibleCount = (width: number): number => {
+  if (width >= 1280) return 6; // Changed to 6 for large screens
+  if (width >= 1024) return 4;
+  if (width >= 768) return 2;
+  return 1;
+};
 
 export function SuccessStories() {
-  const testimonials = [
-    {
-      company: "Finca El Roble",
-      type: "Granja Familiar",
-      country: "Guatemala",
-      quote:
-        "Gracias a Agrilpa, logramos exportar nuestro café orgánico a Francia. En 3 meses duplicamos nuestros ingresos.",
-      achievement: "Acceso al mercado europeo",
-      logo: "/finca-el-roble-logo.jpg",
-    },
-    {
-      company: "Agroindustrias del Pacífico",
-      type: "Procesadora de Frutas",
-      country: "Ecuador",
-      quote:
-        "Conectamos con compradores en Alemania que buscaban piña golden. Ahora exportamos 100 toneladas mensuales.",
-      achievement: "Nuevo mercado en Alemania",
-      logo: "/agroindustrias-pacifico-logo.jpg",
-    },
-    {
-      company: "Cooperativa Los Andes",
-      type: "Cooperativa Agrícola",
-      country: "Perú",
-      quote:
-        "Encontramos compradores para nuestra quinoa orgánica en España e Italia. La plataforma nos cambió el negocio.",
-      achievement: "Expansión a 2 países europeos",
-      logo: "/cooperativa-los-andes-logo.jpg",
-    },
-    {
-      company: "Finca Verde S.A.",
-      type: "Productora de Aguacate",
-      country: "México",
-      quote:
-        "Agrilpa nos ayudó a llegar a distribuidores en Reino Unido. Nuestra producción tiene ahora un mercado asegurado.",
-      achievement: "Contrato anual en UK",
-      logo: "/finca-verde-logo.jpg",
-    },
-    {
-      company: "Tropical Exports",
-      type: "Exportadora",
-      country: "Honduras",
-      quote: "Cerramos un acuerdo con una cadena hotelera en Dubái para suministrar frutas tropicales todo el año.",
-      achievement: "Mercado en Medio Oriente",
-      logo: "/tropical-exports-logo.jpg",
-    },
-    {
-      company: "Hacienda San Martín",
-      type: "Granja Ganadera",
-      country: "Colombia",
-      quote:
-        "Vendemos carne premium a restaurantes en Suiza. La trazabilidad de Agrilpa nos dio credibilidad internacional.",
-      achievement: "Exportación a Suiza",
-      logo: "/hacienda-san-martin-logo.jpg",
-    },
-    {
-      company: "BioFarms Nicaragua",
-      type: "Cultivos Orgánicos",
-      country: "Nicaragua",
-      quote: "Accedimos a certificadores y compradores europeos que valoraron nuestras prácticas sostenibles.",
-      achievement: "Certificación europea",
-      logo: "/biofarms-nicaragua-logo.jpg",
-    },
-    {
-      company: "Azúcar del Valle",
-      type: "Ingenio Azucarero",
-      country: "El Salvador",
-      quote:
-        "Negociamos directamente con importadores en Japón. Eliminamos 3 intermediarios y mejoramos nuestros márgenes.",
-      achievement: "Comercio directo con Japón",
-      logo: "/azucar-del-valle-logo.jpg",
-    },
-    {
-      company: "Finca Los Cerezos",
-      type: "Granja Familiar",
-      country: "Costa Rica",
-      quote:
-        "Exportamos mango a Canadá por primera vez. Agrilpa nos conectó con el comprador ideal en menos de 2 semanas.",
-      achievement: "Primer envío a Canadá",
-      logo: "/finca-los-cerezos-logo.jpg",
-    },
-    {
-      company: "Grupo Agrícola del Sur",
-      type: "Holding Agroindustrial",
-      country: "Chile",
-      quote:
-        "Consolidamos ventas de arándanos a 5 países europeos. La plataforma centralizó toda nuestra operación de exportación.",
-      achievement: "5 mercados europeos",
-      logo: "/grupo-agricola-del-sur-logo.jpg",
-    },
-    {
-      company: "Procesadora Andina",
-      type: "Industria de Alimentos",
-      country: "Bolivia",
-      quote: "Vendemos harina de quinoa a distribuidores en Australia. Nunca pensamos llegar tan lejos.",
-      achievement: "Expansión a Oceanía",
-      logo: "/procesadora-andina-logo.jpg",
-    },
-    {
-      company: "Viñedos del Sol",
-      type: "Bodega",
-      country: "Argentina",
-      quote:
-        "Conectamos con importadores premium en Dinamarca y Noruega. Nuestros vinos ya están en tiendas escandinavas.",
-      achievement: "Mercados nórdicos",
-      logo: "/vinedos-del-sol-logo.jpg",
-    },
-  ]
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [windowWidth, setWindowWidth] = useState(typeof window !== 'undefined' ? window.innerWidth : 1280);
+  const [isAutoPlaying, setIsAutoPlaying] = useState(true);
+  const autoPlayRef = useRef<NodeJS.Timeout | null>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
 
-  const allTestimonials = [...testimonials, ...testimonials]
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    
+    const handleResize = () => {
+      const newWidth = window.innerWidth;
+      setWindowWidth(newWidth);
+      
+      const oldVisibleCount = getVisibleCount(windowWidth);
+      const newVisibleCount = getVisibleCount(newWidth);
+      
+      if (oldVisibleCount !== newVisibleCount) {
+        const maxIndexForNewWidth = Math.max(0, testimonials.length - newVisibleCount);
+        if (currentIndex > maxIndexForNewWidth) {
+          setCurrentIndex(maxIndexForNewWidth);
+        }
+      }
+    };
+    
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, [windowWidth, currentIndex]);
 
-  const scrollContainerRef = useRef<HTMLDivElement>(null)
-  const [isDragging, setIsDragging] = useState(false)
-  const [startX, setStartX] = useState(0)
-  const [scrollLeft, setScrollLeft] = useState(0)
+  useEffect(() => {
+    if (!isAutoPlaying) return;
 
-  const handleMouseDown = (e: React.MouseEvent) => {
-    if (!scrollContainerRef.current) return
-    setIsDragging(true)
-    setStartX(e.pageX - scrollContainerRef.current.offsetLeft)
-    setScrollLeft(scrollContainerRef.current.scrollLeft)
-  }
+    const startAutoPlay = () => {
+      autoPlayRef.current = setInterval(() => {
+        const visibleCount = getVisibleCount(windowWidth);
+        const maxIndex = Math.max(0, testimonials.length - visibleCount);
 
-  const handleMouseMove = (e: React.MouseEvent) => {
-    if (!isDragging || !scrollContainerRef.current) return
-    e.preventDefault()
-    const x = e.pageX - scrollContainerRef.current.offsetLeft
-    const walk = (x - startX) * 2
-    scrollContainerRef.current.scrollLeft = scrollLeft - walk
-  }
+        setCurrentIndex((prev) => {
+          // Loop continuously left to right
+          if (prev >= maxIndex) {
+            return 0;
+          }
+          return prev + 1;
+        });
+      }, 4000);
+    };
 
-  const handleMouseUp = () => setIsDragging(false)
-  const handleMouseLeave = () => setIsDragging(false)
+    startAutoPlay();
 
-  const handleTouchStart = (e: React.TouchEvent) => {
-    if (!scrollContainerRef.current) return
-    setIsDragging(true)
-    setStartX(e.touches[0].pageX - scrollContainerRef.current.offsetLeft)
-    setScrollLeft(scrollContainerRef.current.scrollLeft)
-  }
+    return () => {
+      if (autoPlayRef.current) {
+        clearInterval(autoPlayRef.current);
+      }
+    };
+  }, [isAutoPlaying, windowWidth]);
 
-  const handleTouchMove = (e: React.TouchEvent) => {
-    if (!isDragging || !scrollContainerRef.current) return
-    const x = e.touches[0].pageX - scrollContainerRef.current.offsetLeft
-    const walk = (x - startX) * 2
-    scrollContainerRef.current.scrollLeft = scrollLeft - walk
-  }
+  const visibleCount = getVisibleCount(windowWidth);
+  const maxIndex = Math.max(0, testimonials.length - visibleCount);
 
-  const handleTouchEnd = () => setIsDragging(false)
+  const goNext = () => {
+    setCurrentIndex((prev) => (prev >= maxIndex ? 0 : prev + 1));
+    pauseAutoPlay();
+  };
+
+  const goPrev = () => {
+    setCurrentIndex((prev) => (prev <= 0 ? maxIndex : prev - 1));
+    pauseAutoPlay();
+  };
+
+  const pauseAutoPlay = () => {
+    setIsAutoPlaying(false);
+    setTimeout(() => setIsAutoPlaying(true), 8000);
+  };
+
+  const handleDragEnd = (event: any, info: any) => {
+    const { offset } = info;
+    const swipeThreshold = 30;
+
+    if (offset.x < -swipeThreshold) {
+      goNext();
+    } else if (offset.x > swipeThreshold) {
+      goPrev();
+    }
+  };
+
+  const goToSlide = (index: number) => {
+    setCurrentIndex(index);
+    pauseAutoPlay();
+  };
 
   return (
     <section className="py-16 md:py-24 bg-white/30 backdrop-blur-xl overflow-hidden">
-      {/* Header */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-12">
-        <motion.div
+      <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 mb-12 md:mb-16">
+        <motion.div 
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: "-50px" }}
           transition={{ duration: 0.6 }}
           className="text-center"
         >
-          <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">Lo que Dicen Nuestros Clientes</h2>
+          <span className="inline-block py-1 px-3 rounded-full bg-primary/10 text-primary font-medium text-xs sm:text-sm uppercase tracking-wider mb-3">
+            Casos de Éxito
+          </span>
+          <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
+            Lo que Dicen Nuestros Clientes
+          </h2>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
             Testimonios reales de granjas, industrias y empresas que han alcanzado nuevos mercados con Agrilpa
           </p>
         </motion.div>
       </div>
 
-      {/* Full-width auto-scrolling slider */}
-      <div className="w-full mb-12">
-        <div
-          className="relative overflow-x-auto scrollbar-hide cursor-grab active:cursor-grabbing w-full"
-          ref={scrollContainerRef}
-          onMouseDown={handleMouseDown}
-          onMouseMove={handleMouseMove}
-          onMouseUp={handleMouseUp}
-          onMouseLeave={handleMouseLeave}
-          onTouchStart={handleTouchStart}
-          onTouchMove={handleTouchMove}
-          onTouchEnd={handleTouchEnd}
-        >
-          <div className={`flex gap-5 px-6 pb-8 pt-2 ${isDragging ? "" : "animate-scroll-right"}`}>
-            {allTestimonials.map((testimonial, index) => (
-              <div
-                key={`testimonial-${index}`}
-                className="liquid-glass-card min-w-[380px] max-w-[380px] flex-shrink-0 relative overflow-hidden rounded-2xl p-6 flex flex-col justify-between"
-                style={{ minHeight: "240px" }}
-              >
-                {/* Layered glass background */}
-                <div className="glass-layer-base" />
-                <div className="glass-layer-sheen" />
-
-                {/* Achievement badge — top right */}
-                <div className="absolute top-4 right-4 z-10">
-                  <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-primary/10 border border-primary/20 text-primary text-[10px] font-bold uppercase tracking-wider rounded-lg">
-                    ✦ {testimonial.achievement}
-                  </span>
-                </div>
-
-                {/* Quote block */}
-                <div className="relative z-10 flex-1 pr-2">
-                  <span
-                    style={{
-                      fontFamily: "Georgia, serif",
-                      fontSize: "52px",
-                      lineHeight: "1",
-                      color: "var(--primary)",
-                      opacity: 0.6,
-                      display: "block",
-                      marginBottom: "-8px",
-                      userSelect: "none",
-                    }}
-                  >
-                    &ldquo;
-                  </span>
-                  <p className="text-[14.5px] text-gray-800 leading-relaxed font-medium">
-                    {testimonial.quote}
-                  </p>
-                </div>
-
-                {/* Footer: avatar + name/role */}
-                <div className="relative z-10 flex items-center justify-between mt-5 pt-4 border-t border-white/50">
-                  <div className="flex items-center gap-3">
-                    {/* Circular avatar */}
-                    <div
-                      className="w-11 h-11 rounded-full overflow-hidden border-2 border-white/70 shadow-md flex-shrink-0"
-                      style={{ background: "linear-gradient(135deg, #ffffff, #f3f4f6)" }}
-                    >
-                      <img
-                        src={testimonial.logo || "/placeholder.svg"}
-                        alt={`${testimonial.company}`}
-                        className="w-full h-full object-cover"
-                        onError={(e) => {
-                          const img = e.target as HTMLImageElement
-                          img.style.display = "none"
-                          const parent = img.parentElement
-                          if (parent) {
-                            parent.innerHTML = `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:800;color:#15803d;">${testimonial.company.charAt(0)}</div>`
-                          }
-                        }}
-                      />
-                    </div>
-                    <div>
-                      <p className="font-bold text-sm text-gray-900 leading-tight">{testimonial.company}</p>
-                      <p className="text-xs text-gray-500 mt-0.5">
-                        {testimonial.type} · {testimonial.country}
-                      </p>
-                    </div>
-                  </div>
-
-
-                </div>
-              </div>
-            ))}
+      <div className="w-full relative px-2 sm:px-4" ref={containerRef}>
+        <div className="max-w-[1400px] mx-auto relative mb-6 sm:mb-0">
+          <div className="flex justify-center sm:justify-end sm:absolute sm:-top-24 right-4 sm:right-6 lg:right-8 space-x-2 z-10">
+            <motion.button
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={goPrev}
+              className="p-2 rounded-full bg-white shadow-md hover:bg-gray-50 text-primary transition-all duration-300"
+              aria-label="Testimonio anterior"
+            >
+              <ChevronLeft className="w-5 h-5" />
+            </motion.button>
+            <motion.button
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={goNext}
+              className="p-2 rounded-full bg-white shadow-md hover:bg-gray-50 text-primary transition-all duration-300"
+              aria-label="Siguiente testimonio"
+            >
+              <ChevronRight className="w-5 h-5" />
+            </motion.button>
           </div>
         </div>
+
+        <div className="overflow-hidden relative">
+          <motion.div
+            className="flex"
+            animate={{ x: `-${currentIndex * (100 / visibleCount)}%` }}
+            transition={{ 
+              type: 'spring', 
+              stiffness: 70, 
+              damping: 20 
+            }}
+          >
+            {testimonials.map((testimonial, idx) => (
+              <motion.div
+                key={idx}
+                className={`flex-shrink-0 px-2`}
+                style={{ width: `${100 / visibleCount}%` }}
+                initial={{ opacity: 0.5, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.4 }}
+                drag="x"
+                dragConstraints={{ left: 0, right: 0 }}
+                dragElastic={0.2}
+                onDragEnd={handleDragEnd}
+                whileHover={{ y: -5 }}
+                whileTap={{ scale: 0.98, cursor: 'grabbing' }}
+              >
+                <motion.div 
+                  className="relative overflow-hidden rounded-2xl p-5 h-full bg-white border border-gray-100 shadow-lg shadow-primary/5 cursor-grab flex flex-col"
+                  whileHover={{
+                    boxShadow: "0 10px 20px -5px rgba(139, 198, 70, 0.15), 0 4px 6px -2px rgba(139, 198, 70, 0.05)"
+                  }}
+                >
+                  {/* Achievement badge */}
+                  <div className="mb-4">
+                    <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-primary/10 text-primary text-[10px] font-bold uppercase tracking-wider rounded-lg">
+                      ✦ {testimonial.achievement}
+                    </span>
+                  </div>
+
+                  <div className="absolute top-2 right-2 opacity-5 pointer-events-none">
+                    <Quote size={60} className="text-primary" />
+                  </div>
+                  
+                  <div className="relative z-10 flex-1 flex flex-col">
+                    <p className="text-[13px] sm:text-sm text-gray-700 font-medium mb-6 leading-relaxed flex-1">
+                      &ldquo;{testimonial.quote}&rdquo;
+                    </p>
+                    
+                    <div className="mt-auto pt-4 border-t border-gray-100">
+                      <div className="flex items-center">
+                        <div className="relative flex-shrink-0">
+                          <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-white shadow-sm flex-shrink-0 bg-gray-50 flex items-center justify-center text-primary font-bold">
+                            {testimonial.logo ? (
+                              <img
+                                src={testimonial.logo}
+                                alt={testimonial.company}
+                                className="w-full h-full object-cover"
+                                onError={(e) => {
+                                  (e.target as HTMLImageElement).style.display = 'none';
+                                  (e.target as HTMLImageElement).parentElement!.innerHTML = testimonial.company.charAt(0);
+                                }}
+                              />
+                            ) : (
+                              testimonial.company.charAt(0)
+                            )}
+                          </div>
+                          <motion.div 
+                            className="absolute inset-0 rounded-full bg-primary/20"
+                            animate={{ 
+                              scale: [1, 1.2, 1],
+                              opacity: [0, 0.3, 0] 
+                            }}
+                            transition={{ 
+                              duration: 2,
+                              repeat: Infinity,
+                              repeatDelay: 1
+                            }}
+                          />
+                        </div>
+                        <div className="ml-3">
+                          <h4 className="font-bold text-sm text-gray-900 leading-tight line-clamp-1" title={testimonial.company}>{testimonial.company}</h4>
+                          <p className="text-gray-500 text-[11px] mt-0.5 line-clamp-1">{testimonial.type} · {testimonial.country}</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </motion.div>
+              </motion.div>
+            ))}
+          </motion.div>
+        </div>
+            
+        <div className="flex justify-center mt-8">
+          {Array.from({ length: testimonials.length - visibleCount + 1 }, (_: any, index: any) => (
+            <motion.button
+              key={index}
+              onClick={() => goToSlide(index)}
+              className="relative mx-1 focus:outline-none"
+              whileHover={{ scale: 1.2 }}
+              whileTap={{ scale: 0.9 }}
+              aria-label={`Ir al testimonio ${index + 1}`}
+            >
+              <motion.div
+                className={`w-2 h-2 rounded-full ${
+                  index === currentIndex 
+                    ? 'bg-primary' 
+                    : 'bg-gray-300'
+                }`}
+                animate={{ 
+                  scale: index === currentIndex ? [1, 1.2, 1] : 1
+                }}
+                transition={{ 
+                  duration: 1.5, 
+                  repeat: index === currentIndex ? Infinity : 0,
+                  repeatDelay: 1
+                }}
+              />
+              {index === currentIndex && (
+                <motion.div
+                  className="absolute inset-0 rounded-full bg-primary/30"
+                  animate={{ 
+                    scale: [1, 1.8],
+                    opacity: [1, 0] 
+                  }}
+                  transition={{ 
+                    duration: 1.5,
+                    repeat: Infinity,
+                  }}
+                />
+              )}
+            </motion.button>
+          ))}
+        </div>
       </div>
-
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center" />
-      </div>
-
-      <style jsx>{`
-        @keyframes scroll-right {
-          0%   { transform: translateX(0); }
-          100% { transform: translateX(-50%); }
-        }
-
-        .animate-scroll-right {
-          animation: scroll-right 60s linear infinite;
-        }
-        .animate-scroll-right:hover {
-          animation-play-state: paused;
-        }
-        @media (max-width: 768px) {
-          .animate-scroll-right {
-            animation: scroll-right 30s linear infinite;
-          }
-        }
-
-        .scrollbar-hide::-webkit-scrollbar { display: none; }
-        .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
-
-        /* ── Liquid Glass Card ── */
-        .liquid-glass-card {
-          background: rgba(255, 255, 255, 0.52);
-          backdrop-filter: blur(30px) saturate(190%) brightness(1.06);
-          -webkit-backdrop-filter: blur(30px) saturate(190%) brightness(1.06);
-          border: 1px solid rgba(255, 255, 255, 0.78);
-          box-shadow:
-            0 8px 32px rgba(0, 0, 0, 0.07),
-            0 2px 8px rgba(0, 0, 0, 0.04),
-            inset 0 1px 0 rgba(255, 255, 255, 0.92),
-            inset 1px 0 0 rgba(255, 255, 255, 0.65),
-            inset -1px 0 0 rgba(255, 255, 255, 0.65),
-            inset 0 -1px 0 rgba(255, 255, 255, 0.25);
-          transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.35s ease;
-        }
-
-        .liquid-glass-card:hover {
-          transform: translateY(-8px) scale(1.015);
-          box-shadow:
-            0 24px 56px rgba(0, 0, 0, 0.11),
-            0 6px 20px rgba(22, 163, 74, 0.09),
-            inset 0 1px 0 rgba(255, 255, 255, 0.98),
-            inset 1px 0 0 rgba(255, 255, 255, 0.75),
-            inset -1px 0 0 rgba(255, 255, 255, 0.75),
-            inset 0 -1px 0 rgba(255, 255, 255, 0.35);
-        }
-
-        /* Base gradient fill */
-        .glass-layer-base {
-          position: absolute;
-          inset: 0;
-          border-radius: 16px;
-          background: linear-gradient(
-            140deg,
-            rgba(255, 255, 255, 0.8) 0%,
-            rgba(255, 255, 255, 0.4) 50%,
-            rgba(255, 255, 255, 0.7) 100%
-          );
-          pointer-events: none;
-          z-index: 0;
-        }
-
-        /* Top specular sheen */
-        .glass-layer-sheen {
-          position: absolute;
-          top: 0;
-          left: 0;
-          right: 0;
-          height: 48%;
-          border-radius: 16px 16px 0 0;
-          background: linear-gradient(
-            180deg,
-            rgba(255, 255, 255, 0.58) 0%,
-            rgba(255, 255, 255, 0) 100%
-          );
-          pointer-events: none;
-          z-index: 1;
-        }
-      `}</style>
     </section>
-  )
+  );
 }
