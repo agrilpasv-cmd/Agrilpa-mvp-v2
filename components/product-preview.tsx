@@ -20,27 +20,27 @@ export interface FeaturedProduct {
 }
 
 function ProductImage({ productId, title }: { productId: string; title: string }) {
-  const [src, setSrc] = useState<string | null>(null)
   const [loaded, setLoaded] = useState(false)
+  const src = `/api/products/${productId}/thumb`
 
-  useEffect(() => {
-    let cancelled = false
-    fetch(`/api/products/${productId}/thumb`)
-      .then(r => r.ok ? r.json() : { image: null })
-      .then(d => { if (!cancelled) setSrc(d.image || null) })
-      .catch(() => { if (!cancelled) setSrc(null) })
-      .finally(() => { if (!cancelled) setLoaded(true) })
-    return () => { cancelled = true }
-  }, [productId])
-
-  return loaded ? (
-    <img
-      src={src || "/placeholder.svg"}
-      alt={title}
-      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-    />
-  ) : (
-    <Skeleton className="w-full h-full rounded-none bg-slate-200" />
+  return (
+    <div className="w-full h-full relative bg-slate-100 dark:bg-zinc-800">
+      {!loaded && (
+        <div className="absolute inset-0">
+          <Skeleton className="w-full h-full rounded-none" />
+        </div>
+      )}
+      <img
+        src={src}
+        alt={title}
+        onLoad={() => setLoaded(true)}
+        onError={(e) => {
+          setLoaded(true)
+          e.currentTarget.src = "/placeholder.svg"
+        }}
+        className={`w-full h-full object-cover group-hover:scale-105 transition-all duration-500 ${loaded ? "opacity-100" : "opacity-0"}`}
+      />
+    </div>
   )
 }
 
@@ -100,16 +100,15 @@ export function ProductPreview() {
         </div>
 
         {/* Grid */}
-        <motion.div
-          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6"
-          variants={containerVariants}
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true, amount: 0.1 }}
-        >
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {status === "loading" ? (
             Array.from({ length: 4 }).map((_, i) => (
-              <motion.div key={`sk-${i}`} variants={cardVariants}>
+              <motion.div 
+                key={`sk-${i}`} 
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.3, delay: i * 0.1 }}
+              >
                 <div className="rounded-2xl overflow-hidden flex flex-col h-[340px] border border-slate-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 shadow-md">
                   <Skeleton className="h-52 w-full rounded-none bg-slate-200 dark:bg-zinc-700" />
                   <div className="p-4 flex flex-col gap-3 flex-1">
@@ -122,13 +121,23 @@ export function ProductPreview() {
               </motion.div>
             ))
           ) : products.length === 0 ? (
-            <motion.div variants={cardVariants} className="col-span-4 text-center py-16 text-muted-foreground">
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="col-span-4 text-center py-16 text-muted-foreground"
+            >
               <p>No hay productos destacados en este momento.</p>
               <Link href="/productos" className="text-primary underline mt-2 inline-block">Ver catálogo completo</Link>
             </motion.div>
           ) : (
-            products.map(product => (
-              <motion.div key={product.id} variants={cardVariants}>
+            products.map((product, i) => (
+              <motion.div 
+                key={product.id}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ type: "spring", stiffness: 80, damping: 15, delay: i * 0.1 }}
+              >
                 <Link href={`/producto/${product.id}`} className="block h-full">
                   <div className="rounded-2xl overflow-hidden border border-slate-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 shadow-sm hover:shadow-lg hover:border-primary/40 dark:hover:border-primary/40 transition-all cursor-pointer flex flex-col h-full group">
 
@@ -171,7 +180,7 @@ export function ProductPreview() {
               </motion.div>
             ))
           )}
-        </motion.div>
+        </div>
 
       </div>
     </section>
