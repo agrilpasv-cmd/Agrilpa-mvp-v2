@@ -2,6 +2,8 @@
 
 import { notFound, useRouter, useParams } from "next/navigation"
 import Link from "next/link"
+import Image from "next/image"
+import { ProductImage } from "@/components/product-image"
 import { useState, useEffect, useMemo } from "react"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -751,10 +753,10 @@ export default function ProductPage() {
                   <Card className="bg-card border border-border rounded-2xl overflow-hidden hover:border-primary/50 hover:shadow-xl hover:shadow-primary/5 transition-all cursor-pointer flex flex-col h-full p-0 gap-0 group">
                     {/* Image Section */}
                     <div className="relative h-52 w-full shrink-0 overflow-hidden bg-slate-100">
-                      <img
+                      <ProductImage
                         src={relProduct.image || "/placeholder.svg"}
                         alt={relProduct.name}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                        className="object-cover group-hover:scale-105 transition-transform duration-500"
                       />
                       
                       {/* Top Badges */}

@@ -1,6 +1,7 @@
 "use client"
 
 import Link from "next/link"
+import { ProductImage } from "@/components/product-image"
 import {
   Star, MapPin, ArrowRight, ShieldCheck, Package,
   ShoppingCart, FileText, ChevronLeft, ChevronRight, Expand
@@ -48,13 +49,16 @@ export function ProductHero({
       <div className="w-full lg:w-[42%] shrink-0 flex flex-col gap-3">
 
         {/* Main image — arrows overlaid inside */}
-        <div className="relative rounded-xl overflow-hidden bg-slate-100 dark:bg-zinc-800">
-          <img
+        <div className="relative aspect-[5/4] rounded-xl overflow-hidden bg-slate-100 dark:bg-zinc-800">
+          <ProductImage
             src={activeImg}
             alt={product.name}
-            className="w-full aspect-[5/4] object-cover cursor-zoom-in"
-            onClick={() => setIsZoomOpen(true)}
+            className="object-cover cursor-zoom-in"
+            priority={true}
+            containerClassName="absolute inset-0"
           />
+          {/* invisible overlay for click */}
+          <div className="absolute inset-0 cursor-zoom-in" onClick={() => setIsZoomOpen(true)} />
 
           {/* Zoom button — top right */}
           <button
@@ -106,7 +110,9 @@ export function ProductHero({
                       : "border-slate-200 dark:border-zinc-700 hover:border-slate-300 dark:hover:border-zinc-500"
                   }`}
                 >
-                  <img src={img} className="w-full h-full object-cover" alt="" />
+                  <div className="relative w-full h-full">
+                    <img src={img} loading="lazy" decoding="async" className="w-full h-full object-cover" alt="" />
+                  </div>
                 </button>
               ))}
             </div>

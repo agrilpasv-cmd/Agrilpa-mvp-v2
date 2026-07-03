@@ -108,11 +108,11 @@ export function Hero() {
 
   return (
     <section className="relative w-full min-h-screen flex items-center overflow-hidden">
-      {/* Background Video ALWAYS visible */}
+      {/* Background Video */}
       <div className="absolute inset-0 w-full h-full z-0">
         <video
           ref={videoRef}
-          src="https://res.cloudinary.com/dvdz0yhuh/video/upload/v1774293524/184808-874264370_medium_p3dznv.mp4"
+          src="https://szazlttrgsgcpwqatpwx.supabase.co/storage/v1/object/public/media/184808-874264370.mp4"
           autoPlay
           loop
           muted

@@ -13,6 +13,7 @@ import { createClient } from "@/lib/supabase/client"
 import { PRODUCT_CATEGORIES } from "@/lib/constants"
 import { PhoneCodePicker } from "@/components/ui/country-picker"
 import { CurrencyPicker } from "@/components/ui/currency-picker"
+import { compressImage, MAX_FILE_SIZE_MB } from "@/lib/compress-image"
 
 export default function AdminNuevaPublicacionPage() {
   const router = useRouter()
@@ -129,27 +130,27 @@ export default function AdminNuevaPublicacionPage() {
     }))
   }
 
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>, imageKey: "image" | "image2" | "image3") => {
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>, imageKey: "image" | "image2" | "image3") => {
     const file = e.target.files?.[0]
-    if (file) {
-      if (file.size > 5 * 1024 * 1024) {
-        setStatusMessage({ type: 'error', text: "La imagen es demasiado grande. Por favor usa una imagen menor a 5MB." })
-        e.target.value = "" 
-        return
-      }
+    if (!file) return
 
-      const reader = new FileReader()
-      reader.onload = (event) => {
-        const result = event.target?.result as string
-        if (imageKey === "image") setImagePreview(result)
-        if (imageKey === "image2") setImagePreview2(result)
-        if (imageKey === "image3") setImagePreview3(result)
-        setFormData((prev) => ({
-          ...prev,
-          [imageKey]: result,
-        }))
-      }
-      reader.readAsDataURL(file)
+    if (file.size > MAX_FILE_SIZE_MB * 1024 * 1024) {
+      setStatusMessage({ type: 'error', text: `La imagen es demasiado grande. Usa una imagen menor a ${MAX_FILE_SIZE_MB}MB.` })
+      e.target.value = ""
+      return
+    }
+
+    setStatusMessage({ type: 'loading', text: "Optimizando imagen..." })
+    try {
+      const compressed = await compressImage(file)
+      if (imageKey === "image")  setImagePreview(compressed)
+      if (imageKey === "image2") setImagePreview2(compressed)
+      if (imageKey === "image3") setImagePreview3(compressed)
+      setFormData((prev) => ({ ...prev, [imageKey]: compressed }))
+      setStatusMessage({ type: null, text: "" })
+    } catch (err) {
+      console.error("Image compression failed:", err)
+      setStatusMessage({ type: 'error', text: "Error al procesar la imagen. Intenta con otra." })
     }
   }
 

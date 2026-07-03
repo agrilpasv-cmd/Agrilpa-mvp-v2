@@ -122,3 +122,12 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* Product image skeleton shimmer */
+@keyframes skeleton-shimmer-anim {
+  0%   { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+.skeleton-shimmer {
+  animation: skeleton-shimmer-anim 1.5s infinite;
+}

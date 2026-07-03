@@ -3,6 +3,7 @@
 import { notFound, useRouter, useParams } from "next/navigation"
 import { useState, useEffect } from "react"
 import Link from "next/link"
+import { ProductImage } from "@/components/product-image"
 import { Card } from "@/components/ui/card"
 import { Search, Filter, Star, MapPin, MessageCircle, X, AlertCircle, ShieldCheck, Ship } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
@@ -477,15 +478,16 @@ export default function ProductosPage() {
           {/* Products grid */}
           {filteredProducts.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              {filteredProducts.map((product) => (
+              {filteredProducts.map((product, index) => (
                 <Link key={product.id} href={`/producto/${product.slug}`} className="block h-full">
                   <Card className="bg-card border border-border rounded-2xl overflow-hidden hover:border-primary/50 hover:shadow-xl hover:shadow-primary/5 transition-all cursor-pointer flex flex-col h-full p-0 gap-0 group">
                     {/* Image Section */}
                     <div className="relative h-52 w-full shrink-0 overflow-hidden bg-slate-100">
-                      <img
+                      <ProductImage
                         src={product.image || "/placeholder.svg"}
                         alt={product.name}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                        className="object-cover group-hover:scale-105 transition-transform duration-500"
+                        priority={index < 8}
                       />
                       
                       {/* Top Badges */}
