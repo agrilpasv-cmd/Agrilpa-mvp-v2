@@ -477,7 +477,7 @@ export default function ProductosPage() {
 
           {/* Products grid */}
           {filteredProducts.length > 0 ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+            <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-6">
               {filteredProducts.map((product, index) => (
                 <Link key={product.id} href={`/producto/${product.slug}`} className="block h-full">
                   <Card className="bg-card border border-border rounded-2xl overflow-hidden hover:border-primary/50 hover:shadow-xl hover:shadow-primary/5 transition-all cursor-pointer flex flex-col h-full p-0 gap-0 group">
@@ -499,8 +499,8 @@ export default function ProductosPage() {
                         
                         {/* Verified Pill */}
                         {(product.verified || (product as any).sellerIsPro) && (
-                          <div className="bg-slate-900/90 backdrop-blur-sm text-white text-[10px] font-bold uppercase tracking-wider px-2.5 h-6 flex items-center justify-center gap-1 rounded-full shadow-sm leading-none">
-                            <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
+                          <div className="bg-white/95 backdrop-blur-sm text-slate-900 text-[10px] font-bold uppercase tracking-wider px-2.5 h-6 flex items-center justify-center gap-1 rounded-full shadow-sm leading-none border border-emerald-100">
+                            <ShieldCheck className="w-3.5 h-3.5 text-emerald-500" />
                             Verificado
                           </div>
                         )}
@@ -536,36 +536,31 @@ export default function ProductosPage() {
                         {product.description?.split("---")[0]}
                       </p>
 
-                      <hr className="border-t border-dashed border-border mb-3" />
-
                       {/* Pricing & Minimum Order */}
-                      <div className="flex justify-between items-end mb-4">
-                        <div>
-                          <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-0.5">Desde</p>
-                          <div className="flex items-baseline gap-1">
-                            {product.price === "Por Cotizar" ? (
-                              <span className="text-lg font-bold text-foreground">Por Cotizar</span>
-                            ) : (
-                              <>
-                                <span className="text-xl font-bold text-foreground">
-                                  {product.price}
-                                </span>
-                                <span className="text-sm font-medium text-muted-foreground"> /kg</span>
-                              </>
-                            )}
-                          </div>
+                      <div className="flex justify-between items-center mb-4">
+                        <div className="flex items-baseline gap-1">
+                          {product.price === "Por Cotizar" ? (
+                            <span className="text-base font-bold text-foreground">Por Cotizar</span>
+                          ) : (
+                            <>
+                              <span className="text-lg font-bold text-foreground">
+                                {product.price}
+                              </span>
+                              <span className="text-xs font-medium text-muted-foreground"> /kg</span>
+                            </>
+                          )}
                         </div>
-                        <div className="text-right">
-                          <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-0.5">Pedido Mín.</p>
-                          <p className="text-base font-semibold text-foreground">
+                        <div className="flex items-center gap-1.5 bg-slate-50 dark:bg-zinc-800/50 px-2.5 py-1 rounded-md border border-slate-100 dark:border-zinc-800">
+                          <span className="text-[10px] font-medium text-muted-foreground uppercase">Min.</span>
+                          <span className="text-sm font-semibold text-foreground">
                             {formatMinOrder(product.minOrder)}
-                          </p>
+                          </span>
                         </div>
                       </div>
 
                       {/* Contact Button */}
                       <button
-                        className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-semibold py-3 px-4 rounded-xl transition-all flex items-center justify-center gap-2 shadow-sm"
+                        className="w-full border border-primary text-primary bg-transparent hover:bg-primary hover:text-white font-medium text-sm py-2 px-4 rounded-lg transition-colors duration-300 flex items-center justify-center gap-2"
                         onClick={(e) => {
                           e.preventDefault()
                           e.stopPropagation()
@@ -595,8 +590,8 @@ export default function ProductosPage() {
                           }
                         }}
                       >
-                        <MessageCircle className="w-5 h-5" />
-                        Contactar vendedor
+                        <MessageCircle className="w-4 h-4" />
+                        Contactar
                       </button>
                     </div>
                   </Card>

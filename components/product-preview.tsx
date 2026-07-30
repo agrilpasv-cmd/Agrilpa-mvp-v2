@@ -100,7 +100,7 @@ export function ProductPreview() {
         </div>
 
         {/* Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
           {status === "loading" ? (
             Array.from({ length: 4 }).map((_, i) => (
               <motion.div 
@@ -151,8 +151,8 @@ export function ProductPreview() {
                           {product.category}
                         </div>
                         {product.seller_is_pro && (
-                          <div className="bg-slate-900/90 backdrop-blur-sm text-white text-[10px] font-bold uppercase tracking-wider px-2.5 h-6 flex items-center gap-1 rounded-full shadow-sm">
-                            <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
+                          <div className="bg-white/95 backdrop-blur-sm text-slate-900 text-[10px] font-bold uppercase tracking-wider px-2.5 h-6 flex items-center justify-center gap-1 rounded-full shadow-sm leading-none border border-emerald-100">
+                            <ShieldCheck className="w-3.5 h-3.5 text-emerald-500" />
                             Verificado
                           </div>
                         )}

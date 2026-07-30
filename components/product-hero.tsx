@@ -68,37 +68,11 @@ export function ProductHero({
             <Expand className="w-4 h-4 text-slate-700 dark:text-slate-200" />
           </button>
 
-          {/* Prev arrow — overlaid left */}
-          {allImages.length > 1 && (
-            <button
-              onClick={goPrev}
-              className="absolute left-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white dark:bg-zinc-900 shadow-md border border-slate-200 dark:border-zinc-600 flex items-center justify-center hover:scale-105 transition-transform"
-            >
-              <ChevronLeft className="w-5 h-5 text-slate-700 dark:text-slate-200" />
-            </button>
-          )}
-
-          {/* Next arrow — overlaid right */}
-          {allImages.length > 1 && (
-            <button
-              onClick={goNext}
-              className="absolute right-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white dark:bg-zinc-900 shadow-md border border-slate-200 dark:border-zinc-600 flex items-center justify-center hover:scale-105 transition-transform"
-            >
-              <ChevronRight className="w-5 h-5 text-slate-700 dark:text-slate-200" />
-            </button>
-          )}
         </div>
 
         {/* Thumbnail strip — aligned under image, same width */}
         {allImages.length > 1 && (
           <div className="flex items-center gap-2">
-            <button
-              onClick={goPrev}
-              className="shrink-0 w-7 h-7 rounded-full border border-slate-300 dark:border-zinc-600 bg-white dark:bg-zinc-800 flex items-center justify-center hover:bg-slate-50 dark:hover:bg-zinc-700 transition-colors shadow-sm"
-            >
-              <ChevronLeft className="w-3.5 h-3.5 text-slate-600 dark:text-slate-300" />
-            </button>
-
             <div className="flex gap-2 flex-1 overflow-x-auto">
               {allImages.map((img: string, i: number) => (
                 <button
@@ -117,12 +91,6 @@ export function ProductHero({
               ))}
             </div>
 
-            <button
-              onClick={goNext}
-              className="shrink-0 w-7 h-7 rounded-full border border-slate-300 dark:border-zinc-600 bg-white dark:bg-zinc-800 flex items-center justify-center hover:bg-slate-50 dark:hover:bg-zinc-700 transition-colors shadow-sm"
-            >
-              <ChevronRight className="w-3.5 h-3.5 text-slate-600 dark:text-slate-300" />
-            </button>
           </div>
         )}
       </div>
@@ -139,8 +107,8 @@ export function ProductHero({
             {product.name}
           </h1>
           {(product.verified || product.sellerIsPro) && (
-            <div className="shrink-0 flex items-center justify-center gap-1 bg-slate-900/90 backdrop-blur-sm text-white text-[10px] font-bold uppercase tracking-wider px-2.5 h-6 rounded-full shadow-sm leading-none mt-1.5">
-              <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
+            <div className="shrink-0 flex items-center justify-center gap-1 bg-white/95 backdrop-blur-sm text-slate-900 text-[10px] font-bold uppercase tracking-wider px-2.5 h-6 rounded-full shadow-sm leading-none mt-1.5 border border-emerald-100">
+              <ShieldCheck className="w-3.5 h-3.5 text-emerald-500" />
               Verificado
             </div>
           )}

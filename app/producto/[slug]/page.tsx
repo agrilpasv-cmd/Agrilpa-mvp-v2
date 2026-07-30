@@ -747,7 +747,7 @@ export default function ProductPage() {
         {relatedProducts.length > 0 && (
           <div>
             <h2 className="text-2xl font-bold text-foreground mb-6">{relatedTitle}</h2>
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-6">
               {relatedProducts.map((relProduct) => (
                 <Link key={relProduct.id} href={`/producto/${relProduct.slug}`}>
                   <Card className="bg-card border border-border rounded-2xl overflow-hidden hover:border-primary/50 hover:shadow-xl hover:shadow-primary/5 transition-all cursor-pointer flex flex-col h-full p-0 gap-0 group">
@@ -768,8 +768,8 @@ export default function ProductPage() {
                         
                         {/* Verified Pill */}
                         {(relProduct.verified || (relProduct as any).sellerIsPro) && (
-                          <div className="bg-slate-900/90 backdrop-blur-sm text-white text-[10px] font-bold uppercase tracking-wider px-2.5 h-6 flex items-center justify-center gap-1 rounded-full shadow-sm leading-none">
-                            <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
+                          <div className="bg-white/95 backdrop-blur-sm text-slate-900 text-[10px] font-bold uppercase tracking-wider px-2.5 h-6 flex items-center justify-center gap-1 rounded-full shadow-sm leading-none border border-emerald-100">
+                            <ShieldCheck className="w-3.5 h-3.5 text-emerald-500" />
                             Verificado
                           </div>
                         )}
@@ -805,30 +805,25 @@ export default function ProductPage() {
                         {relProduct.description?.split("---")[0]}
                       </p>
 
-                      <hr className="border-t border-dashed border-border mb-3" />
-
                       {/* Pricing & Minimum Order */}
-                      <div className="flex justify-between items-end mb-4">
-                        <div>
-                          <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-0.5">Desde</p>
-                          <div className="flex items-baseline gap-1">
-                            {relProduct.price === "Por Cotizar" ? (
-                              <span className="text-lg font-bold text-foreground">Por Cotizar</span>
-                            ) : (
-                              <>
-                                <span className="text-xl font-bold text-foreground">
-                                  {relProduct.price}
-                                </span>
-                                <span className="text-sm font-medium text-muted-foreground"> /kg</span>
-                              </>
-                            )}
-                          </div>
+                      <div className="flex justify-between items-center mb-4">
+                        <div className="flex items-baseline gap-1">
+                          {relProduct.price === "Por Cotizar" ? (
+                            <span className="text-base font-bold text-foreground">Por Cotizar</span>
+                          ) : (
+                            <>
+                              <span className="text-lg font-bold text-foreground">
+                                {relProduct.price}
+                              </span>
+                              <span className="text-xs font-medium text-muted-foreground"> /kg</span>
+                            </>
+                          )}
                         </div>
-                        <div className="text-right">
-                          <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-0.5">Pedido Mín.</p>
-                          <p className="text-base font-semibold text-foreground">
+                        <div className="flex items-center gap-1.5 bg-slate-50 dark:bg-zinc-800/50 px-2.5 py-1 rounded-md border border-slate-100 dark:border-zinc-800">
+                          <span className="text-[10px] font-medium text-muted-foreground uppercase">Min.</span>
+                          <span className="text-sm font-semibold text-foreground">
                             {formatMinOrder(relProduct.minOrder)}
-                          </p>
+                          </span>
                         </div>
                       </div>
                     </div>

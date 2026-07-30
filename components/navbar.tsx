@@ -274,7 +274,7 @@ export function Navbar() {
                       <div className="absolute -top-2.5 right-8 w-5 h-5 bg-card border-t border-l border-primary/20 transform rotate-45"></div>
                       <div className="relative z-10">
                         <p className="font-medium text-center text-sm leading-relaxed">
-                          🚀 ¡Únete ahora a <span className="font-bold text-primary">Agrilpa</span> y crea tus publicaciones <span className="font-extrabold text-primary uppercase tracking-wide">GRATIS!</span>
+                          🚀 ¡Únete ahora en <span className="font-bold text-primary">Agrilpa</span> y empieza a comprar y vender globalmente!
                         </p>
                       </div>
                     </div>
