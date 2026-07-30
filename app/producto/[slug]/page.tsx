@@ -290,7 +290,7 @@ export default function ProductPage() {
         return hashA - hashB;
       })
 
-    const combinedProducts = [...sameNameProducts, ...sameCategoryProducts, ...otherProducts].slice(0, 3)
+    const combinedProducts = [...sameNameProducts, ...sameCategoryProducts, ...otherProducts].slice(0, 4)
     
     const title = (sameNameProducts.length > 0 || sameCategoryProducts.length > 0)
       ? "Productos relacionados"
@@ -747,7 +747,7 @@ export default function ProductPage() {
         {relatedProducts.length > 0 && (
           <div>
             <h2 className="text-2xl font-bold text-foreground mb-6">{relatedTitle}</h2>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
               {relatedProducts.map((relProduct) => (
                 <Link key={relProduct.id} href={`/producto/${relProduct.slug}`}>
                   <Card className="bg-card border border-border rounded-2xl overflow-hidden hover:border-primary/50 hover:shadow-xl hover:shadow-primary/5 transition-all cursor-pointer flex flex-col h-full p-0 gap-0 group">

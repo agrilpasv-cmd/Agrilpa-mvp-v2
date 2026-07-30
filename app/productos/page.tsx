@@ -256,7 +256,7 @@ export default function ProductosPage() {
           </div>
         </div>
       ) : (
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-16">
+        <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 pt-16">
           {/* Header */}
           <div className="mb-12">
             <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-4">Catálogo de Productos</h1>
@@ -477,7 +477,7 @@ export default function ProductosPage() {
 
           {/* Products grid */}
           {filteredProducts.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
               {filteredProducts.map((product, index) => (
                 <Link key={product.id} href={`/producto/${product.slug}`} className="block h-full">
                   <Card className="bg-card border border-border rounded-2xl overflow-hidden hover:border-primary/50 hover:shadow-xl hover:shadow-primary/5 transition-all cursor-pointer flex flex-col h-full p-0 gap-0 group">
