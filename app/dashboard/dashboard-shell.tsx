@@ -62,6 +62,8 @@ export default function DashboardShell({
     const [setupError, setSetupError] = useState("")
     const [setupFormData, setSetupFormData] = useState({
         userType: "vendedor",
+        userSubType: "",
+        userSubTypeOther: "",
         companyName: "",
         companyWebsite: "",
         phoneNumber: "",
@@ -204,6 +206,22 @@ export default function DashboardShell({
         setSetupError("")
 
         // Comprehensive Validations
+        if (!setupFormData.userType) {
+            setSetupError("Debes seleccionar un tipo de usuario principal")
+            setIsSubmittingSetup(false)
+            return
+        }
+        if (!setupFormData.userSubType) {
+            setSetupError("Debes seleccionar un subtipo de usuario")
+            setIsSubmittingSetup(false)
+            return
+        }
+        if (setupFormData.userSubType === "Otra" && !setupFormData.userSubTypeOther) {
+            setSetupError("Debes especificar el otro subtipo de usuario")
+            setIsSubmittingSetup(false)
+            return
+        }
+
         const alphanumericRegex = /[a-zA-Z0-9áéíóúÁÉÍÓÚñÑ]/
         if (setupFormData.state && !alphanumericRegex.test(setupFormData.state)) {
             setSetupError("El campo Estado / Provincia debe contener letras o números")
@@ -264,6 +282,8 @@ export default function DashboardShell({
                     phone: fullPhone,
                     country: setupFormData.country || null,
                     user_type: setupFormData.userType,
+                    user_sub_type: setupFormData.userSubType || null,
+                    user_sub_type_other: setupFormData.userSubTypeOther || null,
                     products_of_interest: productsOfInterest,
                     supply_countries: supplyCountries,
                     provider_countries: providerCountries,
@@ -542,11 +562,66 @@ export default function DashboardShell({
                                 <div className="space-y-4">
                                     <div>
                                         <label className="block text-sm font-medium text-foreground mb-2">Tipo de Usuario *</label>
-                                        <select name="userType" value={setupFormData.userType} onChange={handleInputChange} className="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary transition bg-white">
+                                        <select 
+                                            name="userType" 
+                                            value={setupFormData.userType} 
+                                            onChange={(e) => {
+                                                handleInputChange(e);
+                                                setSetupFormData(prev => ({ ...prev, userSubType: "", userSubTypeOther: "" }));
+                                            }} 
+                                            className="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary transition bg-white mb-4"
+                                        >
                                             <option value="vendedor">Vendedor Agrícola</option>
                                             <option value="comprador">Comprador/Distribuidor</option>
-                                            <option value="empresa">Empresa Industrial</option>
                                         </select>
+                                    </div>
+
+                                    <div>
+                                        <label className="block text-sm font-medium text-foreground mb-2">
+                                            {setupFormData.userType === "vendedor" ? "¿Qué tipo de vendedor eres? *" : "¿Qué tipo de comprador eres? *"}
+                                        </label>
+                                        <select
+                                            name="userSubType"
+                                            value={setupFormData.userSubType}
+                                            onChange={handleInputChange}
+                                            className="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary transition bg-white mb-3"
+                                            required
+                                        >
+                                            <option value="" disabled>Selecciona una opción</option>
+                                            {setupFormData.userType === "vendedor" ? (
+                                                <>
+                                                    <option value="Productor agrícola / Caficultor">Productor agrícola / Caficultor</option>
+                                                    <option value="Cooperativa agrícola">Cooperativa agrícola</option>
+                                                    <option value="Asociación de productores">Asociación de productores</option>
+                                                    <option value="Empresa cafetalera / Agroindustria">Empresa cafetalera / Agroindustria</option>
+                                                    <option value="Distribuidor o comercializador local">Distribuidor o comercializador local</option>
+                                                    <option value="Otra">Otra</option>
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <option value="Supermercado o cadena retail">Supermercado o cadena retail</option>
+                                                    <option value="Distribuidor / Mayorista">Distribuidor / Mayorista</option>
+                                                    <option value="Procesadora de alimentos">Procesadora de alimentos</option>
+                                                    <option value="Tostador o industria de café / cacao">Tostador o industria de café / cacao</option>
+                                                    <option value="Empresa importadora / exportadora">Empresa importadora / exportadora</option>
+                                                    <option value="Hotel, restaurante o servicio de alimentos (HORECA)">Hotel, restaurante o servicio de alimentos (HORECA)</option>
+                                                    <option value="Otra">Otra</option>
+                                                </>
+                                            )}
+                                        </select>
+                                        {setupFormData.userSubType === "Otra" && (
+                                            <div className="animate-in fade-in zoom-in duration-300">
+                                                <input
+                                                    type="text"
+                                                    name="userSubTypeOther"
+                                                    value={setupFormData.userSubTypeOther}
+                                                    onChange={handleInputChange}
+                                                    placeholder="Especifica el tipo"
+                                                    className="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary transition"
+                                                    required
+                                                />
+                                            </div>
+                                        )}
                                     </div>
 
                                     <div>

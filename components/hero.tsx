@@ -107,7 +107,7 @@ export function Hero() {
   }
 
   return (
-    <section className="relative w-full min-h-screen flex items-center overflow-hidden">
+    <section className="relative w-full min-h-[75svh] lg:min-h-screen flex items-center overflow-hidden">
       {/* Background Video */}
       <div className="absolute inset-0 w-full h-full z-0">
         <video
@@ -124,7 +124,7 @@ export function Hero() {
       {/* Video Overlay: Aún más claro */}
       <div className="absolute inset-0 bg-black/10 pointer-events-none z-0" />
 
-      <div className="relative z-10 w-full max-w-[85rem] mx-auto px-6 sm:px-10 lg:px-16 pt-20 flex flex-col lg:flex-row items-center gap-12 lg:gap-16">
+      <div className="relative z-10 w-full max-w-[85rem] mx-auto px-6 sm:px-10 lg:px-16 pt-24 pb-12 lg:pt-20 lg:pb-0 flex flex-col lg:flex-row items-center gap-12 lg:gap-16">
         
         {/* Left Column: Text and Buttons */}
         <motion.div 
@@ -171,7 +171,7 @@ export function Hero() {
             initial={{ opacity: 0, x: 50 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.8, delay: 0.5, type: "spring" }}
-            className="w-full lg:w-[50%] xl:w-[55%] relative"
+            className="hidden lg:block w-full lg:w-[50%] xl:w-[55%] relative"
           >
             <div className="relative w-full aspect-[16/7] sm:aspect-video rounded-3xl overflow-hidden shadow-2xl border border-white/20 bg-black/10 backdrop-blur-sm group">
               <AnimatePresence mode="wait">

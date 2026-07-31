@@ -17,7 +17,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import { ChatOverlay } from "@/components/chat-overlay"
-import { Star, MapPin, MessageCircle, Check, ChevronLeft, FileText, ShoppingCart, Copy, Calendar, Package, Loader, AlertCircle, ArrowRight, ShieldCheck, X, Globe } from "lucide-react"
+import { Star, MapPin, MessageCircle, Check, ChevronLeft, FileText, ShoppingCart, Copy, Calendar, Package, Loader, AlertCircle, ArrowRight, ShieldCheck, X, Globe, Mail } from "lucide-react"
 import { ProductHero } from "@/components/product-hero"
 import { createClient } from "@/lib/supabase/client"
 import { format } from "date-fns"
@@ -73,6 +73,8 @@ export default function ProductPage() {
   const [isAuthDialogOpen, setIsAuthDialogOpen] = useState(false)
   const [authDialogAction, setAuthDialogAction] = useState("")
   const [isContactDialogOpen, setIsContactDialogOpen] = useState(false)
+  const [showEmailCopy, setShowEmailCopy] = useState(false)
+  const [copiedEmail, setCopiedEmail] = useState(false)
   const [isQuotationDialogOpen, setIsQuotationDialogOpen] = useState(false)
   const [isSubmittingQuotation, setIsSubmittingQuotation] = useState(false)
   const [quotationSuccess, setQuotationSuccess] = useState(false)
@@ -328,7 +330,11 @@ export default function ProductPage() {
     }
   }
 
-  const handleContactVendor = () => {
+  const handleContactVendor = (e?: React.MouseEvent) => {
+    if (e) {
+      e.preventDefault()
+      e.stopPropagation()
+    }
     if (!currentUserId) {
       setAuthDialogAction("contactar al vendedor")
       setIsAuthDialogOpen(true)
@@ -336,20 +342,8 @@ export default function ProductPage() {
     }
 
     console.log(`[v0] handleContactVendor called for: ${product.name}`)
-    const contactMethod = (product as any).contactMethod
-    const contactInfo = (product as any).contactInfo
-    const countryCode = (product as any).countryCode
-    const phoneNumber = (product as any).phoneNumber
-
-    if ((contactMethod === "WhatsApp" && countryCode && phoneNumber) || (contactMethod && contactInfo)) {
-      console.log(`[v0] Opening contact dialog for method: ${contactMethod}`)
-      setIsContactDialogOpen(true)
-    } else {
-      console.log(`[v0] No direct contact info, opening chat with vendor: ${(product as any).vendorId}`)
-      setIsChatOpen(true)
-    }
-
-    // Track initial "Contact Vendor" click (generic)
+    setIsContactDialogOpen(true)
+    setShowEmailCopy(false)
     setTimeout(() => trackContactClick("generic"), 0)
   }
 
@@ -469,80 +463,13 @@ export default function ProductPage() {
   if (!product) return null
 
   const specificContactButton = (className: string) => {
-    const contactMethod = (product as any).contactMethod
-    const contactInfo = (product as any).contactInfo
-    const countryCode = (product as any).countryCode
-    const phoneNumber = (product as any).phoneNumber
-
-    if (contactMethod === "WhatsApp" && countryCode && phoneNumber) {
-      const message = encodeURIComponent(`Hola vi tu producto "${product.name}" en la plataforma Agrilpa, y estoy interesado.`)
-      return (
-        <button
-          onClick={(e) => {
-            e.preventDefault()
-            e.stopPropagation()
-            if (!currentUserId) {
-              setAuthDialogAction("contactar al vendedor")
-              setIsAuthDialogOpen(true)
-            } else {
-              window.open(`https://wa.me/${countryCode}${phoneNumber}?text=${message}`, '_blank')
-              trackContactClick("whatsapp")
-            }
-          }}
-          className={`flex items-center justify-center gap-2 text-sm border-2 border-slate-900 bg-slate-900 text-white hover:opacity-90 font-semibold rounded-lg transition-all duration-200 dark:border-white dark:bg-white dark:text-slate-900 dark:hover:opacity-90 ${className}`}
-        >
-          <MessageCircle className="w-5 h-5" />
-          Contactar Vendedor
-        </button>
-      )
-    } else if (contactMethod === "Email" && contactInfo) {
-      return (
-        <button
-          onClick={(e) => {
-            e.preventDefault()
-            e.stopPropagation()
-            if (!currentUserId) {
-              setAuthDialogAction("contactar al vendedor")
-              setIsAuthDialogOpen(true)
-            } else {
-              window.open(`mailto:${contactInfo}`, '_blank')
-              trackContactClick("email")
-            }
-          }}
-          className={`flex items-center justify-center gap-2 text-sm border-2 border-slate-900 bg-slate-900 text-white hover:opacity-90 font-semibold rounded-lg transition-all duration-200 dark:border-white dark:bg-white dark:text-slate-900 dark:hover:opacity-90 ${className}`}
-        >
-          <FileText className="w-5 h-5" />
-          Contactar Vendedor
-        </button>
-      )
-    } else if (contactMethod === "Telegram" && contactInfo) {
-      return (
-        <button
-          onClick={(e) => {
-            e.preventDefault()
-            e.stopPropagation()
-            if (!currentUserId) {
-              setAuthDialogAction("contactar al vendedor")
-              setIsAuthDialogOpen(true)
-            } else {
-              window.open(`https://t.me/${contactInfo}`, '_blank')
-              trackContactClick("telegram")
-            }
-          }}
-          className={`flex items-center justify-center gap-2 text-sm border-2 border-slate-900 bg-slate-900 text-white hover:opacity-90 font-semibold rounded-lg transition-all duration-200 dark:border-white dark:bg-white dark:text-slate-900 dark:hover:opacity-90 ${className}`}
-        >
-          <FileText className="w-5 h-5" />
-          Contactar Vendedor
-        </button>
-      )
-    }
     return (
       <button
         onClick={handleContactVendor}
-        className={`border-2 border-slate-900 bg-slate-900 text-white hover:opacity-90 flex items-center justify-center gap-2 font-semibold rounded-lg transition-all duration-200 dark:border-white dark:bg-white dark:text-slate-900 dark:hover:opacity-90 ${className}`}
+        className={`flex items-center justify-center gap-2 text-sm border-2 border-slate-900 bg-slate-900 text-white hover:opacity-90 font-semibold rounded-lg transition-all duration-200 dark:border-white dark:bg-white dark:text-slate-900 dark:hover:opacity-90 ${className}`}
       >
-        <MessageCircle className="w-5 h-5" />
-        Contactar Vendedor
+        <MessageCircle className="w-5 h-5 shrink-0" />
+        <span className="truncate">Contactar Vendedor</span>
       </button>
     )
   }
@@ -760,17 +687,17 @@ export default function ProductPage() {
                       />
                       
                       {/* Top Badges */}
-                      <div className="absolute top-4 left-4 right-4 flex justify-between items-start">
+                      <div className="absolute top-2.5 left-2.5 right-2.5 sm:top-4 sm:left-4 sm:right-4 flex justify-between items-start gap-1">
                         {/* Category Pill */}
-                        <div className="bg-white/95 backdrop-blur-sm text-slate-900 text-[10px] font-bold uppercase tracking-wider px-2.5 h-6 flex items-center justify-center rounded-full shadow-sm leading-none">
+                        <div className="bg-white/95 backdrop-blur-sm text-slate-900 text-[9px] sm:text-[10px] font-bold uppercase tracking-wider px-2 sm:px-2.5 h-5.5 sm:h-6 flex items-center justify-center rounded-full shadow-sm leading-none max-w-[55%] truncate shrink">
                           {relProduct.category}
                         </div>
                         
                         {/* Verified Pill */}
                         {(relProduct.verified || (relProduct as any).sellerIsPro) && (
-                          <div className="bg-white/95 backdrop-blur-sm text-slate-900 text-[10px] font-bold uppercase tracking-wider px-2.5 h-6 flex items-center justify-center gap-1 rounded-full shadow-sm leading-none border border-emerald-100">
-                            <ShieldCheck className="w-3.5 h-3.5 text-emerald-500" />
-                            Verificado
+                          <div className="bg-white/95 backdrop-blur-sm text-slate-900 text-[9px] sm:text-[10px] font-bold uppercase tracking-wider px-2 sm:px-2.5 h-5.5 sm:h-6 flex items-center justify-center gap-1 rounded-full shadow-sm leading-none border border-emerald-100 shrink-0">
+                            <ShieldCheck className="w-3 sm:w-3.5 h-3 sm:h-3.5 text-emerald-500 shrink-0" />
+                            <span>Verificado</span>
                           </div>
                         )}
                       </div>
@@ -843,117 +770,6 @@ export default function ProductPage() {
           onClose={() => setIsChatOpen(false)}
         />
       )}
-
-      <Dialog open={isContactDialogOpen} onOpenChange={setIsContactDialogOpen}>
-        <DialogContent className="sm:max-w-md text-center">
-          <DialogHeader className="flex flex-col items-center gap-2">
-            <div className="bg-primary/10 p-3 rounded-full mb-2">
-              {(product as any).contactMethod === "WhatsApp" ? (
-                <MessageCircle className="w-8 h-8 text-primary" />
-              ) : (
-                <FileText className="w-8 h-8 text-primary" />
-              )}
-            </div>
-            <DialogTitle className="text-xl">
-              {(product as any).contactMethod === "WhatsApp" ? "Contactar por WhatsApp" : "Información de Contacto"}
-            </DialogTitle>
-            <DialogDescription className="text-center text-base pt-2">
-              Contáctate con el vendedor por medio de <span className="font-bold text-foreground mx-1">{(product as any).contactMethod || "Contacto Directo"}</span>
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className="flex flex-col gap-6 py-4">
-            {(product as any).contactMethod === "WhatsApp" && (product as any).countryCode && (product as any).phoneNumber ? (
-              <>
-                <div className="bg-muted p-4 rounded-xl border border-border">
-                  <p className="text-xs text-muted-foreground uppercase tracking-wider mb-2 font-semibold">Número de Teléfono</p>
-                  <p className="text-2xl font-bold tracking-tight text-foreground">
-                    +{(product as any).countryCode} {(product as any).phoneNumber}
-                  </p>
-                </div>
-
-                <div className="grid gap-3">
-                  <Button
-                    className="w-full bg-[#25D366] hover:bg-[#128C7E] text-white gap-2 h-12 text-lg font-semibold shadow-md transition-all hover:scale-[1.02]"
-                    onClick={() => {
-                      const message = encodeURIComponent(`Hola vi tu producto "${product.name}" en la plataforma Agrilpa, y estoy interesado.`)
-                      window.open(`https://wa.me/${(product as any).countryCode}${(product as any).phoneNumber}?text=${message}`, '_blank')
-                      trackContactClick("whatsapp")
-                    }}
-                  >
-                    <MessageCircle className="w-6 h-6" />
-                    Enviar mensaje ahora
-                  </Button>
-
-                  <Button
-                    variant="secondary"
-                    className="w-full gap-2 h-10"
-                    onClick={() => {
-                      navigator.clipboard.writeText(`+${(product as any).countryCode}${(product as any).phoneNumber}`)
-                      alert("Número copiado al portapapeles")
-                    }}
-                  >
-                    <Copy className="w-4 h-4" />
-                    Copiar número
-                  </Button>
-                </div>
-              </>
-            ) : (
-              <>
-                <div className="bg-muted p-4 rounded-xl border border-border">
-                  <p className="text-xs text-muted-foreground uppercase tracking-wider mb-2 font-semibold">
-                    {(product as any).contactMethod === "Email" ? "Correo Electrónico" :
-                      (product as any).contactMethod === "WeChat" ? "ID de WeChat" :
-                        (product as any).contactMethod === "Telegram" ? "Usuario de Telegram" :
-                          "Información"}
-                  </p>
-                  <p className="text-xl font-bold tracking-tight text-foreground break-all">
-                    {(product as any).contactInfo}
-                  </p>
-                </div>
-
-                <div className="grid gap-3">
-                  {(product as any).contactMethod === "Email" ? (
-                    <Button
-                      className="w-full h-12 text-lg font-semibold shadow-md transition-all hover:scale-[1.02]"
-                      onClick={() => {
-                        window.open(`mailto:${(product as any).contactInfo}`, '_blank')
-                        trackContactClick("email")
-                      }}
-                    >
-                      <FileText className="w-5 h-5 mr-2" />
-                      Enviar Correo
-                    </Button>
-                  ) : (product as any).contactMethod === "Telegram" ? (
-                    <Button
-                      className="w-full bg-[#0088cc] hover:bg-[#007dbd] text-white h-12 text-lg font-semibold shadow-md transition-all hover:scale-[1.02]"
-                      onClick={() => {
-                        window.open(`https://t.me/${(product as any).contactInfo}`, '_blank')
-                        trackContactClick("telegram")
-                      }}
-                    >
-                      <FileText className="w-5 h-5 mr-2" />
-                      Abrir Telegram
-                    </Button>
-                  ) : null}
-
-                  <Button
-                    variant={(product as any).contactMethod === "Email" || (product as any).contactMethod === "Telegram" ? "secondary" : "default"}
-                    className={`w-full gap-2 h-10 ${(product as any).contactMethod !== "Email" && (product as any).contactMethod !== "Telegram" ? "h-12 text-lg" : ""}`}
-                    onClick={() => {
-                      navigator.clipboard.writeText((product as any).contactInfo)
-                      alert("Copiado al portapapeles")
-                    }}
-                  >
-                    <Copy className="w-4 h-4" />
-                    Copiar {(product as any).contactMethod === "Email" ? "Correo" : "Usuario"}
-                  </Button>
-                </div>
-              </>
-            )}
-          </div>
-        </DialogContent >
-      </Dialog >
 
       {/* Quotation Dialog */}
       <Dialog open={isQuotationDialogOpen} onOpenChange={(open) => {
@@ -1468,6 +1284,86 @@ export default function ProductPage() {
               </div>
             </>
           )}
+        </DialogContent>
+      </Dialog>
+      {/* Contact Vendor Dialog */}
+      <Dialog open={isContactDialogOpen} onOpenChange={setIsContactDialogOpen}>
+        <DialogContent className="sm:max-w-lg p-0 overflow-hidden bg-background">
+          <div className="bg-primary/5 p-6 flex flex-col items-center border-b border-border">
+            <div className="bg-primary/10 p-4 rounded-full mb-4 ring-8 ring-primary/5">
+              <MessageCircle className="w-8 h-8 text-primary" />
+            </div>
+            <DialogTitle className="text-2xl font-bold text-center">Contactar al Vendedor</DialogTitle>
+            <DialogDescription className="text-center text-base pt-2 text-muted-foreground max-w-sm">
+              Selecciona tu método de contacto preferido para comunicarte directamente con el productor.
+            </DialogDescription>
+          </div>
+          
+          <div className="p-6">
+            <div className="flex justify-center gap-8 md:gap-12 mb-2">
+              {((product as any).countryCode && (product as any).phoneNumber) && (
+                <div className="flex flex-col items-center gap-3">
+                  <button
+                    className="w-16 h-16 rounded-full bg-[#25D366] text-white flex items-center justify-center hover:bg-[#128C7E] transition-all hover:scale-110 shadow-lg ring-4 ring-[#25D366]/20"
+                    onClick={() => {
+                      const message = encodeURIComponent(`Hola vi tu producto "${product.name}" en la plataforma Agrilpa, y estoy interesado.`)
+                      window.open(`https://wa.me/${(product as any).countryCode}${(product as any).phoneNumber}?text=${message}`, '_blank')
+                      trackContactClick("whatsapp")
+                      setIsContactDialogOpen(false)
+                    }}
+                  >
+                    <MessageCircle className="w-8 h-8" />
+                  </button>
+                  <span className="text-sm font-semibold text-foreground">WhatsApp</span>
+                </div>
+              )}
+              {((product as any).contactInfo) && (
+                <div className="flex flex-col items-center gap-3">
+                  <button
+                    className="w-16 h-16 rounded-full bg-blue-500 text-white flex items-center justify-center hover:bg-blue-600 transition-all hover:scale-110 shadow-lg ring-4 ring-blue-500/20"
+                    onClick={() => setShowEmailCopy(true)}
+                  >
+                    <Mail className="w-8 h-8" />
+                  </button>
+                  <span className="text-sm font-semibold text-foreground">Correo</span>
+                </div>
+              )}
+            </div>
+
+            {showEmailCopy && ((product as any).contactInfo) && (
+              <div className="mt-6 p-4 bg-muted/30 rounded-xl border border-border/50 animate-in fade-in slide-in-from-top-2">
+                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2">
+                  Correo Electrónico
+                </p>
+                <div className="flex items-center gap-2">
+                  <Input value={(product as any).contactInfo} readOnly className="bg-background border-border/50 font-medium h-11" />
+                  <Button 
+                    className={`shrink-0 h-11 px-4 transition-all duration-300 ${copiedEmail ? 'bg-green-500 hover:bg-green-600 text-white' : 'bg-primary text-white hover:bg-primary/90'}`}
+                    onClick={() => {
+                      navigator.clipboard.writeText((product as any).contactInfo);
+                      setCopiedEmail(true);
+                      setTimeout(() => setCopiedEmail(false), 2000);
+                      trackContactClick("email");
+                    }}
+                  >
+                    {copiedEmail ? (
+                      <span className="flex items-center gap-2"><Check className="w-4 h-4" /> Copiado</span>
+                    ) : (
+                      <span className="flex items-center gap-2"><Copy className="w-4 h-4" /> Copiar</span>
+                    )}
+                  </Button>
+                </div>
+              </div>
+            )}
+            
+            <div className="mt-8 p-4 bg-amber-500/10 border border-amber-500/20 rounded-xl flex items-start gap-3">
+              <ShieldCheck className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+              <div className="text-xs text-amber-700/90 dark:text-amber-500/90 leading-relaxed">
+                <span className="font-semibold block mb-1">Aviso de Seguridad</span>
+                Agrilpa actúa únicamente como un puente de conexión. Toda transacción o acuerdo es responsabilidad exclusiva de las partes. No nos hacemos responsables de posibles fraudes o incumplimientos.
+              </div>
+            </div>
+          </div>
         </DialogContent>
       </Dialog>
       {/* Auth Guard Dialog */}

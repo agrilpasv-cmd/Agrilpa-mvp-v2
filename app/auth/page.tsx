@@ -26,6 +26,8 @@ function AuthPageContent() {
     fullName: "",
     companyName: "",
     userType: "vendedor",
+    userSubType: "",
+    userSubTypeOther: "",
     countryCode: "",
     phoneNumber: "",
     country: "",
@@ -177,6 +179,8 @@ function AuthPageContent() {
       // Validate step 2 fields
       if (
         !formData.userType ||
+        !formData.userSubType ||
+        (formData.userSubType === "Otra" && !formData.userSubTypeOther) ||
         !formData.companyName ||
         !formData.country ||
         !formData.state ||
@@ -244,6 +248,8 @@ function AuthPageContent() {
             country: formData.country,
             state: formData.state,
             userType: formData.userType,
+            userSubType: formData.userSubType,
+            userSubTypeOther: formData.userSubTypeOther,
             product1: formData.product1,
             product2: formData.product2,
             product3: formData.product3,
@@ -713,6 +719,8 @@ function AuthPageContent() {
                           fullName: "",
                           companyName: "",
                           userType: "vendedor",
+                          userSubType: "",
+                          userSubTypeOther: "",
                           countryCode: "",
                           phoneNumber: "",
                           country: "",
@@ -911,13 +919,63 @@ function AuthPageContent() {
                         <select
                           name="userType"
                           value={formData.userType}
-                          onChange={handleInputChange}
-                          className="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary transition bg-white"
+                          onChange={(e) => {
+                            handleInputChange(e);
+                            setFormData((prev) => ({ ...prev, userSubType: "", userSubTypeOther: "" }));
+                          }}
+                          className="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary transition bg-white mb-4"
                         >
                           <option value="vendedor">Vendedor Agrícola</option>
                           <option value="comprador">Comprador/Distribuidor</option>
-                          <option value="empresa">Empresa Industrial</option>
                         </select>
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-foreground mb-2">
+                          {formData.userType === "vendedor" ? "¿Qué tipo de vendedor eres? *" : "¿Qué tipo de comprador eres? *"}
+                        </label>
+                        <select
+                          name="userSubType"
+                          value={formData.userSubType}
+                          onChange={handleInputChange}
+                          className="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary transition bg-white mb-3"
+                          required
+                        >
+                          <option value="" disabled>Selecciona una opción</option>
+                          {formData.userType === "vendedor" ? (
+                            <>
+                              <option value="Productor agrícola / Caficultor">Productor agrícola / Caficultor</option>
+                              <option value="Cooperativa agrícola">Cooperativa agrícola</option>
+                              <option value="Asociación de productores">Asociación de productores</option>
+                              <option value="Empresa cafetalera / Agroindustria">Empresa cafetalera / Agroindustria</option>
+                              <option value="Distribuidor o comercializador local">Distribuidor o comercializador local</option>
+                              <option value="Otra">Otra</option>
+                            </>
+                          ) : (
+                            <>
+                              <option value="Supermercado o cadena retail">Supermercado o cadena retail</option>
+                              <option value="Distribuidor / Mayorista">Distribuidor / Mayorista</option>
+                              <option value="Procesadora de alimentos">Procesadora de alimentos</option>
+                              <option value="Tostador o industria de café / cacao">Tostador o industria de café / cacao</option>
+                              <option value="Empresa importadora / exportadora">Empresa importadora / exportadora</option>
+                              <option value="Hotel, restaurante o servicio de alimentos (HORECA)">Hotel, restaurante o servicio de alimentos (HORECA)</option>
+                              <option value="Otra">Otra</option>
+                            </>
+                          )}
+                        </select>
+                        {formData.userSubType === "Otra" && (
+                          <div className="animate-in fade-in zoom-in duration-300">
+                            <input
+                              type="text"
+                              name="userSubTypeOther"
+                              value={formData.userSubTypeOther}
+                              onChange={handleInputChange}
+                              placeholder="Especifica el tipo"
+                              className="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary transition"
+                              required
+                            />
+                          </div>
+                        )}
                       </div>
 
                       <div>
@@ -1055,6 +1113,8 @@ function AuthPageContent() {
                         onClick={() => {
                           if (
                             !formData.userType ||
+                            !formData.userSubType ||
+                            (formData.userSubType === "Otra" && !formData.userSubTypeOther) ||
                             !formData.companyName ||
                             !formData.country ||
                             !formData.state ||

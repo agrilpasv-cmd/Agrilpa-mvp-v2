@@ -32,8 +32,9 @@ export async function POST(request: NextRequest) {
       image2,
       image3,
       companyName,
-      contactMethod,
-      contactInfo,
+      contactEmail,
+      countryCode,
+      phoneNumber,
       shippingUnitType,
       containerSize,
       alcanceComercial,
@@ -50,8 +51,7 @@ export async function POST(request: NextRequest) {
       !minOrder ||
       !packaging ||
       !packagingSize ||
-      !companyName ||
-      !contactMethod
+      !companyName
     ) {
     }
 
@@ -59,15 +59,12 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "La descripción del producto debe tener al menos 50 caracteres." }, { status: 400 })
     }
 
-    // Validate contact information based on method
-    if (contactMethod === "WhatsApp") {
-      if (!body.countryCode || !body.phoneNumber) {
-        return NextResponse.json({ error: "Missing WhatsApp contact information (country code and phone number required)" }, { status: 400 })
-      }
-    } else {
-      if (!contactInfo) {
-        return NextResponse.json({ error: "Missing contact information" }, { status: 400 })
-      }
+    // Validate both phone and email
+    if (!countryCode || !phoneNumber) {
+      return NextResponse.json({ error: "Falta número de teléfono de contacto" }, { status: 400 })
+    }
+    if (!contactEmail) {
+      return NextResponse.json({ error: "Falta correo electrónico de contacto" }, { status: 400 })
     }
 
     // Check product limit based on user plan
@@ -101,7 +98,7 @@ export async function POST(request: NextRequest) {
     // Combine contact info into description since we might not have specific columns
     const incoterm = body.incoterm || "A definir con el comprador"
     const supplyCapacity = body.supplyCapacity ? `${body.supplyCapacity} ${body.supplyCapacityUnit || "kg"} / ${body.supplyCapacityPeriod || "mes"}` : ""
-    let fullDescription = `${description}\n\n---\nInformación del Vendedor:\nEmpresa: ${companyName}\nContacto: ${contactMethod}\nIncoterm: ${incoterm}`
+    let fullDescription = `${description}\n\n---\nInformación del Vendedor:\nEmpresa: ${companyName}\nContacto: WhatsApp (+${countryCode} ${phoneNumber}) | Email: ${contactEmail}\nIncoterm: ${incoterm}`
     if (supplyCapacity) {
       fullDescription += `\nCapacidad de Abastecimiento: ${supplyCapacity}`
     }
@@ -126,17 +123,14 @@ export async function POST(request: NextRequest) {
           image: image || null,
           image2: image2 || null,
           image3: image3 || null,
-          contact_method: contactMethod,
-          contact_info: contactInfo,
+          contact_method: "Ambos",
+          contact_info: contactEmail,
           certifications: body.certifications || null,
           shipping_unit_type: shippingUnitType || null,
           container_size: containerSize || null,
           alcance_comercial: alcanceComercial || [],
-          // Add WhatsApp specific fields if method is WhatsApp
-          ...(contactMethod === "WhatsApp" && body.countryCode && body.phoneNumber && {
-            country_code: body.countryCode,
-            phone_number: body.phoneNumber,
-          }),
+          country_code: countryCode,
+          phone_number: phoneNumber,
         },
       ])
       .select()

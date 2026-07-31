@@ -75,8 +75,8 @@ export default function NuevaPublicacionPage() {
     shippingUnit: "",
     containerSize: "",
     companyName: "",
-    contactMethod: "",
-    contactInfo: "",
+    companyName: "",
+    contactEmail: "",
     countryCode: "",
     phoneNumber: "",
     certifications: "",
@@ -122,23 +122,26 @@ export default function NuevaPublicacionPage() {
   // Custom hook for sidebar updates
   const { refreshCounts } = useDashboard()
 
-  // Auto-fill company name from user profile
+  // Auto-fill company name and email from user profile
   useEffect(() => {
-    const loadProfileCompany = async () => {
+    const loadProfileData = async () => {
       try {
         const res = await fetch("/api/user/profile")
         if (res.ok) {
           const data = await res.json()
           const company = data.user?.company_name || ""
-          if (company) {
-            setFormData(prev => ({ ...prev, companyName: company }))
-          }
+          const email = data.user?.email || ""
+          setFormData(prev => ({ 
+            ...prev, 
+            companyName: company || prev.companyName,
+            contactEmail: email || prev.contactEmail
+          }))
         }
       } catch (e) {
         // silent — non-critical
       }
     }
-    loadProfileCompany()
+    loadProfileData()
   }, [])
 
   // Check auth on mount
@@ -241,17 +244,19 @@ export default function NuevaPublicacionPage() {
       return
     }
 
-    // Validate contact information based on method
-    if (formData.contactMethod === "WhatsApp") {
-      if (!formData.countryCode || !formData.phoneNumber) {
-        setStatusMessage({ type: 'error', text: "Falta completar: Código de País y Número de Teléfono" })
-        return
-      }
-    } else {
-      if (!formData.contactInfo) {
-        setStatusMessage({ type: 'error', text: "Falta completar: Usuario / Correo" })
-        return
-      }
+    // Validate both phone and email
+    if (!formData.countryCode || !formData.phoneNumber) {
+      setStatusMessage({ type: 'error', text: "Falta completar: Código de País y Número de Teléfono" })
+      return
+    }
+    if (!formData.contactEmail) {
+      setStatusMessage({ type: 'error', text: "Falta completar: Correo Electrónico de Contacto" })
+      return
+    }
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(formData.contactEmail)) {
+      setStatusMessage({ type: 'error', text: "El correo electrónico no es válido" })
+      return
     }
 
     if (selectedAlcance.length === 0) {
@@ -313,11 +318,9 @@ export default function NuevaPublicacionPage() {
           shippingUnitType: formData.shippingUnit,
           containerSize: formData.containerSize || null,
           alcanceComercial: selectedAlcance,
-          // For WhatsApp, send country code and phone number separately
-          ...(formData.contactMethod === "WhatsApp" && {
-            countryCode: formData.countryCode,
-            phoneNumber: formData.phoneNumber,
-          }),
+          contactEmail: formData.contactEmail,
+          countryCode: formData.countryCode,
+          phoneNumber: formData.phoneNumber,
         }),
       })
 
@@ -1365,73 +1368,45 @@ export default function NuevaPublicacionPage() {
                 </p>
               </div>
               <div>
-                <label htmlFor="contactMethod" className="block text-sm font-medium mb-2">
-                  Medio de Contacto <span className="text-red-500">*</span>
+                <label htmlFor="phoneNumber" className="block text-sm font-medium mb-2">
+                  Código y Teléfono (WhatsApp) <span className="text-red-500">*</span>
                 </label>
-                <select
-                  id="contactMethod"
-                  name="contactMethod"
-                  value={formData.contactMethod}
-                  onChange={handleInputChange}
-                  className="w-full px-3 py-2 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary bg-background"
-                  disabled={isLoading}
-                  required
-                >
-                  <option value="">Selecciona un medio</option>
-                  <option value="WhatsApp">WhatsApp</option>
-                  <option value="Email">Email</option>
-                </select>
+                <div className="flex gap-2">
+                  <div className="w-36 shrink-0">
+                    <PhoneCodePicker
+                      value={formData.countryCode}
+                      onChange={(phoneCode, countryCode) => setFormData({ ...formData, countryCode: phoneCode })}
+                    />
+                    <p className="text-xs text-muted-foreground mt-1">Código de país</p>
+                  </div>
+                  <div className="flex-1">
+                    <Input
+                      id="phoneNumber"
+                      placeholder="0000 0000"
+                      type="number"
+                      value={formData.phoneNumber}
+                      onChange={(e) => setFormData({ ...formData, phoneNumber: e.target.value })}
+                      disabled={isLoading}
+                      required
+                    />
+                    <p className="text-xs text-muted-foreground mt-1">Sin espacios ni guiones</p>
+                  </div>
+                </div>
               </div>
               <div>
-                <label htmlFor={formData.contactMethod === "WhatsApp" ? "phoneNumber" : "contactInfo"} className="block text-sm font-medium mb-2">
-                  {formData.contactMethod === "WhatsApp" ? (
-                    <>Código y Teléfono <span className="text-red-500">*</span></>
-                  ) : (
-                    <>Usuario / Correo <span className="text-red-500">*</span></>
-                  )}
+                <label htmlFor="contactEmail" className="block text-sm font-medium mb-2">
+                  Correo Electrónico <span className="text-red-500">*</span>
                 </label>
-                {formData.contactMethod === "WhatsApp" ? (
-                  <div className="flex gap-2">
-                    <div className="w-36 shrink-0">
-                      <PhoneCodePicker
-                        value={formData.countryCode}
-                        onChange={(phoneCode, countryCode) => setFormData({ ...formData, countryCode: phoneCode })}
-                      />
-                      <p className="text-xs text-muted-foreground mt-1">Código de país</p>
-                    </div>
-                    <div className="flex-1">
-                      <Input
-                        id="phoneNumber"
-                        placeholder="0000 0000"
-                        type="number"
-                        value={formData.phoneNumber}
-                        onChange={(e) => setFormData({ ...formData, phoneNumber: e.target.value })}
-                        disabled={isLoading}
-                        required
-                      />
-                      <p className="text-xs text-muted-foreground mt-1">Sin espacios ni guiones</p>
-                    </div>
-                  </div>
-                ) : (
-                  <Input
-                    id="contactInfo"
-                    type="text"
-                    name="contactInfo"
-                    value={formData.contactInfo}
-                    onChange={handleInputChange}
-                    placeholder={
-                      formData.contactMethod === "Email"
-                        ? "email@empresa.com"
-                        : formData.contactMethod === "WeChat"
-                          ? "Tu usuario de WeChat"
-                          : formData.contactMethod === "Telegram"
-                            ? "@tu_usuario"
-                            : "Tu información de contacto"
-                    }
-                    disabled={isLoading}
-                    required
-                  />
-                )}
+                <Input
+                  id="contactEmail"
+                  type="email"
+                  name="contactEmail"
+                  value={formData.contactEmail}
+                  onChange={handleInputChange}
+                  placeholder="ejemplo@empresa.com"
+                  disabled={isLoading}
+                  required
+                />
               </div>
             </div>
 

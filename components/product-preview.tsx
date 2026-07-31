@@ -146,14 +146,14 @@ export function ProductPreview() {
                       <ProductImage productId={product.id} title={product.title} />
 
                       {/* Badges */}
-                      <div className="absolute top-4 left-4 right-4 flex justify-between items-start">
-                        <div className="bg-white/95 backdrop-blur-sm text-slate-900 text-[10px] font-bold uppercase tracking-wider px-2.5 h-6 flex items-center rounded-full shadow-sm">
+                      <div className="absolute top-2.5 left-2.5 right-2.5 sm:top-4 sm:left-4 sm:right-4 flex justify-between items-start gap-1">
+                        <div className="bg-white/95 backdrop-blur-sm text-slate-900 text-[9px] sm:text-[10px] font-bold uppercase tracking-wider px-2 sm:px-2.5 h-5.5 sm:h-6 flex items-center justify-center rounded-full shadow-sm max-w-[55%] truncate shrink">
                           {product.category}
                         </div>
                         {product.seller_is_pro && (
-                          <div className="bg-white/95 backdrop-blur-sm text-slate-900 text-[10px] font-bold uppercase tracking-wider px-2.5 h-6 flex items-center justify-center gap-1 rounded-full shadow-sm leading-none border border-emerald-100">
-                            <ShieldCheck className="w-3.5 h-3.5 text-emerald-500" />
-                            Verificado
+                          <div className="bg-white/95 backdrop-blur-sm text-slate-900 text-[9px] sm:text-[10px] font-bold uppercase tracking-wider px-2 sm:px-2.5 h-5.5 sm:h-6 flex items-center justify-center gap-1 rounded-full shadow-sm leading-none border border-emerald-100 shrink-0">
+                            <ShieldCheck className="w-3 sm:w-3.5 h-3 sm:h-3.5 text-emerald-500 shrink-0" />
+                            <span>Verificado</span>
                           </div>
                         )}
                       </div>

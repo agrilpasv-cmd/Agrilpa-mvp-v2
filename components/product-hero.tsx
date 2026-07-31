@@ -227,7 +227,7 @@ export function ProductHero({
             <p className="text-xs text-center text-slate-400">No puedes comprar ni cotizar tus propios productos.</p>
           </div>
         ) : product.price === "Por Cotizar" ? (
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <Button
               onClick={() => {
                 if (!currentUserId) { setAuthDialogAction("solicitar una cotización"); setIsAuthDialogOpen(true) }
@@ -235,13 +235,13 @@ export function ProductHero({
               }}
               className="w-full h-12 rounded-lg font-semibold flex items-center justify-center gap-2 border-2 border-slate-900 bg-transparent text-slate-900 hover:bg-slate-900/5 dark:border-white dark:text-white dark:hover:bg-white/10 transition-all duration-200 shadow-sm"
             >
-              <FileText className="w-4 h-4" />
-              Solicitar Cotización
+              <FileText className="w-4 h-4 shrink-0" />
+              <span className="truncate">Solicitar Cotización</span>
             </Button>
             {specificContactButton("w-full h-12 rounded-lg font-semibold")}
           </div>
         ) : (
-          <div className="grid grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <Button
               onClick={() => {
                 if (!currentUserId) { setAuthDialogAction("solicitar una cotización"); setIsAuthDialogOpen(true) }
@@ -249,15 +249,15 @@ export function ProductHero({
               }}
               className="w-full h-12 rounded-lg font-semibold flex items-center justify-center gap-2 border-2 border-slate-900 bg-transparent text-slate-900 hover:bg-slate-900/5 dark:border-white dark:text-white dark:hover:bg-white/10 transition-all duration-200 shadow-sm"
             >
-              <FileText className="w-4 h-4" />
-              Solicitar Cotización
+              <FileText className="w-4 h-4 shrink-0" />
+              <span className="truncate">Solicitar Cotización</span>
             </Button>
             {specificContactButton("w-full h-12 rounded-lg font-semibold")}
             <Button
               onClick={handleBuy}
               className="w-full h-12 rounded-lg bg-primary hover:bg-primary/90 text-white font-semibold flex items-center justify-center gap-2"
             >
-              <ShoppingCart className="w-4 h-4" />
+              <ShoppingCart className="w-4 h-4 shrink-0" />
               Comprar
             </Button>
           </div>
