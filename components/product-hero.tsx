@@ -188,29 +188,25 @@ export function ProductHero({
             <p className="text-lg font-bold text-slate-900 dark:text-white leading-tight">
               {product.price}
             </p>
-            {product.price !== "Por Cotizar" && (
-              <p className="text-[10px] text-slate-400 mt-1">por kg</p>
-            )}
+            
           </div>
           {/* Pedido mínimo */}
           <div className="p-3">
             <p className="text-xs text-slate-500 dark:text-slate-400 mb-1">Pedido mínimo</p>
             <p className="text-lg font-bold text-slate-900 dark:text-white leading-tight">{product.minOrder}</p>
-            <p className="text-[10px] text-slate-400 mt-1">
-              {product.shippingUnitType === "FCL" ? "FCL" : product.shippingUnitType === "LCL" ? "LCL" : "kg"}
-            </p>
+            
           </div>
           {/* Tipo embalaje */}
           <div className="p-3">
             <p className="text-xs text-slate-500 dark:text-slate-400 mb-1">Tipo de Embalaje</p>
             <p className="text-lg font-bold text-slate-900 dark:text-white leading-tight">{product.packaging || "—"}</p>
-            <p className="text-[10px] text-slate-400 mt-1">tipo de empaque</p>
+            
           </div>
           {/* Tamaño embalaje */}
           <div className="p-3">
             <p className="text-xs text-slate-500 dark:text-slate-400 mb-1">Tamaño de Embalaje</p>
             <p className="text-lg font-bold text-slate-900 dark:text-white leading-tight">{product.packagingSize || "—"}</p>
-            <p className="text-[10px] text-slate-400 mt-1">kg por embalaje</p>
+            
           </div>
         </div>
 

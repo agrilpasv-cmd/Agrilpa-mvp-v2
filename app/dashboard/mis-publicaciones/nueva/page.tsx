@@ -226,7 +226,7 @@ export default function NuevaPublicacionPage() {
       { key: "description", label: "Descripción del Producto" },
       { key: "country", label: "País de Origen" },
       { key: "minOrderQuantity", label: "Pedido Mínimo" },
-      { key: "packagingSize", label: "Peso por Embalaje" },
+      
       { key: "image", label: "Foto Principal del Producto" },
       { key: "supplyCapacity", label: "Capacidad de Abastecimiento" },
     ]
@@ -319,6 +319,7 @@ export default function NuevaPublicacionPage() {
           min_order_quantity: formData.minOrderQuantity,
           shippingUnitType: formData.shippingUnit,
           containerSize: formData.containerSize || null,
+          packagingSize: formData.packagingSize ? parseInt(formData.packagingSize) : null,
           alcanceComercial: selectedAlcance,
           contactEmail: formData.contactEmail,
           countryCode: formData.countryCode,
@@ -718,7 +719,7 @@ export default function NuevaPublicacionPage() {
                         quantity: cleanQty,
                         unit: "Contenedor 20'",
                         minOrderQuantity: cleanMin || "1",
-                        packagingSize: prev.packagingSize || "21000"
+                        packagingSize: "21000",
                       }
                     })}
                     className={`flex items-center gap-3 p-3 rounded-xl border-2 transition-all text-left ${
@@ -764,24 +765,28 @@ export default function NuevaPublicacionPage() {
                     </div>
                     <div>
                       <label htmlFor="packagingSize" className="block text-sm font-medium mb-2">
-                        Peso por Embalaje <span className="text-red-500">*</span>
+                        Contenido / Capacidad por Embalaje <span className="text-muted-foreground text-xs font-normal">(Opcional)</span>
                       </label>
-                      <div className="flex gap-2">
+                      <div className="flex gap-2 relative">
                         <Input
                           id="packagingSize"
                           type="number"
                           name="packagingSize"
                           value={formData.packagingSize}
                           onChange={handleInputChange}
-                          placeholder="Ej: 50, 25, 100"
-                          className="w-full"
+                          placeholder="Ej: 200, 25, 10"
+                          className="w-full pr-12"
                           min="1"
-                          disabled={isLoading}
-                          required
+                          disabled={isLoading || formData.unit === 'unidad'}
                         />
-                        <span className="flex items-center px-3 bg-primary/10 border border-primary/20 rounded-md font-semibold text-primary">
-                          kg
-                        </span>
+                        <div className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm font-semibold flex items-center justify-center">
+                          {(() => {
+                            if (formData.unit === 'lt' || formData.unit === 'L') return 'lt';
+                            if (formData.unit === 'gal') return 'gal';
+                            if (formData.unit === 'unidad' || formData.unit === 'caja') return 'u';
+                            return 'kg';
+                          })()}
+                        </div>
                       </div>
                     </div>
                   </>
@@ -820,7 +825,7 @@ export default function NuevaPublicacionPage() {
 
                       <button
                         type="button"
-                        onClick={() => setFormData(prev => ({ ...prev, containerSize: "40HC", packagingSize: "26000" }))}
+                        onClick={() => setFormData(prev => ({ ...prev, containerSize: "40HC", packagingSize: "26000", }))}
                         className={`relative flex flex-col items-center gap-2 rounded-xl border-2 p-5 text-center transition-all ${
                           formData.containerSize === "40HC"
                             ? "border-primary bg-primary/10 shadow-sm"
@@ -841,7 +846,7 @@ export default function NuevaPublicacionPage() {
 
                       <button
                         type="button"
-                        onClick={() => setFormData(prev => ({ ...prev, containerSize: "Ambos", packagingSize: "21000,26000" }))}
+                        onClick={() => setFormData(prev => ({ ...prev, containerSize: "Ambos", packagingSize: "21000,26000", }))}
                         className={`relative flex flex-col items-center gap-2 rounded-xl border-2 p-5 text-center transition-all ${
                           formData.containerSize === "Ambos"
                             ? "border-primary bg-primary/10 shadow-sm"
@@ -970,7 +975,7 @@ export default function NuevaPublicacionPage() {
                     required
                   />
                   <div className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm flex items-center justify-center">
-                    {formData.unit}
+                    {formData.saleMethod === "fcl" ? "FCL" : (formData.unit || "kg")}
                   </div>
                 </div>
               </div>
@@ -992,8 +997,8 @@ export default function NuevaPublicacionPage() {
                     disabled={isLoading}
                     required
                   />
-                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">
-                    {formData.saleMethod === "fcl" ? "cont." : (formData.unit || "kg")}
+                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm flex items-center justify-center">
+                    {formData.saleMethod === "fcl" ? "FCL" : (formData.unit || "kg")}
                   </span>
                 </div>
               </div>
@@ -1005,8 +1010,8 @@ export default function NuevaPublicacionPage() {
               <label htmlFor="supplyCapacity" className="block text-sm font-medium mb-2">
                 Capacidad de Abastecimiento <span className="text-red-500">*</span>
               </label>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                <div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="flex gap-2 relative">
                   <Input
                     id="supplyCapacity"
                     type="number"
@@ -1016,23 +1021,11 @@ export default function NuevaPublicacionPage() {
                     placeholder="Ej: 50"
                     min="0"
                     disabled={isLoading}
-                    className="w-full"
+                    className="w-full pr-12"
                   />
-                </div>
-                <div>
-                  <Select value={formData.supplyCapacityUnit} onValueChange={(v) => setFormData(p => ({...p, supplyCapacityUnit: v}))} disabled={isLoading}>
-  <SelectTrigger className="w-full">
-    <SelectValue placeholder="Selecciona una opción" />
-  </SelectTrigger>
-  <SelectContent>
-
-                    <SelectItem value="kg">kg</SelectItem>
-                    <SelectItem value="toneladas">toneladas</SelectItem>
-                    <SelectItem value="libras">libras</SelectItem>
-                    <SelectItem value="TM">TM</SelectItem>
-                    <SelectItem value="unidades">unidades</SelectItem>
-                    </SelectContent>
-</Select>
+                  <div className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm flex items-center justify-center">
+                    {formData.saleMethod === "fcl" ? "FCL" : (formData.unit || "kg")}
+                  </div>
                 </div>
                 <div className="flex items-center gap-2">
                   <span className="text-muted-foreground text-sm font-medium px-1">/</span>
@@ -1041,10 +1034,9 @@ export default function NuevaPublicacionPage() {
     <SelectValue placeholder="Selecciona una opción" />
   </SelectTrigger>
   <SelectContent>
-
                     <SelectItem value="mes">mes</SelectItem>
                     <SelectItem value="semana">semana</SelectItem>
-                    <SelectItem value="día">día</SelectItem>
+                    <SelectItem value="temporada">temporada</SelectItem>
                     <SelectItem value="año">año</SelectItem>
                     </SelectContent>
 </Select>
@@ -1067,15 +1059,10 @@ export default function NuevaPublicacionPage() {
   <SelectContent>
 
                 <SelectItem value="A definir con el comprador">A definir con el comprador</SelectItem>
-                <SelectItem value="EXW">EXW – En fábrica (el comprador recoge en origen)</SelectItem>
-                <SelectItem value="FCA">FCA – Entrega al transportista</SelectItem>
-                <SelectItem value="FOB">FOB – Libre a bordo (puerto de origen)</SelectItem>
-                <SelectItem value="CIF">CIF – Costo, seguro y flete incluidos</SelectItem>
-                <SelectItem value="CFR">CFR – Costo y flete incluidos</SelectItem>
-                <SelectItem value="DAP">DAP – Entregado en destino</SelectItem>
-                <SelectItem value="DDP">DDP – Entregado con impuestos pagados</SelectItem>
-                <SelectItem value="CPT">CPT – Transporte pagado hasta destino</SelectItem>
-                <SelectItem value="CIP">CIP – Transporte y seguro pagados</SelectItem>
+                <SelectItem value="EXW">EXW – En finca / bodega del vendedor</SelectItem>
+                <SelectItem value="FOB">FOB – Libre a bordo (Puerto de origen)</SelectItem>
+                <SelectItem value="CIF">CIF – Costo, seguro y flete (Puerto destino)</SelectItem>
+                <SelectItem value="DDP">DDP – Entregado en destino final</SelectItem>
                 </SelectContent>
 </Select>
               <p className="text-xs text-muted-foreground mt-1.5">

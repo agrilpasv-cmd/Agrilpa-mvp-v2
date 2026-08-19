@@ -473,10 +473,12 @@ export default function CompraDetailPage() {
                                     <p className="font-semibold text-muted-foreground">País de Origen</p>
                                     <p className="text-base font-medium">{pedido.origin_country || "Venezuela"}</p>
                                 </div>
-                                <div>
-                                    <p className="font-semibold text-muted-foreground">Tipo de Maduración</p>
-                                    <p className="text-base">{pedido.maturity || "Sin especificar"}</p>
-                                </div>
+                                {pedido.maturity && pedido.maturity !== "No aplica" && (
+                                    <div>
+                                        <p className="font-semibold text-muted-foreground">Tipo de Maduración</p>
+                                        <p className="text-base">{pedido.maturity}</p>
+                                    </div>
+                                )}
                                 <div>
                                     <p className="font-semibold text-muted-foreground">Tipo de Embalaje</p>
                                     <p className="text-base">{pedido.packaging_type || "Estándar"}</p>

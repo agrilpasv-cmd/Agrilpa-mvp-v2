@@ -100,7 +100,7 @@ export default function ProductosPage() {
     slug: up.id,
     name: up.title,
     category: up.category,
-    price: up.price_type === "quote" || !up.price || up.price === "Por Cotizar" ? "Por Cotizar" : `${up.price}$ / ${up.unit || "kg"}`,
+    price: up.price_type === "quote" || !up.price || up.price === "Por Cotizar" ? "Por Cotizar" : up.price, currency: up.currency || "$", unit: up.unit || "kg",
     quantity: up.quantity?.replace(/kilos/gi, "kg"),
     description: up.description,
     seller: up.company_name || "Productor Local",
@@ -543,10 +543,8 @@ export default function ProductosPage() {
                             <span className="text-base font-bold text-foreground">Por Cotizar</span>
                           ) : (
                             <>
-                              <span className="text-lg font-bold text-foreground">
-                                {product.price}
-                              </span>
-                              <span className="text-xs font-medium text-muted-foreground"> /kg</span>
+                              <span className="text-lg font-bold text-foreground">{product.currency}{product.price}</span>
+                              <span className="text-xs font-medium text-muted-foreground"> / {product.unit}</span>
                             </>
                           )}
                         </div>

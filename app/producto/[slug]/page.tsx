@@ -117,7 +117,7 @@ export default function ProductPage() {
              description: p.description,
              seller: p.company_name || "Productor Local",
              location: p.state ? `${p.country}, ${p.state}` : p.country,
-             price: p.price === "Por Cotizar" ? "Por Cotizar" : `${p.currency || "US$"} ${p.price}`,
+             price: p.price === "Por Cotizar" ? "Por Cotizar" : p.price, currency: p.currency || "$", unit: p.unit || "kg",
              quantity: p.quantity,
              rating: p.rating || 0,
              reviews: p.reviews || 0,
@@ -200,8 +200,15 @@ export default function ProductPage() {
               country: data.product.country,
               description: data.product.description,
               fullDescription: data.product.description,
-              price: data.product.price_type === "quote" || !data.product.price || data.product.price === "Por Cotizar" ? "Por Cotizar" : `${data.product.price}$ / ${data.product.unit || "kg"}`,
-              minOrder: data.product.min_order_quantity ? `MIN. ${data.product.min_order_quantity} ${data.product.unit || "kg"}` : data.product.min_order?.replace(/kilos/gi, "kg"),
+              price: data.product.price_type === "quote" || !data.product.price || data.product.price === "Por Cotizar" ? "Por Cotizar" : `${data.product.currency || "$"}${data.product.price} / ${data.product.unit || "kg"}`,
+              minOrder: (() => {
+                const u = data.product.unit || "kg";
+                const mq = data.product.min_order_quantity;
+                if (mq) {
+                  return `MIN. ${mq} ${u === 'unidad' && mq > 1 ? 'unidades' : u}`;
+                }
+                return data.product.min_order?.replace(/kilos/gi, "kg");
+              })(),
               rating: data.product.rating || 0,
               reviews: data.product.reviews || 0,
               reviewsData: data.product.reviews_data || [],
@@ -212,7 +219,7 @@ export default function ProductPage() {
               verified: data.product.seller_is_pro || false,
               slug: data.product.id,
               packaging: data.product.packaging,
-              packagingSize: `${data.product.packaging_size} kg`,
+              packagingSize: String(data.product.packaging_size).match(/[a-zA-Z]/) ? data.product.packaging_size : `${data.product.packaging_size} ${(() => { const u = data.product.unit; if (u === 'lt' || u === 'L') return 'lt'; if (u === 'gal') return 'gal'; if (u === 'unidad' || u === 'caja') return 'u'; return 'kg'; })()}`,
               contactMethod: data.product.contact_method || contactMethod,
               contactInfo: data.product.contact_info || contactInfo,
               countryCode: data.product.country_code,
@@ -229,10 +236,10 @@ export default function ProductPage() {
                   ? (data.product.container_size ? [{ label: "Tipo de Contenedor", value: data.product.container_size === "20ST" ? "20' Standard (~21 TM)" : data.product.container_size === "40HC" ? "40' High Cube (~26 TM)" : data.product.container_size === "Ambos" ? "20' Standard y 40' High Cube" : data.product.container_size }] : [])
                   : [
                       ...(data.product.packaging ? [{ label: "Tipo de Embalaje", value: data.product.packaging }] : []),
-                      ...(data.product.packaging_size ? [{ label: "Peso por Embalaje", value: `${data.product.packaging_size} kg` }] : [])
+                      ...(data.product.packaging_size ? [{ label: "Peso por Embalaje", value: String(data.product.packaging_size).match(/[a-zA-Z]/) ? data.product.packaging_size : `${data.product.packaging_size} ${(() => { const u = data.product.unit; if (u === 'lt' || u === 'L') return 'lt'; if (u === 'gal') return 'gal'; if (u === 'unidad' || u === 'caja') return 'u'; return 'kg'; })()}` }] : [])
                     ]
                 ),
-                ...(data.product.maturity ? [{ label: "Tipo de Maduración", value: data.product.maturity }] : []),
+                ...(data.product.maturity && data.product.maturity !== "No aplica" ? [{ label: "Tipo de Maduración", value: data.product.maturity }] : []),
                 { label: "Unidad", value: UNIDADES_MEDIDA.find(u => u.value === (data.product.unit || "kg"))?.label || data.product.unit || "kg" },
                 { label: "Vendedor", value: producerName },
                 ...(extractedSupplyCapacity ? [{ label: "Capacidad de Abastecimiento", value: extractedSupplyCapacity }] : []),
@@ -741,10 +748,8 @@ export default function ProductPage() {
                             <span className="text-base font-bold text-foreground">Por Cotizar</span>
                           ) : (
                             <>
-                              <span className="text-lg font-bold text-foreground">
-                                {relProduct.price}
-                              </span>
-                              <span className="text-xs font-medium text-muted-foreground"> /kg</span>
+                              <span className="text-lg font-bold text-foreground">{relProduct.currency || "$"}{relProduct.price}</span>
+                              <span className="text-xs font-medium text-muted-foreground"> / {relProduct.unit || "kg"}</span>
                             </>
                           )}
                         </div>

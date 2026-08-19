@@ -229,7 +229,8 @@ export default function EditarPublicacionPage({ params }: { params: Promise<{ id
             image2: p.image2 || "",
             image3: p.image3 || "",
             packaging: p.packaging || "",
-            packagingSize: p.packaging_size?.toString() || "",
+            packagingSize: (p.packaging_size?.toString() || "").replace(/[a-zA-Z\s]+$/g, ""),
+            
             shippingUnit: p.shipping_unit_type || "",
             containerSize: p.container_size || "",
             companyName: finalCompanyName,
@@ -325,7 +326,7 @@ export default function EditarPublicacionPage({ params }: { params: Promise<{ id
       { key: "quantity", label: "Cantidad Disponible" },
       { key: "description", label: "Descripción del Producto" },
       { key: "country", label: "País de Origen" },
-      { key: "packagingSize", label: "Peso por Embalaje" },
+      
       { key: "supplyCapacity", label: "Capacidad de Abastecimiento" },
     ]
 
@@ -369,7 +370,7 @@ export default function EditarPublicacionPage({ params }: { params: Promise<{ id
           min_order: `${formData.minOrderQuantity} ${formData.unit}`,
           min_order_quantity: formData.minOrderQuantity,
           packaging: formData.packaging,
-          packaging_size: parseInt(formData.packagingSize) || 0,
+          packaging_size: formData.packagingSize ? parseInt(formData.packagingSize) : null,
           image: formData.image,
           image2: formData.image2,
           image3: formData.image3,
@@ -756,7 +757,7 @@ export default function EditarPublicacionPage({ params }: { params: Promise<{ id
                         quantityUnit: "Contenedor 20'",
                         minOrder: cleanMin || "1",
                         minOrderUnit: "Contenedor 20'",
-                        packagingSize: prev.packagingSize || "21000"
+                        packagingSize: "21000",
                       }
                     })}
                     className={`flex items-center gap-3 p-3 rounded-xl border-2 transition-all text-left ${
@@ -858,7 +859,7 @@ export default function EditarPublicacionPage({ params }: { params: Promise<{ id
 
                       <button
                         type="button"
-                        onClick={() => setFormData(prev => ({ ...prev, containerSize: "40HC", packagingSize: "26000" }))}
+                        onClick={() => setFormData(prev => ({ ...prev, containerSize: "40HC", packagingSize: "26000", }))}
                         className={`relative flex flex-col items-center gap-2 rounded-xl border-2 p-5 text-center transition-all ${
                           formData.containerSize === "40HC"
                             ? "border-primary bg-primary/10 shadow-sm"
@@ -879,7 +880,7 @@ export default function EditarPublicacionPage({ params }: { params: Promise<{ id
 
                       <button
                         type="button"
-                        onClick={() => setFormData(prev => ({ ...prev, containerSize: "Ambos", packagingSize: "21000,26000" }))}
+                        onClick={() => setFormData(prev => ({ ...prev, containerSize: "Ambos", packagingSize: "21000,26000", }))}
                         className={`relative flex flex-col items-center gap-2 rounded-xl border-2 p-5 text-center transition-all ${
                           formData.containerSize === "Ambos"
                             ? "border-primary bg-primary/10 shadow-sm"
@@ -1018,7 +1019,7 @@ export default function EditarPublicacionPage({ params }: { params: Promise<{ id
                     required
                   />
                   <div className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm flex items-center justify-center">
-                    {formData.unit}
+                    {formData.saleMethod === "fcl" ? "FCL" : (formData.unit || "kg")}
                   </div>
                 </div>
               </div>
@@ -1040,7 +1041,7 @@ export default function EditarPublicacionPage({ params }: { params: Promise<{ id
                     required
                   />
                   <div className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm flex items-center justify-center">
-                    {formData.unit}
+                    {formData.saleMethod === "fcl" ? "FCL" : (formData.unit || "kg")}
                   </div>
                 </div>
               </div>

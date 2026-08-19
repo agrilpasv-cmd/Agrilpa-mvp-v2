@@ -170,7 +170,7 @@ export default function AdminNuevaPublicacionPage() {
       { key: "description", label: "Descripción del Producto" },
       { key: "country", label: "País de Origen" },
       { key: "minOrderQuantity", label: "Pedido Mínimo" },
-      { key: "packagingSize", label: "Peso por Embalaje" },
+      
       { key: "image", label: "Foto Principal del Producto" },
       { key: "supplyCapacity", label: "Capacidad de Abastecimiento" },
     ]
@@ -223,6 +223,7 @@ export default function AdminNuevaPublicacionPage() {
           price_type: priceType,
           shippingUnitType: formData.shippingUnit,
           containerSize: formData.containerSize || null,
+          packaging_size: formData.packagingSize ? parseInt(formData.packagingSize) : null,
           alcanceComercial: selectedAlcance,
           ...(formData.contactMethod === "WhatsApp" && {
             countryCode: formData.countryCode,
@@ -520,7 +521,7 @@ export default function AdminNuevaPublicacionPage() {
                   <button
                     type="button"
                     onClick={() => setFormData(prev => ({ 
-                      ...prev, saleMethod: "fcl", packaging: "Contenedores", shippingUnit: "FCL", containerSize: prev.containerSize || "20ST", unit: "Contenedor 20'", packagingSize: prev.packagingSize || "21000"
+                      ...prev, saleMethod: "fcl", packaging: "Contenedores", shippingUnit: "FCL", containerSize: prev.containerSize || "20ST", unit: "Contenedor 20'", packagingSize: "21000",
                     }))}
                     className={`flex items-center gap-3 p-3 rounded-xl border-2 transition-all text-left ${formData.saleMethod === "fcl" ? "border-primary bg-primary/5 ring-1 ring-primary/20" : "border-border hover:border-primary/30 bg-background"}`}
                   >
@@ -561,11 +562,28 @@ export default function AdminNuevaPublicacionPage() {
                     </div>
                     <div>
                       <label htmlFor="packagingSize" className="block text-sm font-medium mb-2">
-                        Peso por Embalaje <span className="text-red-500">*</span>
+                        Contenido / Capacidad por Embalaje <span className="text-muted-foreground text-xs font-normal">(Opcional)</span>
                       </label>
-                      <div className="flex gap-2">
-                        <Input id="packagingSize" type="number" name="packagingSize" value={formData.packagingSize} onChange={handleInputChange} placeholder="Ej: 50" min="1" disabled={isLoading} required />
-                        <span className="flex items-center px-3 bg-primary/10 border border-primary/20 rounded-md font-semibold text-primary">kg</span>
+                      <div className="flex gap-2 relative">
+                        <Input
+                          id="packagingSize"
+                          type="number"
+                          name="packagingSize"
+                          value={formData.packagingSize}
+                          onChange={handleInputChange}
+                          placeholder="Ej: 200, 25, 10"
+                          className="w-full pr-12"
+                          min="1"
+                          disabled={isLoading || formData.unit === 'unidad'}
+                        />
+                        <div className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm font-semibold flex items-center justify-center">
+                          {(() => {
+                            if (formData.unit === 'lt' || formData.unit === 'L') return 'lt';
+                            if (formData.unit === 'gal') return 'gal';
+                            if (formData.unit === 'unidad' || formData.unit === 'caja') return 'u';
+                            return 'kg';
+                          })()}
+                        </div>
                       </div>
                     </div>
                   </>
@@ -577,11 +595,11 @@ export default function AdminNuevaPublicacionPage() {
                         <span className="text-3xl">🚢</span>
                         <p className="font-bold">20' Standard</p>
                       </button>
-                      <button type="button" onClick={() => setFormData(prev => ({ ...prev, containerSize: "40HC", packagingSize: "26000" }))} className={`flex flex-col items-center gap-2 rounded-xl border-2 p-5 text-center ${formData.containerSize === "40HC" ? "border-primary bg-primary/10 shadow-sm" : "border-border bg-background"}`}>
+                      <button type="button" onClick={() => setFormData(prev => ({ ...prev, containerSize: "40HC", packagingSize: "26000", }))} className={`flex flex-col items-center gap-2 rounded-xl border-2 p-5 text-center ${formData.containerSize === "40HC" ? "border-primary bg-primary/10 shadow-sm" : "border-border bg-background"}`}>
                         <span className="text-3xl">🏗️</span>
                         <p className="font-bold">40' High Cube</p>
                       </button>
-                      <button type="button" onClick={() => setFormData(prev => ({ ...prev, containerSize: "Ambos", packagingSize: "21000,26000" }))} className={`flex flex-col items-center gap-2 rounded-xl border-2 p-5 text-center ${formData.containerSize === "Ambos" ? "border-primary bg-primary/10 shadow-sm" : "border-border bg-background"}`}>
+                      <button type="button" onClick={() => setFormData(prev => ({ ...prev, containerSize: "Ambos", packagingSize: "21000,26000", }))} className={`flex flex-col items-center gap-2 rounded-xl border-2 p-5 text-center ${formData.containerSize === "Ambos" ? "border-primary bg-primary/10 shadow-sm" : "border-border bg-background"}`}>
                         <span className="text-2xl">🚢🏗️</span>
                         <p className="font-bold">Ambas Opciones</p>
                       </button>
@@ -623,7 +641,9 @@ export default function AdminNuevaPublicacionPage() {
                   <label className="block text-sm font-medium mb-2">Cantidad Disponible <span className="text-red-500">*</span></label>
                   <div className="relative">
                     <Input type="number" name="quantity" value={formData.quantity} onChange={handleInputChange} min="1" className="w-full pr-12" disabled={isLoading} required />
-                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">{formData.saleMethod === "fcl" ? "cont." : (formData.unit || "kg")}</span>
+                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm flex items-center justify-center">
+                    {formData.saleMethod === "fcl" ? "FCL" : (formData.unit || "kg")}
+                  </span>
                   </div>
                 </div>
 

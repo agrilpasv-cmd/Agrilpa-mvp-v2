@@ -184,7 +184,8 @@ export default function AdminEditarPublicacionPage({ params }: { params: Promise
             image2: p.image2 || "",
             image3: p.image3 || "",
             packaging: p.packaging || "",
-            packagingSize: p.packaging_size?.toString() || "",
+            packagingSize: (p.packaging_size?.toString() || "").replace(/[a-zA-Z\s]+$/g, ""),
+            
             shippingUnit: p.shipping_unit_type || "",
             containerSize: p.container_size || "",
             companyName: finalCompanyName,
@@ -280,7 +281,7 @@ export default function AdminEditarPublicacionPage({ params }: { params: Promise
       { key: "quantity", label: "Cantidad Disponible" },
       { key: "description", label: "Descripción del Producto" },
       { key: "country", label: "País de Origen" },
-      { key: "packagingSize", label: "Peso por Embalaje" },
+      
       { key: "supplyCapacity", label: "Capacidad de Abastecimiento" },
     ]
 
@@ -324,7 +325,7 @@ export default function AdminEditarPublicacionPage({ params }: { params: Promise
           unit: formData.unit,
           price_type: priceType,
           packaging: formData.packaging,
-          packaging_size: parseInt(formData.packagingSize) || 0,
+          packaging_size: formData.packagingSize ? parseInt(formData.packagingSize) : null,
           image: formData.image,
           image2: formData.image2,
           image3: formData.image3,
@@ -709,7 +710,7 @@ export default function AdminEditarPublicacionPage({ params }: { params: Promise
                         quantity: cleanQty,
                         unit: "Contenedor 20'",
                         minOrderQuantity: cleanMin || "1",
-                        packagingSize: prev.packagingSize || "21000"
+                        packagingSize: "21000",
                       }
                     })}
                     className={`flex items-center gap-3 p-3 rounded-xl border-2 transition-all text-left ${
@@ -811,7 +812,7 @@ export default function AdminEditarPublicacionPage({ params }: { params: Promise
 
                       <button
                         type="button"
-                        onClick={() => setFormData(prev => ({ ...prev, containerSize: "40HC", packagingSize: "26000" }))}
+                        onClick={() => setFormData(prev => ({ ...prev, containerSize: "40HC", packagingSize: "26000", }))}
                         className={`relative flex flex-col items-center gap-2 rounded-xl border-2 p-5 text-center transition-all ${
                           formData.containerSize === "40HC"
                             ? "border-primary bg-primary/10 shadow-sm"
@@ -832,7 +833,7 @@ export default function AdminEditarPublicacionPage({ params }: { params: Promise
 
                       <button
                         type="button"
-                        onClick={() => setFormData(prev => ({ ...prev, containerSize: "Ambos", packagingSize: "21000,26000" }))}
+                        onClick={() => setFormData(prev => ({ ...prev, containerSize: "Ambos", packagingSize: "21000,26000", }))}
                         className={`relative flex flex-col items-center gap-2 rounded-xl border-2 p-5 text-center transition-all ${
                           formData.containerSize === "Ambos"
                             ? "border-primary bg-primary/10 shadow-sm"
@@ -982,9 +983,9 @@ export default function AdminEditarPublicacionPage({ params }: { params: Promise
                       disabled={isLoading}
                       required
                     />
-                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">
-                      {formData.saleMethod === "fcl" ? "cont." : (formData.unit || "kg")}
-                    </span>
+                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm flex items-center justify-center">
+                    {formData.saleMethod === "fcl" ? "FCL" : (formData.unit || "kg")}
+                  </span>
                   </div>
                 </div>
               </div>
