@@ -37,6 +37,7 @@ interface Product {
   title: string
   category: string
   price: string
+  currency?: string
   country: string
   state?: string
   image: string
@@ -377,9 +378,7 @@ export default function VendedorPage() {
                         <span className="font-bold text-primary text-lg">
                           {product.price === "Por Cotizar"
                             ? "Por Cotizar"
-                            : product.price?.includes("$")
-                              ? product.price
-                              : `$${product.price}`}
+                            : `${product.currency || "US$"} ${product.price}`}
                         </span>
                         <div className="flex items-center gap-1 text-xs text-muted-foreground">
                           <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />

@@ -242,9 +242,9 @@ export default function PublicacionesPage() {
                           <span className="font-semibold text-primary">
                             {pub.price === "Por Cotizar" ? pub.price : `${pub.currency || "US$"} ${pub.price}`}
                           </span>
-                          <span className="text-sm text-muted-foreground">Stock: {pub.quantity}</span>
+                          <span className="text-sm text-muted-foreground">Stock: {pub.quantity?.replace(/kilos/gi, "kg")}</span>
                           <span className="text-sm text-muted-foreground">{pub.country}</span>
-                          <span className="text-sm text-muted-foreground">Pedido mín: {pub.min_order}</span>
+                          <span className="text-sm text-muted-foreground">Pedido mín: {pub.min_order?.replace(/kilos/gi, "kg")}</span>
                           <span className="text-sm text-muted-foreground flex items-center gap-1">
                             <Eye className="w-3 h-3" />
                             {pub.views ?? 0} vistas

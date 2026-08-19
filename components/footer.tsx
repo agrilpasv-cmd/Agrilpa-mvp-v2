@@ -41,11 +41,6 @@ export function Footer() {
             <h4 className="font-bold mb-4">Vendedores</h4>
             <ul className="space-y-2 text-sm opacity-80">
               <li>
-                <Link href="/guia-exportacion" className="hover:opacity-100" onClick={() => window.scrollTo(0, 0)}>
-                  Guía de exportación
-                </Link>
-              </li>
-              <li>
                 <Link href="/casos-exito" className="hover:opacity-100">
                   Casos de éxito
                 </Link>
@@ -63,16 +58,6 @@ export function Footer() {
               <li>
                 <Link href="/productos" className="hover:opacity-100">
                   Productos
-                </Link>
-              </li>
-              <li>
-                <Link href="/sourcing" className="hover:opacity-100">
-                  Sourcing
-                </Link>
-              </li>
-              <li>
-                <Link href="/socios-logisticos" className="hover:opacity-100">
-                  Socios logísticos
                 </Link>
               </li>
             </ul>

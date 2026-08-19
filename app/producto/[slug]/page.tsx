@@ -200,7 +200,7 @@ export default function ProductPage() {
               description: data.product.description,
               fullDescription: data.product.description,
               price: data.product.price === "Por Cotizar" ? "Por Cotizar" : `${data.product.currency || "US$"} ${data.product.price}`,
-              minOrder: data.product.min_order,
+              minOrder: data.product.min_order?.replace(/kilos/gi, "kg"),
               rating: data.product.rating || 0,
               reviews: data.product.reviews || 0,
               reviewsData: data.product.reviews_data || [],
