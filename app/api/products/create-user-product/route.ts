@@ -131,6 +131,9 @@ export async function POST(request: NextRequest) {
           alcance_comercial: alcanceComercial || [],
           country_code: countryCode,
           phone_number: phoneNumber,
+          unit: body.unit || "kg",
+          price_type: body.price_type || "fixed",
+          min_order_quantity: body.min_order_quantity || null,
         },
       ])
       .select()

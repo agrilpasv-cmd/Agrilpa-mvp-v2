@@ -33,6 +33,9 @@ interface Publication {
   created_at: string
   views?: number
   image?: string
+  unit?: string
+  price_type?: string
+  min_order_quantity?: number
 }
 
 export default function PublicacionesPage() {
@@ -240,11 +243,11 @@ export default function PublicacionesPage() {
                         </p>
                         <div className="flex flex-wrap items-center gap-4 mt-3">
                           <span className="font-semibold text-primary">
-                            {pub.price === "Por Cotizar" ? pub.price : `${pub.currency || "US$"} ${pub.price}`}
+                            {pub.price_type === "quote" || pub.price === "Por Cotizar" ? "Por Cotizar" : `${pub.price}$ / ${pub.unit || "kg"}`}
                           </span>
                           <span className="text-sm text-muted-foreground">Stock: {pub.quantity?.replace(/kilos/gi, "kg")}</span>
                           <span className="text-sm text-muted-foreground">{pub.country}</span>
-                          <span className="text-sm text-muted-foreground">Pedido mín: {pub.min_order?.replace(/kilos/gi, "kg")}</span>
+                          <span className="text-sm text-muted-foreground">Pedido mín: {pub.min_order_quantity ? `MIN. ${pub.min_order_quantity} ${pub.unit || "kg"}` : pub.min_order?.replace(/kilos/gi, "kg")}</span>
                           <span className="text-sm text-muted-foreground flex items-center gap-1">
                             <Eye className="w-3 h-3" />
                             {pub.views ?? 0} vistas

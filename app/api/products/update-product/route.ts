@@ -80,6 +80,9 @@ export async function PUT(request: Request) {
         if (shipping_unit_type !== undefined) updateData.shipping_unit_type = shipping_unit_type
         if (container_size !== undefined) updateData.container_size = container_size
         if (alcanceComercial !== undefined) updateData.alcance_comercial = alcanceComercial
+        if (body.unit !== undefined) updateData.unit = body.unit
+        if (body.price_type !== undefined) updateData.price_type = body.price_type
+        if (body.min_order_quantity !== undefined) updateData.min_order_quantity = body.min_order_quantity
 
         const { data, error } = await supabaseAdmin
             .from("user_products")
@@ -94,7 +97,21 @@ export async function PUT(request: Request) {
               (error.message.includes("column") && error.message.includes("currency") && error.message.includes("schema cache"))
             const isMissingState = error.message && 
               (error.message.includes("column") && error.message.includes("state") && error.message.includes("schema cache"))
+            const isMissingUnit = error.message && 
+              (error.message.includes("column") && (error.message.includes("unit") || error.message.includes("price_type") || error.message.includes("min_order_quantity")) && error.message.includes("schema cache"))
             
+            if (isMissingUnit) {
+                return NextResponse.json({
+                    error: "Faltan las columnas de unidades (unit, price_type, min_order_quantity). Ejecuta el script SQL en Supabase.",
+                    sqlToRun: `
+ALTER TABLE user_products ADD COLUMN IF NOT EXISTS unit TEXT DEFAULT 'kg';
+ALTER TABLE user_products ADD COLUMN IF NOT EXISTS price_type TEXT DEFAULT 'fixed';
+ALTER TABLE user_products ADD COLUMN IF NOT EXISTS min_order_quantity NUMERIC;
+NOTIFY pgrst, 'reload schema';
+`
+                }, { status: 500 })
+            }
+
             if (isMissingCurrency) {
                 return NextResponse.json({
                     error: "Falta la columna 'currency' en la tabla 'user_products'. Por favor ejecuta el script SQL en Supabase para agregarla.",

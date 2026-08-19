@@ -24,12 +24,11 @@ export default function AdminEditarPublicacionPage({ params }: { params: Promise
     category: "",
     price: "",
     quantity: "",
-    quantityUnit: "kg",
+    unit: "kg",
     description: "",
     country: "",
     state: "",
-    minOrder: "",
-    minOrderUnit: "kg",
+    minOrderQuantity: "",
     maturity: "",
     image: "",
     image2: "",
@@ -51,7 +50,7 @@ export default function AdminEditarPublicacionPage({ params }: { params: Promise
     currency: "US$",
     saleMethod: "standard",
   })
-  const [isPriceOnRequest, setIsPriceOnRequest] = useState(false)
+  const [priceType, setPriceType] = useState<"fixed" | "quote">("fixed")
   const [certInput, setCertInput] = useState("")
   const [statusMessage, setStatusMessage] = useState<{ type: 'success' | 'error' | 'loading' | null, text: string }>({ type: null, text: "" })
   const [imagePreview, setImagePreview] = useState<string>("")
@@ -154,62 +153,20 @@ export default function AdminEditarPublicacionPage({ params }: { params: Promise
             }
           }
 
-          // Parse quantity and unit
-          let parsedQuantityNum = ""
-          let parsedQuantityUnit = "kg"
-          if (p.quantity) {
-            const qtyMatch = p.quantity.match(/^(\d+(?:\.\d+)?)/)
-            if (qtyMatch) {
-              parsedQuantityNum = qtyMatch[1]
-              const unitMatch = p.quantity.match(/^\d+(?:\.\d+)?\s*(.*)$/)
-              if (unitMatch && unitMatch[1]) {
-                const rawUnit = unitMatch[1].trim()
-                if (rawUnit.toLowerCase().includes("contenedor")) {
-                  parsedQuantityUnit = rawUnit.includes("40") ? "Contenedor 40'" : "Contenedor 20'"
-                } else if (rawUnit.toLowerCase() === "tm" || rawUnit.toLowerCase().includes("tonelada")) {
-                  parsedQuantityUnit = "TM"
-                } else if (rawUnit.toLowerCase().includes("libra")) {
-                  parsedQuantityUnit = "lb"
-                } else if (rawUnit.toLowerCase() === "qq" || rawUnit.toLowerCase().includes("quintal")) {
-                  parsedQuantityUnit = "qq"
-                } else {
-                  parsedQuantityUnit = rawUnit
-                }
-              }
-            } else {
-              parsedQuantityNum = p.quantity
-            }
-          }
-
-          // Parse min_order and unit
-          let parsedMinOrderNum = ""
-          let parsedMinOrderUnit = "kg"
-          if (p.min_order) {
-            const minMatch = p.min_order.match(/^(\d+(?:\.\d+)?)/)
-            if (minMatch) {
-              parsedMinOrderNum = minMatch[1]
-              const unitMatch = p.min_order.match(/^\d+(?:\.\d+)?\s*(.*)$/)
-              if (unitMatch && unitMatch[1]) {
-                const rawUnit = unitMatch[1].trim()
-                if (rawUnit.toLowerCase().includes("contenedor")) {
-                  parsedMinOrderUnit = rawUnit.includes("40") ? "Contenedor 40'" : "Contenedor 20'"
-                } else if (rawUnit.toLowerCase() === "tm" || rawUnit.toLowerCase().includes("tonelada")) {
-                  parsedMinOrderUnit = "TM"
-                } else if (rawUnit.toLowerCase().includes("libra")) {
-                  parsedMinOrderUnit = "lb"
-                } else if (rawUnit.toLowerCase() === "qq" || rawUnit.toLowerCase().includes("quintal")) {
-                  parsedMinOrderUnit = "qq"
-                } else {
-                  parsedMinOrderUnit = rawUnit
-                }
-              }
-            } else {
-              parsedMinOrderNum = p.min_order
-            }
-          }
-          // Get currency and price
-          let parsedPriceVal = p.price || "";
+          // Parse quantity and minOrder to string for input fields
+          let parsedQuantityNum = p.quantity ? p.quantity.toString().replace(/[^\d.]/g, "") : ""
+          let parsedMinOrderNum = p.min_order_quantity ? p.min_order_quantity.toString() : p.min_order ? p.min_order.toString().replace(/[^\d.]/g, "") : ""
+          
+          let parsedPriceVal = p.price === "Por Cotizar" ? "" : p.price || "";
           let parsedCurrencyVal = p.currency || "US$";
+          let parsedUnit = p.unit || "kg"
+          let parsedPriceType = p.price_type || (p.price === "Por Cotizar" ? "quote" : "fixed")
+
+          if (p.price === "Por Cotizar" || parsedPriceType === "quote") {
+            setPriceType("quote")
+          } else {
+            setPriceType("fixed")
+          }
 
           setFormData({
             title: p.title || "",
@@ -217,12 +174,11 @@ export default function AdminEditarPublicacionPage({ params }: { params: Promise
             price: parsedPriceVal,
             currency: parsedCurrencyVal,
             quantity: parsedQuantityNum,
-            quantityUnit: parsedQuantityUnit,
+            unit: parsedUnit,
             description: cleanDescription,
             country: p.country || "",
             state: p.state || "",
-            minOrder: parsedMinOrderNum,
-            minOrderUnit: parsedMinOrderUnit,
+            minOrderQuantity: parsedMinOrderNum,
             maturity: p.maturity || "",
             image: p.image || "",
             image2: p.image2 || "",
@@ -357,14 +313,16 @@ export default function AdminEditarPublicacionPage({ params }: { params: Promise
           id: resolvedParams.id,
           title: formData.title,
           category: formData.category,
-          price: isPriceOnRequest ? "Por Cotizar" : formData.price,
+          price: priceType === "quote" ? "Por Cotizar" : formData.price,
           currency: formData.currency,
-          quantity: `${formData.quantity} ${formData.quantityUnit || "kg"}`,
+          quantity: `${formData.quantity} ${formData.unit || "kg"}`,
           description: formData.description,
           country: formData.country,
           state: formData.state,
-          min_order: `${formData.minOrder} ${formData.minOrderUnit || "kg"}`,
-          min_order_unit: formData.minOrderUnit,
+          min_order: `${formData.minOrderQuantity} ${formData.unit || "kg"}`,
+          min_order_quantity: formData.minOrderQuantity,
+          unit: formData.unit,
+          price_type: priceType,
           packaging: formData.packaging,
           packaging_size: parseInt(formData.packagingSize) || 0,
           image: formData.image,
@@ -709,8 +667,8 @@ export default function AdminEditarPublicacionPage({ params }: { params: Promise
                   <button
                     type="button"
                     onClick={() => setFormData(prev => {
-                      const cleanQty = prev.quantity.replace(/[^\d.]/g, "")
-                      const cleanMin = prev.minOrder.replace(/[^\d.]/g, "")
+                      const cleanQty = prev.quantity.toString().replace(/[^\d.]/g, "")
+                      const cleanMin = prev.minOrderQuantity.toString().replace(/[^\d.]/g, "")
                       return { 
                         ...prev, 
                         saleMethod: "standard", 
@@ -718,9 +676,8 @@ export default function AdminEditarPublicacionPage({ params }: { params: Promise
                         shippingUnit: "", 
                         containerSize: "", 
                         quantity: cleanQty,
-                        quantityUnit: prev.quantityUnit.startsWith("Contenedor") ? "kg" : prev.quantityUnit,
-                        minOrder: cleanMin,
-                        minOrderUnit: prev.minOrderUnit.startsWith("Contenedor") ? "kg" : prev.minOrderUnit
+                        unit: prev.unit.startsWith("Contenedor") ? "kg" : prev.unit,
+                        minOrderQuantity: cleanMin
                       }
                     })}
                     className={`flex items-center gap-3 p-3 rounded-xl border-2 transition-all text-left ${
@@ -741,8 +698,8 @@ export default function AdminEditarPublicacionPage({ params }: { params: Promise
                   <button
                     type="button"
                     onClick={() => setFormData(prev => {
-                      const cleanQty = prev.quantity.replace(/[^\d.]/g, "")
-                      const cleanMin = prev.minOrder.replace(/[^\d.]/g, "")
+                      const cleanQty = prev.quantity.toString().replace(/[^\d.]/g, "")
+                      const cleanMin = prev.minOrderQuantity.toString().replace(/[^\d.]/g, "")
                       return { 
                         ...prev, 
                         saleMethod: "fcl", 
@@ -750,9 +707,8 @@ export default function AdminEditarPublicacionPage({ params }: { params: Promise
                         shippingUnit: "FCL", 
                         containerSize: prev.containerSize || "20ST", 
                         quantity: cleanQty,
-                        quantityUnit: "Contenedor 20'",
-                        minOrder: cleanMin || "1",
-                        minOrderUnit: "Contenedor 20'",
+                        unit: "Contenedor 20'",
+                        minOrderQuantity: cleanMin || "1",
                         packagingSize: prev.packagingSize || "21000"
                       }
                     })}
@@ -917,7 +873,7 @@ export default function AdminEditarPublicacionPage({ params }: { params: Promise
                       setIsPriceOnRequest(true)
                       setFormData(prev => ({ ...prev, price: "Por Cotizar" }))
                     }}
-                    className={`flex-1 py-2 text-sm font-medium rounded-md transition-all ${isPriceOnRequest
+                    className={`flex-1 py-2 text-sm font-medium rounded-md transition-all ${priceType === "quote"
                       ? "bg-primary text-primary-foreground shadow-sm"
                       : "text-muted-foreground hover:text-foreground"
                       }`}
@@ -927,10 +883,9 @@ export default function AdminEditarPublicacionPage({ params }: { params: Promise
                   <button
                     type="button"
                     onClick={() => {
-                      setIsPriceOnRequest(false)
-                      setFormData(prev => ({ ...prev, price: "" }))
+                      setPriceType("fixed")
                     }}
-                    className={`flex-1 py-2 text-sm font-medium rounded-md transition-all ${!isPriceOnRequest
+                    className={`flex-1 py-2 text-sm font-medium rounded-md transition-all ${priceType === "fixed"
                       ? "bg-primary text-primary-foreground shadow-sm"
                       : "text-muted-foreground hover:text-foreground"
                       }`}
@@ -939,7 +894,7 @@ export default function AdminEditarPublicacionPage({ params }: { params: Promise
                   </button>
                 </div>
 
-                {!isPriceOnRequest ? (
+                {priceType === "fixed" ? (
                   <div className="flex gap-2">
                     <CurrencyPicker
                       value={formData.currency}
@@ -950,16 +905,18 @@ export default function AdminEditarPublicacionPage({ params }: { params: Promise
                       <Input
                         type="number"
                         name="price"
-                        value={formData.price === "Por Cotizar" ? "" : formData.price}
+                        value={formData.price}
                         onChange={handleInputChange}
                         placeholder="0.00"
                         className="pr-12"
                         disabled={isLoading}
-                        required={!isPriceOnRequest}
+                        required={priceType === "fixed"}
                         step="0.01"
                         min="0"
                       />
-                      <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">/{formData.saleMethod === "fcl" ? "contenedor" : "kg"}</span>
+                      <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">
+                        / {formData.saleMethod === "fcl" ? "contenedor" : (formData.unit || "kg")}
+                      </span>
                     </div>
                   </div>
                 ) : (
@@ -971,40 +928,64 @@ export default function AdminEditarPublicacionPage({ params }: { params: Promise
 
               <div>
                 <label className="block text-sm font-medium mb-2">
+                  Unidad de Medida Global <span className="text-red-500">*</span>
+                </label>
+                <select
+                  name="unit"
+                  value={formData.unit}
+                  onChange={handleInputChange}
+                  className="w-full px-3 py-2 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary bg-background text-sm"
+                  disabled={isLoading}
+                >
+                  {formData.saleMethod === "fcl" ? (
+                    <>
+                      <option value="Contenedor 20'">Contenedor 20'</option>
+                      <option value="Contenedor 40'">Contenedor 40'</option>
+                    </>
+                  ) : (
+                    <>
+                      <option value="kg">kg (Kilogramos)</option>
+                      <option value="lb">lb (Libras)</option>
+                      <option value="qq">qq (Quintales)</option>
+                      <option value="TM">TM (Toneladas Métricas)</option>
+                      <option value="L">L (Litros)</option>
+                      <option value="ml">ml (Mililitros)</option>
+                      <option value="gal">gal (Galones)</option>
+                      <option value="caneca_20l">Caneca (20L)</option>
+                      <option value="tambor_200l">Tambor (200L)</option>
+                      <option value="caja">Caja</option>
+                      <option value="saco">Saco</option>
+                      <option value="malla">Malla</option>
+                      <option value="unidad">Unidad</option>
+                    </>
+                  )}
+                </select>
+                <p className="text-xs text-muted-foreground mt-1.5">
+                  Esta unidad se aplicará al precio, cantidad y pedido mínimo.
+                </p>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-2">
                   Cantidad Disponible <span className="text-red-500">*</span>
                 </label>
                 <div className="flex gap-2">
-                  <Input
-                    type="number"
-                    name="quantity"
-                    value={formData.quantity}
-                    onChange={handleInputChange}
-                    placeholder="Ej: 500"
-                    min="1"
-                    className="w-full"
-                    disabled={isLoading}
-                    required
-                  />
-                  <select
-                    name="quantityUnit"
-                    value={formData.quantityUnit}
-                    onChange={handleInputChange}
-                    className="px-3 py-2 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary bg-background text-sm min-w-[120px]"
-                    disabled={isLoading}
-                  >
-                    {formData.saleMethod === "fcl" ? (
-                      <>
-                        <option value="Contenedor 20'">Contenedor 20'</option>
-                        <option value="Contenedor 40'">Contenedor 40'</option>
-                      </>
-                    ) : (
-                      <>
-                        <option value="kg">kg (Kilogramos)</option>
-                        <option value="lb">lb (Libras)</option>
-                        <option value="qq">qq (Quintales)</option>
-                      </>
-                    )}
-                  </select>
+                  <div className="relative flex-1">
+                    <Input
+                      type="number"
+                      name="quantity"
+                      value={formData.quantity}
+                      onChange={handleInputChange}
+                      placeholder="Ej: 500"
+                      min="1"
+                      className="w-full pr-12"
+                      disabled={isLoading}
+                      required
+                    />
+                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">
+                      {formData.saleMethod === "fcl" ? "cont." : (formData.unit || "kg")}
+                    </span>
+                  </div>
                 </div>
               </div>
 
@@ -1013,37 +994,22 @@ export default function AdminEditarPublicacionPage({ params }: { params: Promise
                   Pedido Mínimo <span className="text-red-500">*</span>
                 </label>
                 <div className="flex gap-2">
-                  <Input
-                    type="number"
-                    name="minOrder"
-                    value={formData.minOrder}
-                    onChange={handleInputChange}
-                    placeholder="Ej: 100"
-                    min="1"
-                    className="w-full"
-                    disabled={isLoading}
-                    required
-                  />
-                  <select
-                    name="minOrderUnit"
-                    value={formData.minOrderUnit}
-                    onChange={handleInputChange}
-                    className="px-3 py-2 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary bg-background text-sm min-w-[120px]"
-                    disabled={isLoading}
-                  >
-                    {formData.saleMethod === "fcl" ? (
-                      <>
-                        <option value="Contenedor 20'">Contenedor 20'</option>
-                        <option value="Contenedor 40'">Contenedor 40'</option>
-                      </>
-                    ) : (
-                      <>
-                        <option value="kg">kg (Kilogramos)</option>
-                        <option value="lb">lb (Libras)</option>
-                        <option value="qq">qq (Quintales)</option>
-                      </>
-                    )}
-                  </select>
+                  <div className="relative flex-1">
+                    <Input
+                      type="number"
+                      name="minOrderQuantity"
+                      value={formData.minOrderQuantity}
+                      onChange={handleInputChange}
+                      placeholder="Ej: 100"
+                      min="1"
+                      className="w-full pr-12"
+                      disabled={isLoading}
+                      required
+                    />
+                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">
+                      {formData.saleMethod === "fcl" ? "cont." : (formData.unit || "kg")}
+                    </span>
+                  </div>
                 </div>
               </div>
             </div>

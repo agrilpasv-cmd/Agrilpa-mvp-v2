@@ -10,10 +10,11 @@ import { Input } from "@/components/ui/input"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Badge } from "@/components/ui/badge"
 import { Textarea } from "@/components/ui/textarea"
+import { Select, SelectContent, SelectItem, SelectGroup, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { ArrowLeft, Check, Loader, X, Plus } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 import { v4 as uuidv4 } from "uuid"
-import { PRODUCT_CATEGORIES } from "@/lib/constants"
+import { PRODUCT_CATEGORIES, UNIDADES_MEDIDA } from "@/lib/constants"
 import { useDashboard } from "../../context"
 import { PhoneCodePicker } from "@/components/ui/country-picker"
 import { CurrencyPicker } from "@/components/ui/currency-picker"
@@ -60,12 +61,11 @@ export default function NuevaPublicacionPage() {
     category: "",
     price: "",
     quantity: "",
-    quantityUnit: "kg",
+    unit: "kg",
     description: "",
     country: "",
     state: "",
-    minOrder: "",
-    minOrderUnit: "kg",
+    minOrderQuantity: "",
     maturity: "",
     image: "",
     image2: "",
@@ -74,7 +74,6 @@ export default function NuevaPublicacionPage() {
     packagingSize: "",
     shippingUnit: "",
     containerSize: "",
-    companyName: "",
     companyName: "",
     contactEmail: "",
     countryCode: "",
@@ -87,7 +86,7 @@ export default function NuevaPublicacionPage() {
     supplyCapacityPeriod: "mes",
     currency: "US$",
   })
-  const [isPriceOnRequest, setIsPriceOnRequest] = useState(true)
+  const [priceType, setPriceType] = useState<"fixed" | "quote">("fixed")
   const [certInput, setCertInput] = useState("")
   const [statusMessage, setStatusMessage] = useState<{ type: 'success' | 'error' | 'loading' | null, text: string }>({ type: null, text: "" })
   const [imagePreview, setImagePreview] = useState<string>("")
@@ -220,13 +219,13 @@ export default function NuevaPublicacionPage() {
       { key: "title", label: "Título del Producto" },
       { key: "category", label: "Categoría" },
       { key: "category", label: "Categoría" },
-      // Price is optional if "Por Cotizar" is selected
-      ...(isPriceOnRequest ? [] : [{ key: "price", label: "Precio" }]),
+      // Price is optional if "quote" is selected
+      ...(priceType === "quote" ? [] : [{ key: "price", label: "Precio" }]),
       { key: "quantity", label: "Cantidad Disponible" },
       { key: "quantity", label: "Cantidad Disponible" },
       { key: "description", label: "Descripción del Producto" },
       { key: "country", label: "País de Origen" },
-      { key: "minOrder", label: "Pedido Mínimo" },
+      { key: "minOrderQuantity", label: "Pedido Mínimo" },
       { key: "packagingSize", label: "Peso por Embalaje" },
       { key: "image", label: "Foto Principal del Producto" },
       { key: "supplyCapacity", label: "Capacidad de Abastecimiento" },
@@ -311,10 +310,13 @@ export default function NuevaPublicacionPage() {
         body: JSON.stringify({
           userId,
           ...formData,
-          price: isPriceOnRequest ? "Por Cotizar" : formData.price,
+          price: priceType === "quote" ? "Por Cotizar" : formData.price,
+          price_type: priceType,
           currency: formData.currency,
-          quantity: `${formData.quantity} ${formData.quantityUnit || "kg"}`,
-          minOrder: `${formData.minOrder} ${formData.minOrderUnit || "kg"}`,
+          unit: formData.unit,
+          quantity: `${formData.quantity} ${formData.unit}`,
+          minOrder: `${formData.minOrderQuantity} ${formData.unit}`,
+          min_order_quantity: formData.minOrderQuantity,
           shippingUnitType: formData.shippingUnit,
           containerSize: formData.containerSize || null,
           alcanceComercial: selectedAlcance,
@@ -503,20 +505,22 @@ export default function NuevaPublicacionPage() {
                 <label htmlFor="category" className="block text-sm font-medium mb-2">
                   Categoría <span className="text-red-500">*</span>
                 </label>
-                <select
-                  id="category"
-                  name="category"
+                <Select
                   value={formData.category}
-                  onChange={handleInputChange}
-                  className="w-full px-3 py-2 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary bg-background"
+                  onValueChange={(value) => setFormData((prev) => ({ ...prev, category: value }))}
                   disabled={isLoading}
-                  required
                 >
-                  <option value="">Selecciona una categoría</option>
-                  {PRODUCT_CATEGORIES.map((cat) => (
-                    <option key={cat} value={cat}>{cat}</option>
-                  ))}
-                </select>
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Selecciona una categoría" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {PRODUCT_CATEGORIES.map((cat) => (
+                      <SelectItem key={cat} value={cat}>
+                        {cat}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
             </div>
 
@@ -526,92 +530,106 @@ export default function NuevaPublicacionPage() {
                 <label htmlFor="country" className="block text-sm font-medium mb-2">
                   País de Origen <span className="text-red-500">*</span>
                 </label>
-                <select
-                  id="country"
-                  name="country"
-                  value={formData.country}
-                  onChange={handleInputChange}
-                  className="w-full px-3 py-2 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary bg-background"
-                  disabled={isLoading}
-                  required
-                >
-                  <option value="">Selecciona un país</option>
-                  <optgroup label="Centroamérica">
-                    <option value="El Salvador">El Salvador</option>
-                    <option value="Guatemala">Guatemala</option>
-                    <option value="Honduras">Honduras</option>
-                    <option value="Nicaragua">Nicaragua</option>
-                    <option value="Costa Rica">Costa Rica</option>
-                    <option value="Panamá">Panamá</option>
-                    <option value="Belice">Belice</option>
-                  </optgroup>
-                  <optgroup label="Norteamérica">
-                    <option value="México">México</option>
-                    <option value="Estados Unidos">Estados Unidos</option>
-                    <option value="Canadá">Canadá</option>
-                  </optgroup>
-                  <optgroup label="Sudamérica">
-                    <option value="Argentina">Argentina</option>
-                    <option value="Bolivia">Bolivia</option>
-                    <option value="Brasil">Brasil</option>
-                    <option value="Chile">Chile</option>
-                    <option value="Colombia">Colombia</option>
-                    <option value="Ecuador">Ecuador</option>
-                    <option value="Paraguay">Paraguay</option>
-                    <option value="Perú">Perú</option>
-                    <option value="Uruguay">Uruguay</option>
-                    <option value="Venezuela">Venezuela</option>
-                    <option value="Guyana">Guyana</option>
-                    <option value="Surinam">Surinam</option>
-                  </optgroup>
-                  <optgroup label="El Caribe">
-                    <option value="Cuba">Cuba</option>
-                    <option value="República Dominicana">República Dominicana</option>
-                    <option value="Jamaica">Jamaica</option>
-                    <option value="Haití">Haití</option>
-                    <option value="Trinidad y Tobago">Trinidad y Tobago</option>
-                    <option value="Puerto Rico">Puerto Rico</option>
-                  </optgroup>
-                  <optgroup label="Europa">
-                    <option value="España">España</option>
-                    <option value="Francia">Francia</option>
-                    <option value="Alemania">Alemania</option>
-                    <option value="Italia">Italia</option>
-                    <option value="Portugal">Portugal</option>
-                    <option value="Países Bajos">Países Bajos</option>
-                    <option value="Bélgica">Bélgica</option>
-                    <option value="Polonia">Polonia</option>
-                    <option value="Reino Unido">Reino Unido</option>
-                  </optgroup>
-                  <optgroup label="Asia">
-                    <option value="China">China</option>
-                    <option value="India">India</option>
-                    <option value="Japón">Japón</option>
-                    <option value="Corea del Sur">Corea del Sur</option>
-                    <option value="Tailandia">Tailandia</option>
-                    <option value="Vietnam">Vietnam</option>
-                    <option value="Indonesia">Indonesia</option>
-                    <option value="Filipinas">Filipinas</option>
-                    <option value="Malasia">Malasia</option>
-                    <option value="Turquía">Turquía</option>
-                  </optgroup>
-                  <optgroup label="África">
-                    <option value="Sudáfrica">Sudáfrica</option>
-                    <option value="Nigeria">Nigeria</option>
-                    <option value="Kenia">Kenia</option>
-                    <option value="Etiopía">Etiopía</option>
-                    <option value="Ghana">Ghana</option>
-                    <option value="Costa de Marfil">Costa de Marfil</option>
-                    <option value="Tanzania">Tanzania</option>
-                    <option value="Uganda">Uganda</option>
-                    <option value="Marruecos">Marruecos</option>
-                    <option value="Egipto">Egipto</option>
-                  </optgroup>
-                  <optgroup label="Oceanía">
-                    <option value="Australia">Australia</option>
-                    <option value="Nueva Zelanda">Nueva Zelanda</option>
-                  </optgroup>
-                </select>
+                <Select value={formData.country} onValueChange={(v) => setFormData(p => ({...p, country: v}))} disabled={isLoading}>
+  <SelectTrigger className="w-full">
+    <SelectValue placeholder="Selecciona una opción" />
+  </SelectTrigger>
+  <SelectContent>
+
+                  
+                  <SelectGroup>
+      <SelectLabel>Centroamérica</SelectLabel>
+                    <SelectItem value="El Salvador">El Salvador</SelectItem>
+                    <SelectItem value="Guatemala">Guatemala</SelectItem>
+                    <SelectItem value="Honduras">Honduras</SelectItem>
+                    <SelectItem value="Nicaragua">Nicaragua</SelectItem>
+                    <SelectItem value="Costa Rica">Costa Rica</SelectItem>
+                    <SelectItem value="Panamá">Panamá</SelectItem>
+                    <SelectItem value="Belice">Belice</SelectItem>
+                  
+    </SelectGroup>
+                  <SelectGroup>
+      <SelectLabel>Norteamérica</SelectLabel>
+                    <SelectItem value="México">México</SelectItem>
+                    <SelectItem value="Estados Unidos">Estados Unidos</SelectItem>
+                    <SelectItem value="Canadá">Canadá</SelectItem>
+                  
+    </SelectGroup>
+                  <SelectGroup>
+      <SelectLabel>Sudamérica</SelectLabel>
+                    <SelectItem value="Argentina">Argentina</SelectItem>
+                    <SelectItem value="Bolivia">Bolivia</SelectItem>
+                    <SelectItem value="Brasil">Brasil</SelectItem>
+                    <SelectItem value="Chile">Chile</SelectItem>
+                    <SelectItem value="Colombia">Colombia</SelectItem>
+                    <SelectItem value="Ecuador">Ecuador</SelectItem>
+                    <SelectItem value="Paraguay">Paraguay</SelectItem>
+                    <SelectItem value="Perú">Perú</SelectItem>
+                    <SelectItem value="Uruguay">Uruguay</SelectItem>
+                    <SelectItem value="Venezuela">Venezuela</SelectItem>
+                    <SelectItem value="Guyana">Guyana</SelectItem>
+                    <SelectItem value="Surinam">Surinam</SelectItem>
+                  
+    </SelectGroup>
+                  <SelectGroup>
+      <SelectLabel>El Caribe</SelectLabel>
+                    <SelectItem value="Cuba">Cuba</SelectItem>
+                    <SelectItem value="República Dominicana">República Dominicana</SelectItem>
+                    <SelectItem value="Jamaica">Jamaica</SelectItem>
+                    <SelectItem value="Haití">Haití</SelectItem>
+                    <SelectItem value="Trinidad y Tobago">Trinidad y Tobago</SelectItem>
+                    <SelectItem value="Puerto Rico">Puerto Rico</SelectItem>
+                  
+    </SelectGroup>
+                  <SelectGroup>
+      <SelectLabel>Europa</SelectLabel>
+                    <SelectItem value="España">España</SelectItem>
+                    <SelectItem value="Francia">Francia</SelectItem>
+                    <SelectItem value="Alemania">Alemania</SelectItem>
+                    <SelectItem value="Italia">Italia</SelectItem>
+                    <SelectItem value="Portugal">Portugal</SelectItem>
+                    <SelectItem value="Países Bajos">Países Bajos</SelectItem>
+                    <SelectItem value="Bélgica">Bélgica</SelectItem>
+                    <SelectItem value="Polonia">Polonia</SelectItem>
+                    <SelectItem value="Reino Unido">Reino Unido</SelectItem>
+                  
+    </SelectGroup>
+                  <SelectGroup>
+      <SelectLabel>Asia</SelectLabel>
+                    <SelectItem value="China">China</SelectItem>
+                    <SelectItem value="India">India</SelectItem>
+                    <SelectItem value="Japón">Japón</SelectItem>
+                    <SelectItem value="Corea del Sur">Corea del Sur</SelectItem>
+                    <SelectItem value="Tailandia">Tailandia</SelectItem>
+                    <SelectItem value="Vietnam">Vietnam</SelectItem>
+                    <SelectItem value="Indonesia">Indonesia</SelectItem>
+                    <SelectItem value="Filipinas">Filipinas</SelectItem>
+                    <SelectItem value="Malasia">Malasia</SelectItem>
+                    <SelectItem value="Turquía">Turquía</SelectItem>
+                  
+    </SelectGroup>
+                  <SelectGroup>
+      <SelectLabel>África</SelectLabel>
+                    <SelectItem value="Sudáfrica">Sudáfrica</SelectItem>
+                    <SelectItem value="Nigeria">Nigeria</SelectItem>
+                    <SelectItem value="Kenia">Kenia</SelectItem>
+                    <SelectItem value="Etiopía">Etiopía</SelectItem>
+                    <SelectItem value="Ghana">Ghana</SelectItem>
+                    <SelectItem value="Costa de Marfil">Costa de Marfil</SelectItem>
+                    <SelectItem value="Tanzania">Tanzania</SelectItem>
+                    <SelectItem value="Uganda">Uganda</SelectItem>
+                    <SelectItem value="Marruecos">Marruecos</SelectItem>
+                    <SelectItem value="Egipto">Egipto</SelectItem>
+                  
+    </SelectGroup>
+                  <SelectGroup>
+      <SelectLabel>Oceanía</SelectLabel>
+                    <SelectItem value="Australia">Australia</SelectItem>
+                    <SelectItem value="Nueva Zelanda">Nueva Zelanda</SelectItem>
+                  
+    </SelectGroup>
+                  </SelectContent>
+</Select>
               </div>
               <div>
                 <label htmlFor="state" className="block text-sm font-medium mb-2">
@@ -631,22 +649,20 @@ export default function NuevaPublicacionPage() {
                 <label htmlFor="maturity" className="block text-sm font-medium mb-2">
                   Tipo de Maduración <span className="text-red-500">*</span>
                 </label>
-                <select
-                  id="maturity"
-                  name="maturity"
-                  value={formData.maturity}
-                  onChange={handleInputChange}
-                  className="w-full px-3 py-2 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary bg-background"
-                  disabled={isLoading}
-                  required
-                >
-                  <option value="">Selecciona una opción</option>
-                  <option value="No aplica">No aplica</option>
-                  <option value="Verde">Verde</option>
-                  <option value="Semi-maduro">Semi-maduro</option>
-                  <option value="Maduro">Maduro</option>
-                  <option value="Sobre-maduro">Sobre-maduro</option>
-                </select>
+                <Select value={formData.maturity} onValueChange={(v) => setFormData(p => ({...p, maturity: v}))} disabled={isLoading}>
+  <SelectTrigger className="w-full">
+    <SelectValue placeholder="Selecciona una opción" />
+  </SelectTrigger>
+  <SelectContent>
+
+                  
+                  <SelectItem value="No aplica">No aplica</SelectItem>
+                  <SelectItem value="Verde">Verde</SelectItem>
+                  <SelectItem value="Semi-maduro">Semi-maduro</SelectItem>
+                  <SelectItem value="Maduro">Maduro</SelectItem>
+                  <SelectItem value="Sobre-maduro">Sobre-maduro</SelectItem>
+                  </SelectContent>
+</Select>
               </div>
             </div>
 
@@ -660,8 +676,8 @@ export default function NuevaPublicacionPage() {
                   <button
                     type="button"
                     onClick={() => setFormData(prev => {
-                      const cleanQty = prev.quantity.replace(/[^\d.]/g, "")
-                      const cleanMin = prev.minOrder.replace(/[^\d.]/g, "")
+                      const cleanQty = prev.quantity.toString().replace(/[^\d.]/g, "")
+                      const cleanMin = prev.minOrderQuantity.toString().replace(/[^\d.]/g, "")
                       return { 
                         ...prev, 
                         saleMethod: "standard", 
@@ -669,9 +685,8 @@ export default function NuevaPublicacionPage() {
                         shippingUnit: "", 
                         containerSize: "", 
                         quantity: cleanQty,
-                        quantityUnit: prev.quantityUnit.startsWith("Contenedor") ? "kg" : prev.quantityUnit,
-                        minOrder: cleanMin,
-                        minOrderUnit: prev.minOrderUnit.startsWith("Contenedor") ? "kg" : prev.minOrderUnit
+                        unit: prev.unit.startsWith("Contenedor") ? "kg" : prev.unit,
+                        minOrderQuantity: cleanMin
                       }
                     })}
                     className={`flex items-center gap-3 p-3 rounded-xl border-2 transition-all text-left ${
@@ -692,8 +707,8 @@ export default function NuevaPublicacionPage() {
                   <button
                     type="button"
                     onClick={() => setFormData(prev => {
-                      const cleanQty = prev.quantity.replace(/[^\d.]/g, "")
-                      const cleanMin = prev.minOrder.replace(/[^\d.]/g, "")
+                      const cleanQty = prev.quantity.toString().replace(/[^\d.]/g, "")
+                      const cleanMin = prev.minOrderQuantity.toString().replace(/[^\d.]/g, "")
                       return { 
                         ...prev, 
                         saleMethod: "fcl", 
@@ -701,9 +716,8 @@ export default function NuevaPublicacionPage() {
                         shippingUnit: "FCL", 
                         containerSize: prev.containerSize || "20ST", 
                         quantity: cleanQty,
-                        quantityUnit: "Contenedor 20'",
-                        minOrder: cleanMin || "1",
-                        minOrderUnit: "Contenedor 20'",
+                        unit: "Contenedor 20'",
+                        minOrderQuantity: cleanMin || "1",
                         packagingSize: prev.packagingSize || "21000"
                       }
                     })}
@@ -731,24 +745,22 @@ export default function NuevaPublicacionPage() {
                       <label htmlFor="packaging" className="block text-sm font-medium mb-2">
                         Tipo de Embalaje <span className="text-red-500">*</span>
                       </label>
-                      <select
-                        id="packaging"
-                        name="packaging"
-                        value={formData.packaging}
-                        onChange={handleInputChange}
-                        className="w-full px-3 py-2 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary bg-background"
-                        disabled={isLoading}
-                        required
-                      >
-                        <option value="">Selecciona un tipo de embalaje</option>
-                        <option value="Sacos">Sacos</option>
-                        <option value="Cajas">Cajas</option>
-                        <option value="Bolsas">Bolsas</option>
-                        <option value="Pallets">Pallets</option>
-                        <option value="Barriles">Barriles</option>
-                        <option value="Canastillas">Canastillas</option>
-                        <option value="Empaques Frescos">Empaques Frescos</option>
-                      </select>
+                      <Select value={formData.packaging} onValueChange={(v) => setFormData(p => ({...p, packaging: v}))} disabled={isLoading}>
+  <SelectTrigger className="w-full">
+    <SelectValue placeholder="Selecciona una opción" />
+  </SelectTrigger>
+  <SelectContent>
+
+                        
+                        <SelectItem value="Sacos">Sacos</SelectItem>
+                        <SelectItem value="Cajas">Cajas</SelectItem>
+                        <SelectItem value="Bolsas">Bolsas</SelectItem>
+                        <SelectItem value="Pallets">Pallets</SelectItem>
+                        <SelectItem value="Barriles">Barriles</SelectItem>
+                        <SelectItem value="Canastillas">Canastillas</SelectItem>
+                        <SelectItem value="Empaques Frescos">Empaques Frescos</SelectItem>
+                        </SelectContent>
+</Select>
                     </div>
                     <div>
                       <label htmlFor="packagingSize" className="block text-sm font-medium mb-2">
@@ -856,22 +868,39 @@ export default function NuevaPublicacionPage() {
               </div>
             </div>
 
+            {/* Global Unit Selector */}
+            <div className="mb-6">
+              <label htmlFor="unit" className="block text-sm font-medium mb-2">
+                Unidad de Medida Global <span className="text-red-500">*</span>
+              </label>
+              <Select value={formData.unit} onValueChange={(v) => setFormData(p => ({...p, unit: v}))} disabled={isLoading}>
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Selecciona una opción" />
+                </SelectTrigger>
+                <SelectContent>
+                  {UNIDADES_MEDIDA.map((u) => (
+                    <SelectItem key={u.value} value={u.value}>{u.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground mt-1">Esta unidad se usará para el precio, cantidad disponible y pedido mínimo.</p>
+            </div>
+
             {/* Precio, Cantidad Disponible y Pedido Mínimo */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
-                <label htmlFor="price" className="block text-sm font-medium mb-2">
+                <label className="block text-sm font-medium mb-2">
                   Precio <span className="text-red-500">*</span>
                 </label>
 
                 <div className="flex bg-muted p-1 rounded-lg mb-3">
                   <button
                     type="button"
-                    aria-pressed={isPriceOnRequest}
                     onClick={() => {
-                      setIsPriceOnRequest(true)
-                      setFormData(prev => ({ ...prev, price: "Por Cotizar" }))
+                      setPriceType("quote")
+                      setFormData(prev => ({ ...prev, price: "" }))
                     }}
-                    className={`flex-1 py-2 text-sm font-medium rounded-md transition-all ${isPriceOnRequest
+                    className={`flex-1 py-2 text-sm font-medium rounded-md transition-all ${priceType === "quote"
                       ? "bg-primary text-primary-foreground shadow-sm"
                       : "text-muted-foreground hover:text-foreground"
                       }`}
@@ -880,12 +909,10 @@ export default function NuevaPublicacionPage() {
                   </button>
                   <button
                     type="button"
-                    aria-pressed={!isPriceOnRequest}
                     onClick={() => {
-                      setIsPriceOnRequest(false)
-                      setFormData(prev => ({ ...prev, price: "" }))
+                      setPriceType("fixed")
                     }}
-                    className={`flex-1 py-2 text-sm font-medium rounded-md transition-all ${!isPriceOnRequest
+                    className={`flex-1 py-2 text-sm font-medium rounded-md transition-all ${priceType === "fixed"
                       ? "bg-primary text-primary-foreground shadow-sm"
                       : "text-muted-foreground hover:text-foreground"
                       }`}
@@ -894,7 +921,7 @@ export default function NuevaPublicacionPage() {
                   </button>
                 </div>
 
-                {!isPriceOnRequest ? (
+                {priceType === "fixed" ? (
                   <div className="flex gap-2">
                     <CurrencyPicker
                       value={formData.currency}
@@ -906,16 +933,16 @@ export default function NuevaPublicacionPage() {
                         id="price"
                         type="number"
                         name="price"
-                        value={formData.price === "Por Cotizar" ? "" : formData.price}
+                        value={formData.price}
                         onChange={handleInputChange}
                         placeholder="0.00"
                         className="pr-12"
                         disabled={isLoading}
-                        required={!isPriceOnRequest}
+                        required={priceType === "fixed"}
                         step="0.01"
                         min="0"
                       />
-                      <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">/{formData.saleMethod === "fcl" ? "contenedor" : "kg"}</span>
+                      <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">/{formData.unit}</span>
                     </div>
                   </div>
                 ) : (
@@ -929,7 +956,7 @@ export default function NuevaPublicacionPage() {
                 <label htmlFor="quantity" className="block text-sm font-medium mb-2">
                   Cantidad Disponible <span className="text-red-500">*</span>
                 </label>
-                <div className="flex gap-2">
+                <div className="flex gap-2 relative">
                   <Input
                     id="quantity"
                     type="number"
@@ -938,70 +965,36 @@ export default function NuevaPublicacionPage() {
                     onChange={handleInputChange}
                     placeholder="Ej: 500"
                     min="1"
-                    className="w-full"
+                    className="w-full pr-16"
                     disabled={isLoading}
                     required
                   />
-                  <select
-                    name="quantityUnit"
-                    value={formData.quantityUnit}
-                    onChange={handleInputChange}
-                    className="px-3 py-2 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary bg-background text-sm min-w-[120px]"
-                    disabled={isLoading}
-                  >
-                    {formData.saleMethod === "fcl" ? (
-                      <>
-                        <option value="Contenedor 20'">Contenedor 20'</option>
-                        <option value="Contenedor 40'">Contenedor 40'</option>
-                      </>
-                    ) : (
-                      <>
-                        <option value="kg">kg (Kilogramos)</option>
-                        <option value="lb">lb (Libras)</option>
-                        <option value="qq">qq (Quintales)</option>
-                      </>
-                    )}
-                  </select>
+                  <div className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm flex items-center justify-center">
+                    {formData.unit}
+                  </div>
                 </div>
               </div>
 
               <div>
-                <label htmlFor="minOrder" className="block text-sm font-medium mb-2">
+                <label htmlFor="minOrderQuantity" className="block text-sm font-medium mb-2">
                   Pedido Mínimo <span className="text-red-500">*</span>
                 </label>
-                <div className="flex gap-2">
+                <div className="flex gap-2 relative">
                   <Input
-                    id="minOrder"
+                    id="minOrderQuantity"
                     type="number"
-                    name="minOrder"
-                    value={formData.minOrder}
+                    name="minOrderQuantity"
+                    value={formData.minOrderQuantity}
                     onChange={handleInputChange}
                     placeholder="Ej: 100"
                     min="1"
-                    className="w-full"
+                    className="w-full pr-12"
                     disabled={isLoading}
                     required
                   />
-                  <select
-                    name="minOrderUnit"
-                    value={formData.minOrderUnit}
-                    onChange={handleInputChange}
-                    className="px-3 py-2 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary bg-background text-sm min-w-[120px]"
-                    disabled={isLoading}
-                  >
-                    {formData.saleMethod === "fcl" ? (
-                      <>
-                        <option value="Contenedor 20'">Contenedor 20'</option>
-                        <option value="Contenedor 40'">Contenedor 40'</option>
-                      </>
-                    ) : (
-                      <>
-                        <option value="kg">kg (Kilogramos)</option>
-                        <option value="lb">lb (Libras)</option>
-                        <option value="qq">qq (Quintales)</option>
-                      </>
-                    )}
-                  </select>
+                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">
+                    {formData.saleMethod === "fcl" ? "cont." : (formData.unit || "kg")}
+                  </span>
                 </div>
               </div>
             </div>
@@ -1027,36 +1020,34 @@ export default function NuevaPublicacionPage() {
                   />
                 </div>
                 <div>
-                  <select
-                    id="supplyCapacityUnit"
-                    name="supplyCapacityUnit"
-                    value={formData.supplyCapacityUnit}
-                    onChange={handleInputChange}
-                    className="w-full px-3 py-2 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary bg-background text-sm"
-                    disabled={isLoading}
-                  >
-                    <option value="kg">kg</option>
-                    <option value="toneladas">toneladas</option>
-                    <option value="libras">libras</option>
-                    <option value="TM">TM</option>
-                    <option value="unidades">unidades</option>
-                  </select>
+                  <Select value={formData.supplyCapacityUnit} onValueChange={(v) => setFormData(p => ({...p, supplyCapacityUnit: v}))} disabled={isLoading}>
+  <SelectTrigger className="w-full">
+    <SelectValue placeholder="Selecciona una opción" />
+  </SelectTrigger>
+  <SelectContent>
+
+                    <SelectItem value="kg">kg</SelectItem>
+                    <SelectItem value="toneladas">toneladas</SelectItem>
+                    <SelectItem value="libras">libras</SelectItem>
+                    <SelectItem value="TM">TM</SelectItem>
+                    <SelectItem value="unidades">unidades</SelectItem>
+                    </SelectContent>
+</Select>
                 </div>
                 <div className="flex items-center gap-2">
                   <span className="text-muted-foreground text-sm font-medium px-1">/</span>
-                  <select
-                    id="supplyCapacityPeriod"
-                    name="supplyCapacityPeriod"
-                    value={formData.supplyCapacityPeriod}
-                    onChange={handleInputChange}
-                    className="w-full px-3 py-2 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary bg-background text-sm"
-                    disabled={isLoading}
-                  >
-                    <option value="mes">mes</option>
-                    <option value="semana">semana</option>
-                    <option value="día">día</option>
-                    <option value="año">año</option>
-                  </select>
+                  <Select value={formData.supplyCapacityPeriod} onValueChange={(v) => setFormData(p => ({...p, supplyCapacityPeriod: v}))} disabled={isLoading}>
+  <SelectTrigger className="w-full">
+    <SelectValue placeholder="Selecciona una opción" />
+  </SelectTrigger>
+  <SelectContent>
+
+                    <SelectItem value="mes">mes</SelectItem>
+                    <SelectItem value="semana">semana</SelectItem>
+                    <SelectItem value="día">día</SelectItem>
+                    <SelectItem value="año">año</SelectItem>
+                    </SelectContent>
+</Select>
                 </div>
               </div>
               <p className="text-xs text-muted-foreground mt-1.5">
@@ -1069,25 +1060,24 @@ export default function NuevaPublicacionPage() {
               <label htmlFor="incoterm" className="block text-sm font-medium mb-2">
                 Incoterm <span className="text-xs text-muted-foreground">(Opcional)</span>
               </label>
-              <select
-                id="incoterm"
-                name="incoterm"
-                value={formData.incoterm}
-                onChange={handleInputChange}
-                className="w-full px-3 py-2 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary bg-background"
-                disabled={isLoading}
-              >
-                <option value="A definir con el comprador">A definir con el comprador</option>
-                <option value="EXW">EXW – En fábrica (el comprador recoge en origen)</option>
-                <option value="FCA">FCA – Entrega al transportista</option>
-                <option value="FOB">FOB – Libre a bordo (puerto de origen)</option>
-                <option value="CIF">CIF – Costo, seguro y flete incluidos</option>
-                <option value="CFR">CFR – Costo y flete incluidos</option>
-                <option value="DAP">DAP – Entregado en destino</option>
-                <option value="DDP">DDP – Entregado con impuestos pagados</option>
-                <option value="CPT">CPT – Transporte pagado hasta destino</option>
-                <option value="CIP">CIP – Transporte y seguro pagados</option>
-              </select>
+              <Select value={formData.incoterm} onValueChange={(v) => setFormData(p => ({...p, incoterm: v}))} disabled={isLoading}>
+  <SelectTrigger className="w-full">
+    <SelectValue placeholder="Selecciona una opción" />
+  </SelectTrigger>
+  <SelectContent>
+
+                <SelectItem value="A definir con el comprador">A definir con el comprador</SelectItem>
+                <SelectItem value="EXW">EXW – En fábrica (el comprador recoge en origen)</SelectItem>
+                <SelectItem value="FCA">FCA – Entrega al transportista</SelectItem>
+                <SelectItem value="FOB">FOB – Libre a bordo (puerto de origen)</SelectItem>
+                <SelectItem value="CIF">CIF – Costo, seguro y flete incluidos</SelectItem>
+                <SelectItem value="CFR">CFR – Costo y flete incluidos</SelectItem>
+                <SelectItem value="DAP">DAP – Entregado en destino</SelectItem>
+                <SelectItem value="DDP">DDP – Entregado con impuestos pagados</SelectItem>
+                <SelectItem value="CPT">CPT – Transporte pagado hasta destino</SelectItem>
+                <SelectItem value="CIP">CIP – Transporte y seguro pagados</SelectItem>
+                </SelectContent>
+</Select>
               <p className="text-xs text-muted-foreground mt-1.5">
                 Define hasta dónde llega la responsabilidad del vendedor en el envío.
               </p>

@@ -26,12 +26,11 @@ export default function AdminNuevaPublicacionPage() {
     category: "",
     price: "",
     quantity: "",
-    quantityUnit: "kg",
+    unit: "kg",
     description: "",
     country: "",
     state: "",
-    minOrder: "",
-    minOrderUnit: "kg",
+    minOrderQuantity: "",
     maturity: "",
     image: "",
     image2: "",
@@ -53,7 +52,7 @@ export default function AdminNuevaPublicacionPage() {
     supplyCapacityPeriod: "mes",
     currency: "US$",
   })
-  const [isPriceOnRequest, setIsPriceOnRequest] = useState(true)
+  const [priceType, setPriceType] = useState<"fixed" | "quote">("fixed")
   const [certInput, setCertInput] = useState("")
   const [statusMessage, setStatusMessage] = useState<{ type: 'success' | 'error' | 'loading' | null, text: string }>({ type: null, text: "" })
   const [imagePreview, setImagePreview] = useState<string>("")
@@ -166,11 +165,11 @@ export default function AdminNuevaPublicacionPage() {
     const requiredFields = [
       { key: "title", label: "Título del Producto" },
       { key: "category", label: "Categoría" },
-      ...(isPriceOnRequest ? [] : [{ key: "price", label: "Precio" }]),
+      ...(priceType === "quote" ? [] : [{ key: "price", label: "Precio" }]),
       { key: "quantity", label: "Cantidad Disponible" },
       { key: "description", label: "Descripción del Producto" },
       { key: "country", label: "País de Origen" },
-      { key: "minOrder", label: "Pedido Mínimo" },
+      { key: "minOrderQuantity", label: "Pedido Mínimo" },
       { key: "packagingSize", label: "Peso por Embalaje" },
       { key: "image", label: "Foto Principal del Producto" },
       { key: "supplyCapacity", label: "Capacidad de Abastecimiento" },
@@ -215,10 +214,13 @@ export default function AdminNuevaPublicacionPage() {
         body: JSON.stringify({
           userId: selectedUserId,
           ...formData,
-          price: isPriceOnRequest ? "Por Cotizar" : formData.price,
+          price: priceType === "quote" ? "Por Cotizar" : formData.price,
           currency: formData.currency,
-          quantity: `${formData.quantity} ${formData.quantityUnit || "kg"}`,
-          minOrder: `${formData.minOrder} ${formData.minOrderUnit || "kg"}`,
+          quantity: `${formData.quantity} ${formData.unit || "kg"}`,
+          minOrder: `${formData.minOrderQuantity} ${formData.unit || "kg"}`,
+          min_order_quantity: formData.minOrderQuantity,
+          unit: formData.unit,
+          price_type: priceType,
           shippingUnitType: formData.shippingUnit,
           containerSize: formData.containerSize || null,
           alcanceComercial: selectedAlcance,
@@ -505,7 +507,7 @@ export default function AdminNuevaPublicacionPage() {
                     type="button"
                     onClick={() => setFormData(prev => ({ 
                       ...prev, saleMethod: "standard", packaging: prev.packaging === "Contenedores" ? "" : prev.packaging, shippingUnit: "", containerSize: "",
-                      quantityUnit: prev.quantityUnit.startsWith("Contenedor") ? "kg" : prev.quantityUnit, minOrderUnit: prev.minOrderUnit.startsWith("Contenedor") ? "kg" : prev.minOrderUnit
+                      unit: prev.unit.startsWith("Contenedor") ? "kg" : prev.unit
                     }))}
                     className={`flex items-center gap-3 p-3 rounded-xl border-2 transition-all text-left ${formData.saleMethod === "standard" ? "border-primary bg-primary/5 ring-1 ring-primary/20" : "border-border hover:border-primary/30 bg-background"}`}
                   >
@@ -518,7 +520,7 @@ export default function AdminNuevaPublicacionPage() {
                   <button
                     type="button"
                     onClick={() => setFormData(prev => ({ 
-                      ...prev, saleMethod: "fcl", packaging: "Contenedores", shippingUnit: "FCL", containerSize: prev.containerSize || "20ST", quantityUnit: "Contenedor 20'", minOrderUnit: "Contenedor 20'", packagingSize: prev.packagingSize || "21000"
+                      ...prev, saleMethod: "fcl", packaging: "Contenedores", shippingUnit: "FCL", containerSize: prev.containerSize || "20ST", unit: "Contenedor 20'", packagingSize: prev.packagingSize || "21000"
                     }))}
                     className={`flex items-center gap-3 p-3 rounded-xl border-2 transition-all text-left ${formData.saleMethod === "fcl" ? "border-primary bg-primary/5 ring-1 ring-primary/20" : "border-border hover:border-primary/30 bg-background"}`}
                   >
@@ -593,13 +595,16 @@ export default function AdminNuevaPublicacionPage() {
               <div>
                 <label className="block text-sm font-medium mb-2">Precio <span className="text-red-500">*</span></label>
                 <div className="flex bg-muted p-1 rounded-lg mb-3">
-                  <button type="button" onClick={() => { setIsPriceOnRequest(true); setFormData(prev => ({ ...prev, price: "Por Cotizar" })) }} className={`flex-1 py-2 text-sm font-medium rounded-md ${isPriceOnRequest ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground"}`}>Cotización</button>
-                  <button type="button" onClick={() => { setIsPriceOnRequest(false); setFormData(prev => ({ ...prev, price: "" })) }} className={`flex-1 py-2 text-sm font-medium rounded-md ${!isPriceOnRequest ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground"}`}>Precio</button>
+                  <button type="button" onClick={() => { setPriceType("quote") }} className={`flex-1 py-2 text-sm font-medium rounded-md ${priceType === "quote" ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground"}`}>Cotización</button>
+                  <button type="button" onClick={() => { setPriceType("fixed") }} className={`flex-1 py-2 text-sm font-medium rounded-md ${priceType === "fixed" ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground"}`}>Precio</button>
                 </div>
-                {!isPriceOnRequest ? (
+                {priceType === "fixed" ? (
                   <div className="flex gap-2">
                     <CurrencyPicker value={formData.currency} onChange={(val) => setFormData(prev => ({ ...prev, currency: val }))} disabled={isLoading} />
-                    <Input type="number" name="price" value={formData.price === "Por Cotizar" ? "" : formData.price} onChange={handleInputChange} placeholder="0.00" disabled={isLoading} required={!isPriceOnRequest} step="0.01" min="0" />
+                    <div className="relative flex-1">
+                      <Input type="number" name="price" value={formData.price} onChange={handleInputChange} placeholder="0.00" className="pr-12" disabled={isLoading} required={priceType === "fixed"} step="0.01" min="0" />
+                      <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">/ {formData.saleMethod === "fcl" ? "contenedor" : (formData.unit || "kg")}</span>
+                    </div>
                   </div>
                 ) : (
                   <div className="p-3 bg-muted/50 border border-dashed rounded-lg text-center text-sm text-muted-foreground">Precio a acordar</div>
@@ -607,22 +612,27 @@ export default function AdminNuevaPublicacionPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-2">Cantidad Disponible <span className="text-red-500">*</span></label>
-                <div className="flex gap-2">
-                  <Input type="number" name="quantity" value={formData.quantity} onChange={handleInputChange} min="1" className="w-full" disabled={isLoading} required />
-                  <select name="quantityUnit" value={formData.quantityUnit} onChange={handleInputChange} className="px-3 py-2 border border-border rounded-md bg-background text-sm min-w-[120px]" disabled={isLoading}>
-                    {formData.saleMethod === "fcl" ? <><option value="Contenedor 20'">Contenedor 20'</option><option value="Contenedor 40'">Contenedor 40'</option></> : <><option value="kg">kg</option><option value="lb">lb</option><option value="qq">qq</option></>}
-                  </select>
-                </div>
+                <label className="block text-sm font-medium mb-2">Unidad de Medida Global <span className="text-red-500">*</span></label>
+                <select name="unit" value={formData.unit} onChange={handleInputChange} className="w-full px-3 py-2 border border-border rounded-md bg-background text-sm" disabled={isLoading}>
+                  {formData.saleMethod === "fcl" ? <><option value="Contenedor 20'">Contenedor 20'</option><option value="Contenedor 40'">Contenedor 40'</option></> : <><option value="kg">kg (Kilogramos)</option><option value="lb">lb (Libras)</option><option value="qq">qq (Quintales)</option><option value="TM">TM (Toneladas Métricas)</option><option value="L">L (Litros)</option><option value="ml">ml (Mililitros)</option><option value="gal">gal (Galones)</option><option value="caneca_20l">Caneca (20L)</option><option value="tambor_200l">Tambor (200L)</option><option value="caja">Caja</option><option value="saco">Saco</option><option value="malla">Malla</option><option value="unidad">Unidad</option></>}
+                </select>
               </div>
 
-              <div>
-                <label className="block text-sm font-medium mb-2">Pedido Mínimo <span className="text-red-500">*</span></label>
-                <div className="flex gap-2">
-                  <Input type="number" name="minOrder" value={formData.minOrder} onChange={handleInputChange} min="1" className="w-full" disabled={isLoading} required />
-                  <select name="minOrderUnit" value={formData.minOrderUnit} onChange={handleInputChange} className="px-3 py-2 border border-border rounded-md bg-background text-sm min-w-[120px]" disabled={isLoading}>
-                    {formData.saleMethod === "fcl" ? <><option value="Contenedor 20'">Contenedor 20'</option><option value="Contenedor 40'">Contenedor 40'</option></> : <><option value="kg">kg</option><option value="lb">lb</option><option value="qq">qq</option></>}
-                  </select>
+              <div className="grid grid-cols-1 gap-4">
+                <div>
+                  <label className="block text-sm font-medium mb-2">Cantidad Disponible <span className="text-red-500">*</span></label>
+                  <div className="relative">
+                    <Input type="number" name="quantity" value={formData.quantity} onChange={handleInputChange} min="1" className="w-full pr-12" disabled={isLoading} required />
+                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">{formData.saleMethod === "fcl" ? "cont." : (formData.unit || "kg")}</span>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium mb-2">Pedido Mínimo <span className="text-red-500">*</span></label>
+                  <div className="relative">
+                    <Input type="number" name="minOrderQuantity" value={formData.minOrderQuantity} onChange={handleInputChange} min="1" className="w-full pr-12" disabled={isLoading} required />
+                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">{formData.saleMethod === "fcl" ? "cont." : (formData.unit || "kg")}</span>
+                  </div>
                 </div>
               </div>
             </div>

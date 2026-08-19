@@ -19,3 +19,10 @@ export const PRODUCT_CATEGORIES = [
   "Otros"
 ].sort();
 
+export const UNIDADES_MEDIDA = [
+  { value: 'kg', label: 'Kilogramos (kg)' },
+  { value: 'TM', label: 'Toneladas Métricas (TM)' },
+  { value: 'lt', label: 'Litros (lt)' },
+  { value: 'unidad', label: 'Unidades (unidad)' },
+  { value: 'caja', label: 'Cajas (caja)' },
+];

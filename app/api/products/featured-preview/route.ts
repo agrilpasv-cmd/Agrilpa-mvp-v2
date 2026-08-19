@@ -25,7 +25,7 @@ export async function GET() {
     if (featuredIds.length > 0) {
       const { data } = await supabase
         .from("user_products")
-        .select("id, title, category, description, country, price, currency, min_order, user_id")
+        .select("id, title, category, description, country, price, currency, min_order, user_id, unit, price_type, min_order_quantity")
         .eq("is_visible", true)
         .in("id", featuredIds)
 
@@ -35,7 +35,7 @@ export async function GET() {
     } else {
       const { data } = await supabase
         .from("user_products")
-        .select("id, title, category, description, country, price, currency, min_order, user_id")
+        .select("id, title, category, description, country, price, currency, min_order, user_id, unit, price_type, min_order_quantity")
         .eq("is_visible", true)
         .order("created_at", { ascending: false })
         .limit(4)

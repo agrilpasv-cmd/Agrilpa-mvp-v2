@@ -14,7 +14,7 @@ export async function GET() {
         // 1. Fetch ALL products raw (no joins that might filter results)
         const { data: products, error: productsError } = await supabaseAdmin
             .from("user_products")
-            .select("id, user_id, title, category, description, country, state, price, currency, quantity, min_order, packaging, packaging_size, certifications, maturity, contact_method, contact_info, created_at, views, is_visible, shipping_unit_type, container_size")
+            .select("id, user_id, title, category, description, country, state, price, currency, quantity, min_order, packaging, packaging_size, certifications, maturity, contact_method, contact_info, created_at, views, is_visible, shipping_unit_type, container_size, unit, price_type, min_order_quantity")
             .order("created_at", { ascending: false })
 
         if (productsError) {

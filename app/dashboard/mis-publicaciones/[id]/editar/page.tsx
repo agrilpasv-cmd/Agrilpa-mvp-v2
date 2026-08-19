@@ -24,12 +24,11 @@ export default function EditarPublicacionPage({ params }: { params: Promise<{ id
     category: "",
     price: "",
     quantity: "",
-    quantityUnit: "kg",
+    unit: "kg",
     description: "",
     country: "",
     state: "",
-    minOrder: "",
-    minOrderUnit: "kg",
+    minOrderQuantity: "",
     maturity: "",
     image: "",
     image2: "",
@@ -51,7 +50,7 @@ export default function EditarPublicacionPage({ params }: { params: Promise<{ id
     currency: "US$",
     saleMethod: "standard",
   })
-  const [isPriceOnRequest, setIsPriceOnRequest] = useState(false)
+  const [priceType, setPriceType] = useState<"fixed" | "quote">("fixed")
   const [certInput, setCertInput] = useState("")
   const [statusMessage, setStatusMessage] = useState<{ type: 'success' | 'error' | 'loading' | null, text: string }>({ type: null, text: "" })
   const [imagePreview, setImagePreview] = useState<string>("")
@@ -208,8 +207,11 @@ export default function EditarPublicacionPage({ params }: { params: Promise<{ id
             }
           }
           // Get currency and price
-          let parsedPriceVal = p.price || "";
+          let parsedPriceVal = p.price === "Por Cotizar" ? "" : (p.price || "");
           let parsedCurrencyVal = p.currency || "US$";
+          let parsedPriceType = p.price_type || (p.price === "Por Cotizar" ? "quote" : "fixed");
+          let parsedUnit = p.unit || parsedQuantityUnit || "kg";
+          let parsedMinOrderQuantity = p.min_order_quantity ? p.min_order_quantity.toString() : parsedMinOrderNum;
 
           setFormData({
             title: p.title || "",
@@ -217,12 +219,11 @@ export default function EditarPublicacionPage({ params }: { params: Promise<{ id
             price: parsedPriceVal,
             currency: parsedCurrencyVal,
             quantity: parsedQuantityNum,
-            quantityUnit: parsedQuantityUnit,
+            unit: parsedUnit,
             description: cleanDescription,
             country: p.country || "",
             state: p.state || "",
-            minOrder: parsedMinOrderNum,
-            minOrderUnit: parsedMinOrderUnit,
+            minOrderQuantity: parsedMinOrderQuantity,
             maturity: p.maturity || "",
             image: p.image || "",
             image2: p.image2 || "",
@@ -247,7 +248,7 @@ export default function EditarPublicacionPage({ params }: { params: Promise<{ id
           setImagePreview2(p.image2 || "")
           setImagePreview3(p.image3 || "")
           setSelectedAlcance(p.alcance_comercial || [])
-          setIsPriceOnRequest(p.price === "Por Cotizar")
+          setPriceType(parsedPriceType as "fixed" | "quote")
         } else {
           setStatusMessage({ type: 'error', text: "Producto no encontrado" })
         }
@@ -320,7 +321,7 @@ export default function EditarPublicacionPage({ params }: { params: Promise<{ id
     const requiredFields = [
       { key: "title", label: "Título del Producto" },
       { key: "category", label: "Categoría" },
-      ...(isPriceOnRequest ? [] : [{ key: "price", label: "Precio" }]),
+      ...(priceType === "quote" ? [] : [{ key: "price", label: "Precio" }]),
       { key: "quantity", label: "Cantidad Disponible" },
       { key: "description", label: "Descripción del Producto" },
       { key: "country", label: "País de Origen" },
@@ -357,14 +358,16 @@ export default function EditarPublicacionPage({ params }: { params: Promise<{ id
           id: resolvedParams.id,
           title: formData.title,
           category: formData.category,
-          price: isPriceOnRequest ? "Por Cotizar" : formData.price,
+          price: priceType === "quote" ? "Por Cotizar" : formData.price,
+          price_type: priceType,
           currency: formData.currency,
-          quantity: `${formData.quantity} ${formData.quantityUnit || "kg"}`,
+          unit: formData.unit,
+          quantity: `${formData.quantity} ${formData.unit}`,
           description: formData.description,
           country: formData.country,
           state: formData.state,
-          min_order: `${formData.minOrder} ${formData.minOrderUnit || "kg"}`,
-          min_order_unit: formData.minOrderUnit,
+          min_order: `${formData.minOrderQuantity} ${formData.unit}`,
+          min_order_quantity: formData.minOrderQuantity,
           packaging: formData.packaging,
           packaging_size: parseInt(formData.packagingSize) || 0,
           image: formData.image,
@@ -903,6 +906,36 @@ export default function EditarPublicacionPage({ params }: { params: Promise<{ id
               </div>
             </div>
 
+            {/* Global Unit Selector */}
+            <div className="mb-6">
+              <label htmlFor="unit" className="block text-sm font-medium mb-2">
+                Unidad de Medida Global <span className="text-red-500">*</span>
+              </label>
+              <select
+                id="unit"
+                name="unit"
+                value={formData.unit}
+                onChange={handleInputChange}
+                className="w-full md:w-1/3 px-3 py-2 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary bg-background"
+                disabled={isLoading}
+              >
+                <option value="kg">kg</option>
+                <option value="lb">lb</option>
+                <option value="qq">qq</option>
+                <option value="TM">TM</option>
+                <option value="L">L</option>
+                <option value="ml">ml</option>
+                <option value="gal">gal</option>
+                <option value="caneca_20l">caneca_20l</option>
+                <option value="tambor_200l">tambor_200l</option>
+                <option value="caja">caja</option>
+                <option value="saco">saco</option>
+                <option value="malla">malla</option>
+                <option value="unidad">unidad</option>
+              </select>
+              <p className="text-xs text-muted-foreground mt-1">Esta unidad se usará para el precio, cantidad disponible y pedido mínimo.</p>
+            </div>
+
             {/* Precio, Cantidad Disponible y Pedido Mínimo */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
@@ -914,10 +947,10 @@ export default function EditarPublicacionPage({ params }: { params: Promise<{ id
                   <button
                     type="button"
                     onClick={() => {
-                      setIsPriceOnRequest(true)
-                      setFormData(prev => ({ ...prev, price: "Por Cotizar" }))
+                      setPriceType("quote")
+                      setFormData(prev => ({ ...prev, price: "" }))
                     }}
-                    className={`flex-1 py-2 text-sm font-medium rounded-md transition-all ${isPriceOnRequest
+                    className={`flex-1 py-2 text-sm font-medium rounded-md transition-all ${priceType === "quote"
                       ? "bg-primary text-primary-foreground shadow-sm"
                       : "text-muted-foreground hover:text-foreground"
                       }`}
@@ -927,10 +960,9 @@ export default function EditarPublicacionPage({ params }: { params: Promise<{ id
                   <button
                     type="button"
                     onClick={() => {
-                      setIsPriceOnRequest(false)
-                      setFormData(prev => ({ ...prev, price: "" }))
+                      setPriceType("fixed")
                     }}
-                    className={`flex-1 py-2 text-sm font-medium rounded-md transition-all ${!isPriceOnRequest
+                    className={`flex-1 py-2 text-sm font-medium rounded-md transition-all ${priceType === "fixed"
                       ? "bg-primary text-primary-foreground shadow-sm"
                       : "text-muted-foreground hover:text-foreground"
                       }`}
@@ -939,7 +971,7 @@ export default function EditarPublicacionPage({ params }: { params: Promise<{ id
                   </button>
                 </div>
 
-                {!isPriceOnRequest ? (
+                {priceType === "fixed" ? (
                   <div className="flex gap-2">
                     <CurrencyPicker
                       value={formData.currency}
@@ -950,16 +982,16 @@ export default function EditarPublicacionPage({ params }: { params: Promise<{ id
                       <Input
                         type="number"
                         name="price"
-                        value={formData.price === "Por Cotizar" ? "" : formData.price}
+                        value={formData.price}
                         onChange={handleInputChange}
                         placeholder="0.00"
                         className="pr-12"
                         disabled={isLoading}
-                        required={!isPriceOnRequest}
+                        required={priceType === "fixed"}
                         step="0.01"
                         min="0"
                       />
-                      <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">/{formData.saleMethod === "fcl" ? "contenedor" : "kg"}</span>
+                      <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">/{formData.unit}</span>
                     </div>
                   </div>
                 ) : (
@@ -973,7 +1005,7 @@ export default function EditarPublicacionPage({ params }: { params: Promise<{ id
                 <label className="block text-sm font-medium mb-2">
                   Cantidad Disponible <span className="text-red-500">*</span>
                 </label>
-                <div className="flex gap-2">
+                <div className="flex gap-2 relative">
                   <Input
                     type="number"
                     name="quantity"
@@ -981,30 +1013,13 @@ export default function EditarPublicacionPage({ params }: { params: Promise<{ id
                     onChange={handleInputChange}
                     placeholder="Ej: 500"
                     min="1"
-                    className="w-full"
+                    className="w-full pr-16"
                     disabled={isLoading}
                     required
                   />
-                  <select
-                    name="quantityUnit"
-                    value={formData.quantityUnit}
-                    onChange={handleInputChange}
-                    className="px-3 py-2 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary bg-background text-sm min-w-[120px]"
-                    disabled={isLoading}
-                  >
-                    {formData.saleMethod === "fcl" ? (
-                      <>
-                        <option value="Contenedor 20'">Contenedor 20'</option>
-                        <option value="Contenedor 40'">Contenedor 40'</option>
-                      </>
-                    ) : (
-                      <>
-                        <option value="kg">kg (Kilogramos)</option>
-                        <option value="lb">lb (Libras)</option>
-                        <option value="qq">qq (Quintales)</option>
-                      </>
-                    )}
-                  </select>
+                  <div className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm flex items-center justify-center">
+                    {formData.unit}
+                  </div>
                 </div>
               </div>
 
@@ -1012,38 +1027,21 @@ export default function EditarPublicacionPage({ params }: { params: Promise<{ id
                 <label className="block text-sm font-medium mb-2">
                   Pedido Mínimo <span className="text-red-500">*</span>
                 </label>
-                <div className="flex gap-2">
+                <div className="flex gap-2 relative">
                   <Input
                     type="number"
-                    name="minOrder"
-                    value={formData.minOrder}
+                    name="minOrderQuantity"
+                    value={formData.minOrderQuantity}
                     onChange={handleInputChange}
                     placeholder="Ej: 100"
                     min="1"
-                    className="w-full"
+                    className="w-full pr-16"
                     disabled={isLoading}
                     required
                   />
-                  <select
-                    name="minOrderUnit"
-                    value={formData.minOrderUnit}
-                    onChange={handleInputChange}
-                    className="px-3 py-2 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary bg-background text-sm min-w-[120px]"
-                    disabled={isLoading}
-                  >
-                    {formData.saleMethod === "fcl" ? (
-                      <>
-                        <option value="Contenedor 20'">Contenedor 20'</option>
-                        <option value="Contenedor 40'">Contenedor 40'</option>
-                      </>
-                    ) : (
-                      <>
-                        <option value="kg">kg (Kilogramos)</option>
-                        <option value="lb">lb (Libras)</option>
-                        <option value="qq">qq (Quintales)</option>
-                      </>
-                    )}
-                  </select>
+                  <div className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm flex items-center justify-center">
+                    {formData.unit}
+                  </div>
                 </div>
               </div>
             </div>

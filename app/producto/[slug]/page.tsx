@@ -2,6 +2,7 @@
 
 import { notFound, useRouter, useParams } from "next/navigation"
 import Link from "next/link"
+import { UNIDADES_MEDIDA } from "@/lib/constants"
 import Image from "next/image"
 import { ProductImage } from "@/components/product-image"
 import { useState, useEffect, useMemo } from "react"
@@ -199,8 +200,8 @@ export default function ProductPage() {
               country: data.product.country,
               description: data.product.description,
               fullDescription: data.product.description,
-              price: data.product.price === "Por Cotizar" ? "Por Cotizar" : `${data.product.currency || "US$"} ${data.product.price}`,
-              minOrder: data.product.min_order?.replace(/kilos/gi, "kg"),
+              price: data.product.price_type === "quote" || !data.product.price || data.product.price === "Por Cotizar" ? "Por Cotizar" : `${data.product.price}$ / ${data.product.unit || "kg"}`,
+              minOrder: data.product.min_order_quantity ? `MIN. ${data.product.min_order_quantity} ${data.product.unit || "kg"}` : data.product.min_order?.replace(/kilos/gi, "kg"),
               rating: data.product.rating || 0,
               reviews: data.product.reviews || 0,
               reviewsData: data.product.reviews_data || [],
@@ -232,6 +233,7 @@ export default function ProductPage() {
                     ]
                 ),
                 ...(data.product.maturity ? [{ label: "Tipo de Maduración", value: data.product.maturity }] : []),
+                { label: "Unidad", value: UNIDADES_MEDIDA.find(u => u.value === (data.product.unit || "kg"))?.label || data.product.unit || "kg" },
                 { label: "Vendedor", value: producerName },
                 ...(extractedSupplyCapacity ? [{ label: "Capacidad de Abastecimiento", value: extractedSupplyCapacity }] : []),
                 ...(data.product.shipping_unit_type && data.product.shipping_unit_type !== "FCL" ? [{ 

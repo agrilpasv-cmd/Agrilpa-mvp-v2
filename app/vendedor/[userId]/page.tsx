@@ -46,6 +46,9 @@ interface Product {
   views: number
   created_at: string
   rating?: number
+  unit?: string
+  price_type?: string
+  min_order_quantity?: number
 }
 
 export default function VendedorPage() {
@@ -376,9 +379,9 @@ export default function VendedorPage() {
                       {/* Price + views row */}
                       <div className="flex items-center justify-between mt-auto pt-3 border-t border-border">
                         <span className="font-bold text-primary text-lg">
-                          {product.price === "Por Cotizar"
+                          {product.price_type === "quote" || !product.price || product.price === "Por Cotizar"
                             ? "Por Cotizar"
-                            : `${product.currency || "US$"} ${product.price}`}
+                            : `${product.price}$ / ${product.unit || "kg"}`}
                         </span>
                         <div className="flex items-center gap-1 text-xs text-muted-foreground">
                           <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />

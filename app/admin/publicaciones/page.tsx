@@ -36,6 +36,10 @@ interface Product {
     image: string
     created_at: string
     user_id: string
+    currency?: string
+    unit?: string
+    price_type?: string
+    min_order_quantity?: number
     user: {
         full_name: string
         email: string
@@ -187,7 +191,7 @@ export default function AdminPublicationsPage() {
                                                 <p className="truncate">{product.title}</p>
                                             </td>
                                             <td className="p-4">{product.category}</td>
-                                            <td className="p-4">{product.price}</td>
+                                            <td className="p-4">{product.price_type === "quote" || !product.price || product.price === "Por Cotizar" ? "Por Cotizar" : `${product.price}$ / ${product.unit || "kg"}`}</td>
                                             <td className="p-4 text-sm">
                                                 <div className="font-medium">{product.user?.full_name || "Desconocido"}</div>
                                                 <div className="text-xs text-muted-foreground">{product.user?.email}</div>
