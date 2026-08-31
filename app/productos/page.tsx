@@ -195,7 +195,7 @@ export default function ProductosPage() {
   const fetchUserProducts = async () => {
     setIsLoading(true)
     try {
-      const userResponse = await fetch("/api/products/get-user-products", { cache: 'no-store' })
+      const userResponse = await fetch(`/api/products/get-user-products?t=${Date.now()}`, { cache: 'no-store' })
 
       if (userResponse.ok) {
         const data = await userResponse.json()

@@ -2,7 +2,6 @@ import { createClient } from "@supabase/supabase-js"
 import { NextResponse } from "next/server"
 
 export const dynamic = 'force-dynamic'
-export const revalidate = 60
 
 export async function GET(request: Request) {
   try {
@@ -154,8 +153,7 @@ export async function GET(request: Request) {
     }
 
     const response = NextResponse.json({ products: processed }, { status: 200 })
-    // Cache 60s in browser, 300s in CDN/edge
-    response.headers.set("Cache-Control", "public, s-maxage=300, stale-while-revalidate=60")
+    response.headers.set("Cache-Control", "no-cache, no-store, must-revalidate")
     return response
   } catch (error) {
     console.error("[API] Internal error:", error)
