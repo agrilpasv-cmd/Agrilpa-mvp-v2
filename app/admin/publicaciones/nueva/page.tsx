@@ -123,6 +123,18 @@ export default function AdminNuevaPublicacionPage() {
         .join(" ")
     }
 
+    if (name === "price") {
+      let cleanVal = value.replace(/[^0-9.]/g, "")
+      const parts = cleanVal.split(".")
+      if (parts[0].length > 2) parts[0] = parts[0].slice(0, 2)
+      if (parts.length > 1) {
+        parts[1] = parts[1].slice(0, 2)
+        cleanVal = parts.slice(0, 2).join(".")
+      } else {
+        cleanVal = parts[0]
+      }
+      processedValue = cleanVal
+    }
     setFormData((prev) => ({
       ...prev,
       [name]: processedValue,

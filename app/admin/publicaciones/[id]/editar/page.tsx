@@ -3,53 +3,39 @@
 import type React from "react"
 import { useState, useEffect, use } from "react"
 import { useRouter } from "next/navigation"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { Textarea } from "@/components/ui/textarea"
-import { ArrowLeft, Check, Loader, X, Plus } from "lucide-react"
-import { PRODUCT_CATEGORIES } from "@/lib/constants"
-import { PhoneCodePicker } from "@/components/ui/country-picker"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { ArrowLeft, Check, Loader, X, Plus, ChevronRight, ChevronLeft, ShieldCheck, Image as ImageIcon } from "lucide-react"
+import { createClient } from "@/lib/supabase/client"
+import { PRODUCT_CATEGORIES, UNIDADES_MEDIDA } from "@/lib/constants"
 import { CurrencyPicker } from "@/components/ui/currency-picker"
 import { compressImage, MAX_FILE_SIZE_MB } from "@/lib/compress-image"
+
+const PREDEFINED_CERTS = [
+  "Global GAP", "USDA Organic", "Fair Trade", "Rainforest Alliance",
+  "HACCP", "ISO 9001", "FDA Registered", "SMETA", "Kosher", "Halal", "Organic EU"
+]
 
 export default function AdminEditarPublicacionPage({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = use(params)
   const router = useRouter()
   const [isLoading, setIsLoading] = useState(false)
   const [isLoadingData, setIsLoadingData] = useState(true)
+  const [currentStep, setCurrentStep] = useState(1)
+
   const [formData, setFormData] = useState({
-    title: "",
-    category: "",
-    price: "",
-    quantity: "",
-    unit: "kg",
-    description: "",
-    country: "",
-    state: "",
-    minOrderQuantity: "",
-    maturity: "",
-    image: "",
-    image2: "",
-    image3: "",
-    packaging: "",
-    packagingSize: "",
-    shippingUnit: "",
-    containerSize: "",
-    companyName: "",
-    contactMethod: "",
-    contactInfo: "",
-    countryCode: "",
-    phoneNumber: "",
-    certifications: "",
-    incoterm: "A definir con el comprador",
-    supplyCapacity: "",
-    supplyCapacityUnit: "toneladas",
-    supplyCapacityPeriod: "mes",
-    currency: "US$",
-    saleMethod: "standard",
+    title: "", category: "", price: "", quantity: "", unit: "kg", description: "",
+    country: "", state: "", minOrderQuantity: "", maturity: "", image: "", image2: "", image3: "",
+    packaging: "", packagingSize: "", shippingUnit: "", containerSize: "", companyName: "",
+    contactEmail: "", countryCode: "", phoneNumber: "", certifications: "",
+    incoterm: "A definir con el comprador", saleMethod: "standard", supplyCapacity: "",
+    supplyCapacityUnit: "toneladas", supplyCapacityPeriod: "mes", currency: "US$",
   })
+  
   const [priceType, setPriceType] = useState<"fixed" | "quote">("fixed")
   const [certInput, setCertInput] = useState("")
   const [statusMessage, setStatusMessage] = useState<{ type: 'success' | 'error' | 'loading' | null, text: string }>({ type: null, text: "" })
@@ -60,1417 +46,649 @@ export default function AdminEditarPublicacionPage({ params }: { params: Promise
 
   const ALL_COUNTRIES = [
     "El Salvador", "Guatemala", "Honduras", "Nicaragua", "Costa Rica", "Panamá", "Belice",
-    "México", "Estados Unidos", "Canadá",
-    "Argentina", "Bolivia", "Brasil", "Chile", "Colombia", "Ecuador", "Paraguay", "Perú", "Uruguay", "Venezuela", "Guyana", "Surinam",
-    "Cuba", "República Dominicana", "Jamaica", "Haití", "Trinidad y Tobago", "Puerto Rico",
-    "España", "Francia", "Alemania", "Italia", "Portugal", "Países Bajos", "Bélgica", "Polonia", "Reino Unido",
-    "China", "India", "Japón", "Corea del Sur", "Tailandia", "Vietnam", "Indonesia", "Filipinas", "Malasia", "Turquía",
-    "Sudáfrica", "Nigeria", "Kenia", "Etiopía", "Ghana", "Costa de Marfil", "Tanzania", "Uganda", "Marruecos", "Egipto",
-    "Australia", "Nueva Zelanda"
+    "México", "Estados Unidos", "Canadá", "Argentina", "Bolivia", "Brasil", "Chile", 
+    "Colombia", "Ecuador", "Paraguay", "Perú", "Uruguay", "Venezuela",
+    "España", "Alemania", "Países Bajos", "Reino Unido", "China", "Japón"
   ]
 
   const ALCANCE_OPTIONS = {
-    nacional: [
-      { value: 'Nacional (Cobertura en todo el país)', label: 'Nacional (Cobertura en todo el país)' }
-    ],
     internacional: [
-      { value: 'Regional (Centroamérica)', label: 'Regional (Centroamérica)' },
+      { value: 'Regional (Centroamérica)', label: 'Centroamérica' },
       { value: 'Norteamérica (EE.UU./Canadá)', label: 'Norteamérica (EE.UU./Canadá)' },
       { value: 'Europa', label: 'Europa' },
-      { value: 'Mercado Global (Otros destinos)', label: 'Mercado Global (Otros destinos)' }
+      { value: 'Mercado Global (Otros destinos)', label: 'Mercado Global' }
     ]
   }
 
-
+  
   // Load existing product data
   useEffect(() => {
     const loadProduct = async () => {
       try {
-        const response = await fetch(`/api/products/get-user-product-by-id?id=${resolvedParams.id}`)
-        const data = await response.json()
-
+        const res = await fetch(`/api/products/get-user-product-by-id?id=${resolvedParams.id}`)
+        const data = await res.json()
         if (data.product) {
           const p = data.product
-
-          // Parse description to extract vendor info and clean description
-          let cleanDescription = p.description || ""
-          let extractedCompanyName = ""
-          let extractedIncoterm = "A definir con el comprador"
-          let extractedSupplyCapacity = ""
-          let extractedSupplyCapacityUnit = "toneladas"
-          let extractedSupplyCapacityPeriod = "mes"
-
-          // Check if description contains vendor info section
-          if (cleanDescription.includes("---\nInformación del Vendedor:")) {
-            const parts = cleanDescription.split("---\nInformación del Vendedor:")
-            cleanDescription = parts[0].trim()
-
-            // Extract company name — only capture up to the next labeled field or end of line
-            const vendorInfo = parts[1] || ""
-            const companyMatch = vendorInfo.match(/Empresa:\s*([^\n]*?)(?:\s*\n|$)/)
-            const rawCompany = companyMatch ? companyMatch[1].trim() : ""
-            // Guard: reject the value if it accidentally captured contact info text
-            if (rawCompany && !rawCompany.toLowerCase().startsWith("contacto")) {
-              extractedCompanyName = rawCompany
-            }
-
-            // Extract incoterm from vendor info
-            const incotermMatch = vendorInfo.match(/Incoterm:\s*(.+?)(\n|$)/)
-            if (incotermMatch) {
-              extractedIncoterm = incotermMatch[1].trim()
-            }
-
-            // Extract supply capacity from vendor info
-            const supplyMatch = vendorInfo.match(/Capacidad de Abastecimiento:\s*(.+?)(\n|$)/)
-            if (supplyMatch) {
-              const fullSupply = supplyMatch[1].trim()
-              const parseMatch = fullSupply.match(/^(\d+(?:\.\d+)?)\s+(.*?)\s*\/\s*(.*?)$/)
-              if (parseMatch) {
-                extractedSupplyCapacity = parseMatch[1]
-                extractedSupplyCapacityUnit = parseMatch[2]
-                extractedSupplyCapacityPeriod = parseMatch[3]
-              } else {
-                extractedSupplyCapacity = fullSupply
-              }
-            }
+          let cleanDesc = p.description || ""
+          if (cleanDesc.includes("---\nInformación del Vendedor:")) {
+            cleanDesc = cleanDesc.split("---\nInformación del Vendedor:")[0].trim()
           }
-
-          // Always use the user's current registered company name as per requirements
-          let finalCompanyName = p.company_name || ""
-          try {
-            const profileRes = await fetch("/api/user/profile")
-            if (profileRes.ok) {
-              const profileData = await profileRes.json()
-              const company = profileData.user?.company_name || ""
-              if (company) {
-                finalCompanyName = company
-              }
-            }
-          } catch (e) {
-            // silent — fallback to stored name if profile call fails
-            if (!finalCompanyName) {
-              finalCompanyName = extractedCompanyName || ""
-            }
-          }
-
-          // Parse quantity and minOrder to string for input fields
-          let parsedQuantityNum = p.quantity ? p.quantity.toString().replace(/[^\d.]/g, "") : ""
-          let parsedMinOrderNum = p.min_order_quantity ? p.min_order_quantity.toString() : p.min_order ? p.min_order.toString().replace(/[^\d.]/g, "") : ""
-          
-          let parsedPriceVal = p.price === "Por Cotizar" ? "" : p.price || "";
-          let parsedCurrencyVal = p.currency || "US$";
-          let parsedUnit = p.unit || "kg"
-          let parsedPriceType = p.price_type || (p.price === "Por Cotizar" ? "quote" : "fixed")
-
-          if (p.price === "Por Cotizar" || parsedPriceType === "quote") {
-            setPriceType("quote")
-          } else {
-            setPriceType("fixed")
-          }
-
-          setFormData({
+          // Parse quantity number only
+          const qtyNum = p.quantity ? p.quantity.toString().replace(/[^\d.]/g, "") : ""
+          const minNum = p.min_order_quantity ? p.min_order_quantity.toString() : (p.min_order ? p.min_order.toString().replace(/[^\d.]/g, "") : "")
+          setPriceType(p.price_type || (p.price === "Por Cotizar" ? "quote" : "fixed"))
+          setFormData(prev => ({
+            ...prev,
             title: p.title || "",
             category: p.category || "",
-            price: parsedPriceVal,
-            currency: parsedCurrencyVal,
-            quantity: parsedQuantityNum,
-            unit: parsedUnit,
-            description: cleanDescription,
+            price: p.price === "Por Cotizar" ? "" : (p.price || ""),
+            currency: p.currency || "US$",
+            quantity: qtyNum,
+            unit: p.unit || "kg",
+            description: cleanDesc,
             country: p.country || "",
             state: p.state || "",
-            minOrderQuantity: parsedMinOrderNum,
+            minOrderQuantity: minNum,
             maturity: p.maturity || "",
             image: p.image || "",
             image2: p.image2 || "",
             image3: p.image3 || "",
             packaging: p.packaging || "",
             packagingSize: (p.packaging_size?.toString() || "").replace(/[a-zA-Z\s]+$/g, ""),
-            
             shippingUnit: p.shipping_unit_type || "",
             containerSize: p.container_size || "",
-            companyName: finalCompanyName,
-            contactMethod: p.contact_method || "",
-            contactInfo: p.contact_info || "",
-            countryCode: p.country_code || "",
+            companyName: p.company_name || "",
+            contactEmail: p.contact_email || "",
+            countryCode: p.country_code || "503",
             phoneNumber: p.phone_number || "",
             certifications: p.certifications || "",
-            incoterm: extractedIncoterm,
+            incoterm: p.incoterm || "A definir con el comprador",
             saleMethod: p.shipping_unit_type === "FCL" ? "fcl" : "standard",
-            supplyCapacity: extractedSupplyCapacity,
-            supplyCapacityUnit: extractedSupplyCapacityUnit,
-            supplyCapacityPeriod: extractedSupplyCapacityPeriod,
-          })
+            supplyCapacity: "",
+            supplyCapacityUnit: "toneladas",
+            supplyCapacityPeriod: "mes",
+          }))
           setImagePreview(p.image || "")
           setImagePreview2(p.image2 || "")
           setImagePreview3(p.image3 || "")
           setSelectedAlcance(p.alcance_comercial || [])
-          setIsPriceOnRequest(p.price === "Por Cotizar")
-        } else {
-          setStatusMessage({ type: 'error', text: "Producto no encontrado" })
         }
-      } catch (err) {
-        console.error("Error loading product:", err)
-        setStatusMessage({ type: 'error', text: "Error al cargar el producto" })
+      } catch (e) {
+        setStatusMessage({ type: 'error', text: "Error al cargar el producto." })
       } finally {
         setIsLoadingData(false)
       }
     }
-
     loadProduct()
   }, [resolvedParams.id])
+
+  useEffect(() => {
+    const checkAuth = async () => {
+      const supabase = createClient()
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session) router.push("/auth")
+    }
+    const timer = setTimeout(() => checkAuth(), 500)
+    return () => clearTimeout(timer)
+  }, [router])
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target
     let processedValue = value
-
     if (name === "state") {
-      // Allow only letters, spaces, and Spanish characters (áéíóúÁÉÍÓÚñÑüÜ)
       const cleanVal = value.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s]/g, "")
-      // Capitalize first letter of each word
-      processedValue = cleanVal
-        .split(" ")
-        .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-        .join(" ")
+      processedValue = cleanVal.split(" ").map((word) => word.charAt(0).toUpperCase() + word.slice(1)).join(" ")
     }
-
-    setFormData((prev) => ({
-      ...prev,
-      [name]: processedValue,
-    }))
-  }
-
-  const toggleAlcance = (option: string) => {
-    setSelectedAlcance((prev) =>
-      prev.includes(option) ? prev.filter((item) => item !== option) : [...prev, option]
-    )
+    if (name === "price") {
+      let cleanVal = value.replace(/[^0-9.]/g, "")
+      const parts = cleanVal.split(".")
+      if (parts[0].length > 2) parts[0] = parts[0].slice(0, 2)
+      if (parts.length > 1) {
+        parts[1] = parts[1].slice(0, 2)
+        cleanVal = parts.slice(0, 2).join(".")
+      } else {
+        cleanVal = parts[0]
+      }
+      processedValue = cleanVal
+    }
+    setFormData((prev) => ({ ...prev, [name]: processedValue }))
   }
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>, imageKey: "image" | "image2" | "image3") => {
     const file = e.target.files?.[0]
     if (!file) return
-
     if (file.size > MAX_FILE_SIZE_MB * 1024 * 1024) {
-      setStatusMessage({ type: 'error', text: `La imagen es demasiado grande. Usa una imagen menor a ${MAX_FILE_SIZE_MB}MB.` })
+      setStatusMessage({ type: 'error', text: `La imagen no debe superar los ${MAX_FILE_SIZE_MB}MB.` })
       e.target.value = ""
-      setTimeout(() => setStatusMessage({ type: null, text: "" }), 5000)
       return
     }
-
     setStatusMessage({ type: 'loading', text: "Optimizando imagen..." })
     try {
       const compressed = await compressImage(file)
-      if (imageKey === "image")  setImagePreview(compressed)
+      if (imageKey === "image") setImagePreview(compressed)
       if (imageKey === "image2") setImagePreview2(compressed)
       if (imageKey === "image3") setImagePreview3(compressed)
       setFormData((prev) => ({ ...prev, [imageKey]: compressed }))
       setStatusMessage({ type: null, text: "" })
     } catch (err) {
-      console.error("Image compression failed:", err)
-      setStatusMessage({ type: 'error', text: "Error al procesar la imagen. Intenta con otra." })
+      setStatusMessage({ type: 'error', text: "Error al procesar la imagen." })
     }
+  }
+
+  // --- LÓGICA DE CERTIFICACIONES MEJORADA ---
+  const toggleCertification = (cert: string) => {
+    const currentCerts = formData.certifications ? formData.certifications.split(',').map(c => c.trim()).filter(Boolean) : []
+    if (currentCerts.includes(cert)) {
+      setFormData({ ...formData, certifications: currentCerts.filter(c => c !== cert).join(',') })
+    } else {
+      setFormData({ ...formData, certifications: [...currentCerts, cert].join(',') })
+    }
+  }
+
+  const handleAddCustomCert = (e?: React.KeyboardEvent<HTMLInputElement> | React.MouseEvent<HTMLButtonElement>) => {
+    // Si viene de teclado y no es Enter, no hacemos nada
+    if (e && 'key' in e && e.key !== 'Enter') return;
+    
+    e?.preventDefault()
+    const newCert = certInput.trim()
+    if (newCert) {
+      const currentCerts = formData.certifications ? formData.certifications.split(',').map(c => c.trim()).filter(Boolean) : []
+      if (!currentCerts.includes(newCert)) {
+        setFormData({ ...formData, certifications: [...currentCerts, newCert].join(',') })
+      }
+      setCertInput("")
+    }
+  }
+
+  const validateStep = (step: number) => {
+    setStatusMessage({ type: null, text: "" })
+    if (step === 1) {
+      if (!formData.image) return "La Foto Principal es obligatoria."
+      if (!formData.title) return "Debes ingresar el Título del Producto."
+      if (!formData.category) return "Selecciona una Categoría."
+      if (!formData.country) return "Selecciona el País de Origen."
+      if (formData.description.length < 50) return "La descripción debe ser más detallada (mín. 50 caracteres)."
+    }
+    if (step === 3) {
+      if (priceType === "fixed" && !formData.price) return "Debes indicar un precio o seleccionar 'Cotización'."
+      if (!formData.quantity) return "Indica la Cantidad Disponible."
+      if (!formData.minOrderQuantity) return "Indica el Pedido Mínimo."
+      if (!formData.supplyCapacity) return "Indica tu Capacidad de Abastecimiento."
+      if (selectedAlcance.length === 0) return "Selecciona al menos una región en tu Alcance Comercial."
+    }
+    return null
+  }
+
+  const handleNextStep = () => {
+    const error = validateStep(currentStep)
+    if (error) return setStatusMessage({ type: 'error', text: error })
+    setCurrentStep((prev) => Math.min(prev + 1, 3))
+    window.scrollTo({ top: 0, behavior: "smooth" })
+  }
+
+  const handlePrevStep = () => {
+    setStatusMessage({ type: null, text: "" })
+    setCurrentStep((prev) => Math.max(prev - 1, 1))
+    window.scrollTo({ top: 0, behavior: "smooth" })
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    setStatusMessage({ type: 'loading', text: "Validando datos..." })
-
-    const requiredFields = [
-      { key: "title", label: "Título del Producto" },
-      { key: "category", label: "Categoría" },
-      ...(isPriceOnRequest ? [] : [{ key: "price", label: "Precio" }]),
-      { key: "quantity", label: "Cantidad Disponible" },
-      { key: "description", label: "Descripción del Producto" },
-      { key: "country", label: "País de Origen" },
-      
-      { key: "supplyCapacity", label: "Capacidad de Abastecimiento" },
-    ]
-
-    const missingField = requiredFields.find((field) => !formData[field.key as keyof typeof formData])
-
-    if (missingField) {
-      setStatusMessage({ type: 'error', text: `Falta completar: ${missingField.label}` })
-      return
-    }
-
-    if (formData.description.length < 50) {
-      setStatusMessage({ type: 'error', text: `La descripción debe tener al menos 50 caracteres. Faltan ${50 - formData.description.length}.` })
-      return
-    }
-
-    if (selectedAlcance.length === 0) {
-      setStatusMessage({ type: 'error', text: "Debe seleccionar al menos una opción en 'Alcance Comercial'." })
-      return
-    }
-
+    const error = validateStep(3)
+    if (error) return setStatusMessage({ type: 'error', text: error })
 
     setIsLoading(true)
     setStatusMessage({ type: 'loading', text: "Guardando cambios..." })
 
     try {
-      const response = await fetch('/api/products/update-product', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+      const response = await fetch("/api/products/update-product", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           id: resolvedParams.id,
           title: formData.title,
           category: formData.category,
           price: priceType === "quote" ? "Por Cotizar" : formData.price,
+          price_type: priceType,
           currency: formData.currency,
-          quantity: `${formData.quantity} ${formData.unit || "kg"}`,
+          unit: formData.unit,
+          quantity: `${formData.quantity} ${formData.unit}`,
           description: formData.description,
           country: formData.country,
           state: formData.state,
-          min_order: `${formData.minOrderQuantity} ${formData.unit || "kg"}`,
-          min_order_quantity: formData.minOrderQuantity,
-          unit: formData.unit,
-          price_type: priceType,
-          packaging: formData.packaging,
+          min_order: `${formData.minOrderQuantity} ${formData.unit}`,
+          min_order_quantity: Number(formData.minOrderQuantity) || null,
+          maturity: formData.maturity,
+          packaging: formData.packaging || (formData.saleMethod === "fcl" ? "Contenedores" : "Cajas de Cartón"),
           packaging_size: formData.packagingSize ? parseInt(formData.packagingSize) : null,
           image: formData.image,
           image2: formData.image2,
           image3: formData.image3,
-          contact_method: formData.contactMethod,
-          contact_info: formData.contactInfo,
-          country_code: formData.countryCode,
-          phone_number: formData.phoneNumber,
           certifications: formData.certifications,
-          company_name: formData.companyName,
           incoterm: formData.incoterm,
-          shipping_unit_type: formData.shippingUnit || null,
+          shipping_unit_type: formData.saleMethod === "fcl" ? "FCL" : null,
           container_size: formData.containerSize || null,
-          supplyCapacity: formData.supplyCapacity,
-          supplyCapacityUnit: formData.supplyCapacityUnit,
-          supplyCapacityPeriod: formData.supplyCapacityPeriod,
           alcanceComercial: selectedAlcance,
-        })
+        }),
       })
 
-      const result = await response.json()
+      const responseData = await response.json()
 
-      if (result.success) {
-        setStatusMessage({ type: 'success', text: "¡Publicación actualizada exitosamente! Redirigiendo..." })
-        setTimeout(() => {
-          router.push("/admin/publicaciones")
-        }, 1500)
-      } else {
-        setStatusMessage({ type: 'error', text: result.error || "Error al actualizar" })
+      if (!response.ok) {
+        throw new Error(responseData.error || "Error al actualizar la publicación.")
       }
-    } catch (error) {
-      console.error("Error updating product:", error)
-      setStatusMessage({ type: 'error', text: "Ocurrió un error inesperado." })
-    } finally {
+
+      setStatusMessage({ type: 'success', text: "¡Publicación actualizada exitosamente!" })
+            setTimeout(() => router.push("/admin/publicaciones"), 1500)
+    } catch (error: any) {
+      setStatusMessage({ type: 'error', text: error.message || "Ocurrió un problema de conexión. Intenta de nuevo." })
       setIsLoading(false)
     }
   }
 
-  if (isLoadingData) {
-    return (
-      <div className="p-6 flex items-center justify-center min-h-[400px]">
-        <div className="text-center">
-          <Loader className="w-8 h-8 animate-spin mx-auto mb-4" />
-          <p className="text-muted-foreground">Cargando producto...</p>
-        </div>
-      </div>
-    )
-  }
+  const activeCertsArray = formData.certifications ? formData.certifications.split(',').map(c => c.trim()).filter(Boolean) : []
 
   return (
-    <div className="p-6 space-y-6">
+    // VOLVEMOS AL MAX-W-4XL (Estructura centrada y enfocada)
+    <div className="p-4 md:p-6 space-y-6 w-full max-w-4xl mx-auto">
+      
       <div className="flex items-center gap-4">
-        <Button
-          variant="outline"
-          size="icon"
-          onClick={() => router.push("/admin/publicaciones")}
-          className="bg-transparent"
-          disabled={isLoading}
-        >
-          <ArrowLeft className="w-4 h-4" />
+        <Button variant="outline" size="icon" onClick={() => router.push("/admin/publicaciones")} className="rounded-full hover:bg-muted transition-colors duration-300" disabled={isLoading}>
+          <ArrowLeft className="w-5 h-5 text-foreground" />
         </Button>
         <div>
-          <h1 className="text-3xl font-bold text-foreground">Editar Publicación (Modo Administrador)</h1>
-          <p className="text-muted-foreground mt-1">Actualiza los detalles de tu producto</p>
+          <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-foreground">Editar Publicación (Administrador)</h1>
+          <p className="text-sm text-muted-foreground mt-1">Actualiza los datos de tu publicación.</p>
         </div>
       </div>
 
-      <Card className="border-primary/20">
-        <CardHeader>
-          <CardTitle>Información del Producto</CardTitle>
-          <CardDescription>
-            Modifica los detalles de tu publicación
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div>
-              <label className="block text-sm font-medium mb-2">Fotos del Producto (Hasta 3 imágenes, mínimo 1 requerida)</label>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                {/* Image 1 (Required) */}
-                <div className="flex flex-col gap-2">
-                  <div className="flex items-center justify-center w-full">
-                    {imagePreview ? (
-                      <div className="relative w-full h-32 border border-border rounded-lg overflow-hidden group shadow-sm bg-muted animate-in fade-in zoom-in-95 duration-200">
-                        <img src={imagePreview} alt="Preview 1" className="w-full h-full object-cover" />
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setImagePreview("")
-                            setFormData(p => ({ ...p, image: "" }))
-                          }}
-                          className="absolute top-2 right-2 bg-destructive/90 hover:bg-destructive text-white rounded-full p-1.5 shadow-md transition-all duration-200 hover:scale-105"
-                        >
-                          <X className="w-4 h-4" />
-                        </button>
-                      </div>
-                    ) : (
-                      <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-border rounded-lg cursor-pointer hover:bg-muted/50 transition-colors">
-                        <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                          <svg className="w-8 h-8 mb-2 text-muted-foreground animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                          </svg>
-                          <p className="mb-2 text-sm text-muted-foreground font-semibold">Foto Principal *</p>
-                        </div>
-                        <input type="file" accept="image/*" onChange={(e) => handleImageUpload(e, "image")} className="hidden" disabled={isLoading} />
-                      </label>
-                    )}
+      <Card className="border border-border/50 shadow-sm bg-background overflow-hidden">
+        
+        {/* STEPPER ELEGANTE */}
+        <CardHeader className="bg-muted/10 border-b border-border/50 py-5">
+          <div className="flex items-center justify-between w-full relative px-2 md:px-8">
+            <div className="absolute left-6 right-6 top-1/2 -translate-y-1/2 h-[2px] bg-muted z-0" />
+            <div 
+              className="absolute left-6 top-1/2 -translate-y-1/2 h-[2px] bg-primary z-0 transition-all duration-700 ease-[cubic-bezier(0.22,1,0.36,1)]" 
+              style={{ width: `calc(${((currentStep - 1) / 2) * 100}% - 3rem)` }} 
+            />
+            {[
+              { num: 1, label: "Info Básica" },
+              { num: 2, label: "Logística" },
+              { num: 3, label: "Negocio" }
+            ].map((step) => {
+              const isActive = currentStep >= step.num
+              const isPast = currentStep > step.num
+              return (
+                <div key={step.num} className="relative z-10 flex flex-col items-center gap-2 bg-transparent">
+                  <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm transition-all duration-500 shadow-sm ${
+                    isActive ? 'bg-primary text-primary-foreground scale-110 ring-4 ring-primary/20' : 'bg-background text-muted-foreground border-2 border-muted hover:border-primary/50'
+                  }`}>
+                    {isPast ? <Check className="w-5 h-5" /> : step.num}
                   </div>
-                </div>
-
-                {/* Image 2 (Optional) */}
-                <div className="flex flex-col gap-2">
-                  <div className="flex items-center justify-center w-full">
-                    {imagePreview2 ? (
-                      <div className="relative w-full h-32 border border-border rounded-lg overflow-hidden group shadow-sm bg-muted animate-in fade-in zoom-in-95 duration-200">
-                        <img src={imagePreview2} alt="Preview 2" className="w-full h-full object-cover" />
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setImagePreview2("")
-                            setFormData(p => ({ ...p, image2: "" }))
-                          }}
-                          className="absolute top-2 right-2 bg-destructive/90 hover:bg-destructive text-white rounded-full p-1.5 shadow-md transition-all duration-200 hover:scale-105"
-                        >
-                          <X className="w-4 h-4" />
-                        </button>
-                      </div>
-                    ) : (
-                      <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-border rounded-lg cursor-pointer hover:bg-muted/50 transition-colors">
-                        <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                          <svg className="w-8 h-8 mb-2 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                          </svg>
-                          <p className="mb-2 text-sm text-muted-foreground font-semibold">Foto Adicional</p>
-                        </div>
-                        <input type="file" accept="image/*" onChange={(e) => handleImageUpload(e, "image2")} className="hidden" disabled={isLoading} />
-                      </label>
-                    )}
-                  </div>
-                </div>
-
-                {/* Image 3 (Optional) */}
-                <div className="flex flex-col gap-2">
-                  <div className="flex items-center justify-center w-full">
-                    {imagePreview3 ? (
-                      <div className="relative w-full h-32 border border-border rounded-lg overflow-hidden group shadow-sm bg-muted animate-in fade-in zoom-in-95 duration-200">
-                        <img src={imagePreview3} alt="Preview 3" className="w-full h-full object-cover" />
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setImagePreview3("")
-                            setFormData(p => ({ ...p, image3: "" }))
-                          }}
-                          className="absolute top-2 right-2 bg-destructive/90 hover:bg-destructive text-white rounded-full p-1.5 shadow-md transition-all duration-200 hover:scale-105"
-                        >
-                          <X className="w-4 h-4" />
-                        </button>
-                      </div>
-                    ) : (
-                      <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-border rounded-lg cursor-pointer hover:bg-muted/50 transition-colors">
-                        <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                          <svg className="w-8 h-8 mb-2 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                          </svg>
-                          <p className="mb-2 text-sm text-muted-foreground font-semibold">Foto Adicional</p>
-                        </div>
-                        <input type="file" accept="image/*" onChange={(e) => handleImageUpload(e, "image3")} className="hidden" disabled={isLoading} />
-                      </label>
-                    )}
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Título y Categoría */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium mb-2">
-                  Título del Producto <span className="text-red-500">*</span>
-                </label>
-                <Input
-                  type="text"
-                  name="title"
-                  value={formData.title}
-                  onChange={handleInputChange}
-                  placeholder="Ej: Tomates Frescos Orgánicos"
-                  disabled={isLoading}
-                  required
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-2">
-                  Categoría <span className="text-red-500">*</span>
-                </label>
-                <select
-                  name="category"
-                  value={formData.category}
-                  onChange={handleInputChange}
-                  className="w-full px-3 py-2 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary bg-background"
-                  disabled={isLoading}
-                  required
-                >
-                  <option value="">Selecciona una categoría</option>
-                  {PRODUCT_CATEGORIES.map((cat) => (
-                    <option key={cat} value={cat}>{cat}</option>
-                  ))}
-                </select>
-              </div>
-            </div>
-
-            {/* País de Origen, Estado/Región y Tipo de Maduración */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div>
-                <label className="block text-sm font-medium mb-2">
-                  País de Origen <span className="text-red-500">*</span>
-                </label>
-                <select
-                  name="country"
-                  value={formData.country}
-                  onChange={handleInputChange}
-                  className="w-full px-3 py-2 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary bg-background"
-                  disabled={isLoading}
-                  required
-                >
-                  <option value="">Selecciona un país</option>
-                  <optgroup label="Centroamérica">
-                    <option value="El Salvador">El Salvador</option>
-                    <option value="Guatemala">Guatemala</option>
-                    <option value="Honduras">Honduras</option>
-                    <option value="Nicaragua">Nicaragua</option>
-                    <option value="Costa Rica">Costa Rica</option>
-                    <option value="Panamá">Panamá</option>
-                    <option value="Belice">Belice</option>
-                  </optgroup>
-                  <optgroup label="Norteamérica">
-                    <option value="México">México</option>
-                    <option value="Estados Unidos">Estados Unidos</option>
-                    <option value="Canadá">Canadá</option>
-                  </optgroup>
-                  <optgroup label="Sudamérica">
-                    <option value="Argentina">Argentina</option>
-                    <option value="Bolivia">Bolivia</option>
-                    <option value="Brasil">Brasil</option>
-                    <option value="Chile">Chile</option>
-                    <option value="Colombia">Colombia</option>
-                    <option value="Ecuador">Ecuador</option>
-                    <option value="Paraguay">Paraguay</option>
-                    <option value="Perú">Perú</option>
-                    <option value="Uruguay">Uruguay</option>
-                    <option value="Venezuela">Venezuela</option>
-                    <option value="Guyana">Guyana</option>
-                    <option value="Surinam">Surinam</option>
-                  </optgroup>
-                  <optgroup label="El Caribe">
-                    <option value="Cuba">Cuba</option>
-                    <option value="República Dominicana">República Dominicana</option>
-                    <option value="Jamaica">Jamaica</option>
-                    <option value="Haití">Haití</option>
-                    <option value="Trinidad y Tobago">Trinidad y Tobago</option>
-                    <option value="Puerto Rico">Puerto Rico</option>
-                  </optgroup>
-                  <optgroup label="Europa">
-                    <option value="España">España</option>
-                    <option value="Francia">Francia</option>
-                    <option value="Alemania">Alemania</option>
-                    <option value="Italia">Italia</option>
-                    <option value="Portugal">Portugal</option>
-                    <option value="Países Bajos">Países Bajos</option>
-                    <option value="Bélgica">Bélgica</option>
-                    <option value="Polonia">Polonia</option>
-                    <option value="Reino Unido">Reino Unido</option>
-                  </optgroup>
-                  <optgroup label="Asia">
-                    <option value="China">China</option>
-                    <option value="India">India</option>
-                    <option value="Japón">Japón</option>
-                    <option value="Corea del Sur">Corea del Sur</option>
-                    <option value="Tailandia">Tailandia</option>
-                    <option value="Vietnam">Vietnam</option>
-                    <option value="Indonesia">Indonesia</option>
-                    <option value="Filipinas">Filipinas</option>
-                    <option value="Malasia">Malasia</option>
-                    <option value="Turquía">Turquía</option>
-                  </optgroup>
-                  <optgroup label="África">
-                    <option value="Sudáfrica">Sudáfrica</option>
-                    <option value="Nigeria">Nigeria</option>
-                    <option value="Kenia">Kenia</option>
-                    <option value="Etiopía">Etiopía</option>
-                    <option value="Ghana">Ghana</option>
-                    <option value="Costa de Marfil">Costa de Marfil</option>
-                    <option value="Tanzania">Tanzania</option>
-                    <option value="Uganda">Uganda</option>
-                    <option value="Marruecos">Marruecos</option>
-                    <option value="Egipto">Egipto</option>
-                  </optgroup>
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-2">
-                  Estado / Región
-                </label>
-                <Input
-                  type="text"
-                  name="state"
-                  value={formData.state}
-                  onChange={handleInputChange}
-                  placeholder="Ej: Jalisco, San Salvador, Alajuela"
-                  disabled={isLoading}
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-2">
-                  Tipo de Maduración <span className="text-red-500">*</span>
-                </label>
-                <select
-                  name="maturity"
-                  value={formData.maturity}
-                  onChange={handleInputChange}
-                  className="w-full px-3 py-2 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary bg-background"
-                  disabled={isLoading}
-                  required
-                >
-                  <option value="">Selecciona una opción</option>
-                  <option value="No aplica">No aplica</option>
-                  <option value="Verde">Verde</option>
-                  <option value="Semi-maduro">Semi-maduro</option>
-                  <option value="Maduro">Maduro</option>
-                  <option value="Sobre-maduro">Sobre-maduro</option>
-                </select>
-              </div>
-            </div>
-
-            {/* ── Elección de Método de Venta ── */}
-            <div className="border border-border/60 bg-muted/20 p-4 rounded-xl space-y-4">
-              <div>
-                <label className="block text-sm font-semibold mb-3">
-                  ¿Cómo vendes este producto? <span className="text-red-500">*</span>
-                </label>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <button
-                    type="button"
-                    onClick={() => setFormData(prev => {
-                      const cleanQty = prev.quantity.toString().replace(/[^\d.]/g, "")
-                      const cleanMin = prev.minOrderQuantity.toString().replace(/[^\d.]/g, "")
-                      return { 
-                        ...prev, 
-                        saleMethod: "standard", 
-                        packaging: prev.packaging === "Contenedores" ? "" : prev.packaging, 
-                        shippingUnit: "", 
-                        containerSize: "", 
-                        quantity: cleanQty,
-                        unit: prev.unit.startsWith("Contenedor") ? "kg" : prev.unit,
-                        minOrderQuantity: cleanMin
-                      }
-                    })}
-                    className={`flex items-center gap-3 p-3 rounded-xl border-2 transition-all text-left ${
-                      formData.saleMethod === "standard"
-                        ? "border-primary bg-primary/5 ring-1 ring-primary/20"
-                        : "border-border hover:border-primary/30 bg-background"
-                    }`}
-                  >
-                    <div className={`w-10 h-10 rounded-lg flex items-center justify-center text-xl ${formData.saleMethod === "standard" ? "bg-primary text-white" : "bg-muted text-muted-foreground"}`}>
-                      📦
-                    </div>
-                    <div>
-                      <p className="font-bold text-sm">Carga General / Sacos</p>
-                      <p className="text-xs text-muted-foreground">Venta por sacos, cajas o bultos</p>
-                    </div>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => setFormData(prev => {
-                      const cleanQty = prev.quantity.toString().replace(/[^\d.]/g, "")
-                      const cleanMin = prev.minOrderQuantity.toString().replace(/[^\d.]/g, "")
-                      return { 
-                        ...prev, 
-                        saleMethod: "fcl", 
-                        packaging: "Contenedores", 
-                        shippingUnit: "FCL", 
-                        containerSize: prev.containerSize || "20ST", 
-                        quantity: cleanQty,
-                        unit: "Contenedor 20'",
-                        minOrderQuantity: cleanMin || "1",
-                        packagingSize: "21000",
-                      }
-                    })}
-                    className={`flex items-center gap-3 p-3 rounded-xl border-2 transition-all text-left ${
-                      formData.saleMethod === "fcl"
-                        ? "border-primary bg-primary/5 ring-1 ring-primary/20"
-                        : "border-border hover:border-primary/30 bg-background"
-                    }`}
-                  >
-                    <div className={`w-10 h-10 rounded-lg flex items-center justify-center text-xl ${formData.saleMethod === "fcl" ? "bg-primary text-white" : "bg-muted text-muted-foreground"}`}>
-                      🚢
-                    </div>
-                    <div>
-                      <p className="font-bold text-sm">Venta por Contenedor</p>
-                      <p className="text-xs text-muted-foreground">Exportación FCL (Full Container)</p>
-                    </div>
-                  </button>
-                </div>
-              </div>
-
-              <div className={`grid grid-cols-1 md:grid-cols-2 gap-6 pt-2 ${formData.saleMethod === "fcl" ? "animate-in fade-in slide-in-from-top-4 duration-500" : ""}`}>
-                {formData.saleMethod === "standard" ? (
-                  <>
-                    <div>
-                      <label className="block text-sm font-medium mb-2">
-                        Tipo de Embalaje <span className="text-red-500">*</span>
-                      </label>
-                      <select
-                        name="packaging"
-                        value={formData.packaging}
-                        onChange={handleInputChange}
-                        className="w-full px-3 py-2 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary bg-background"
-                        disabled={isLoading}
-                        required
-                      >
-                        <option value="">Selecciona un tipo de embalaje</option>
-                        <option value="Sacos">Sacos</option>
-                        <option value="Cajas">Cajas</option>
-                        <option value="Bolsas">Bolsas</option>
-                        <option value="Pallets">Pallets</option>
-                        <option value="Barriles">Barriles</option>
-                        <option value="Canastillas">Canastillas</option>
-                        <option value="Empaques Frescos">Empaques Frescos</option>
-                      </select>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium mb-2">
-                        Peso por Embalaje <span className="text-red-500">*</span>
-                      </label>
-                      <div className="flex gap-2">
-                        <Input
-                          type="number"
-                          name="packagingSize"
-                          value={formData.packagingSize}
-                          onChange={handleInputChange}
-                          placeholder="Ej: 50, 25, 100"
-                          className="w-full"
-                          min="1"
-                          disabled={isLoading}
-                          required
-                        />
-                        <span className="flex items-center px-3 bg-primary/10 border border-primary/20 rounded-md font-semibold text-primary">
-                          kg
-                        </span>
-                      </div>
-                    </div>
-                  </>
-                ) : formData.saleMethod === "fcl" ? (
-                  <div className="md:col-span-2 space-y-4">
-                    <div className="flex items-center justify-between">
-                      <label className="block text-sm font-semibold">
-                        Opciones de Contenedor FCL
-                      </label>
-                      <span className="flex items-center gap-1.5 text-xs text-primary bg-primary/10 border border-primary/20 px-2.5 py-1 rounded-full font-medium">
-                        💡 El comprador verá que vendes por contenedor completo
-                      </span>
-                    </div>
-                    
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                      <button
-                        type="button"
-                        onClick={() => setFormData(prev => ({ ...prev, containerSize: "20ST", packagingSize: "21000" }))}
-                        className={`relative flex flex-col items-center gap-2 rounded-xl border-2 p-5 text-center transition-all ${
-                          formData.containerSize === "20ST"
-                            ? "border-primary bg-primary/10 shadow-sm"
-                            : "border-border hover:border-primary/40 bg-background"
-                        }`}
-                      >
-                        <span className="text-3xl">🚢</span>
-                        <div>
-                          <p className="font-bold">20&apos; Standard</p>
-                          <p className="text-[10px] text-muted-foreground leading-tight">Capacidad aprox. 21,000 kg</p>
-                        </div>
-                        {formData.containerSize === "20ST" && (
-                          <div className="absolute top-2 right-2 w-5 h-5 rounded-full bg-primary flex items-center justify-center">
-                            <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>
-                          </div>
-                        )}
-                      </button>
-
-                      <button
-                        type="button"
-                        onClick={() => setFormData(prev => ({ ...prev, containerSize: "40HC", packagingSize: "26000", }))}
-                        className={`relative flex flex-col items-center gap-2 rounded-xl border-2 p-5 text-center transition-all ${
-                          formData.containerSize === "40HC"
-                            ? "border-primary bg-primary/10 shadow-sm"
-                            : "border-border hover:border-primary/40 bg-background"
-                        }`}
-                      >
-                        <span className="text-3xl">🏗️</span>
-                        <div>
-                          <p className="font-bold">40&apos; High Cube</p>
-                          <p className="text-[10px] text-muted-foreground leading-tight">Capacidad aprox. 26,000 kg</p>
-                        </div>
-                        {formData.containerSize === "40HC" && (
-                          <div className="absolute top-2 right-2 w-5 h-5 rounded-full bg-primary flex items-center justify-center">
-                            <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>
-                          </div>
-                        )}
-                      </button>
-
-                      <button
-                        type="button"
-                        onClick={() => setFormData(prev => ({ ...prev, containerSize: "Ambos", packagingSize: "21000,26000", }))}
-                        className={`relative flex flex-col items-center gap-2 rounded-xl border-2 p-5 text-center transition-all ${
-                          formData.containerSize === "Ambos"
-                            ? "border-primary bg-primary/10 shadow-sm"
-                            : "border-border hover:border-primary/40 bg-background"
-                        }`}
-                      >
-                        <div className="flex -space-x-2">
-                          <span className="text-2xl z-10">🚢</span>
-                          <span className="text-2xl">🏗️</span>
-                        </div>
-                        <div>
-                          <p className="font-bold">Ambas Opciones</p>
-                          <p className="text-[10px] text-muted-foreground leading-tight">El comprador elige el tamaño</p>
-                        </div>
-                        {formData.containerSize === "Ambos" && (
-                          <div className="absolute top-2 right-2 w-5 h-5 rounded-full bg-primary flex items-center justify-center">
-                            <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>
-                          </div>
-                        )}
-                      </button>
-                    </div>
-                  </div>
-                ) : null}
-              </div>
-            </div>
-
-            {/* Precio, Cantidad Disponible y Pedido Mínimo */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div>
-                <label className="block text-sm font-medium mb-2">
-                  Precio <span className="text-red-500">*</span>
-                </label>
-
-                <div className="flex bg-muted p-1 rounded-lg mb-3">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setIsPriceOnRequest(true)
-                      setFormData(prev => ({ ...prev, price: "Por Cotizar" }))
-                    }}
-                    className={`flex-1 py-2 text-sm font-medium rounded-md transition-all ${priceType === "quote"
-                      ? "bg-primary text-primary-foreground shadow-sm"
-                      : "text-muted-foreground hover:text-foreground"
-                      }`}
-                  >
-                    Cotización
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setPriceType("fixed")
-                    }}
-                    className={`flex-1 py-2 text-sm font-medium rounded-md transition-all ${priceType === "fixed"
-                      ? "bg-primary text-primary-foreground shadow-sm"
-                      : "text-muted-foreground hover:text-foreground"
-                      }`}
-                  >
-                    Precio
-                  </button>
-                </div>
-
-                {priceType === "fixed" ? (
-                  <div className="flex gap-2">
-                    <CurrencyPicker
-                      value={formData.currency}
-                      onChange={(val) => setFormData(prev => ({ ...prev, currency: val }))}
-                      disabled={isLoading}
-                    />
-                    <div className="relative flex-1">
-                      <Input
-                        type="number"
-                        name="price"
-                        value={formData.price}
-                        onChange={handleInputChange}
-                        placeholder="0.00"
-                        className="pr-12"
-                        disabled={isLoading}
-                        required={priceType === "fixed"}
-                        step="0.01"
-                        min="0"
-                      />
-                      <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">
-                        / {formData.saleMethod === "fcl" ? "contenedor" : (formData.unit || "kg")}
-                      </span>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="p-3 bg-muted/50 border border-dashed border-muted-foreground/30 rounded-lg text-center text-sm text-muted-foreground">
-                    El precio se acordará directamente con el comprador
-                  </div>
-                )}
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium mb-2">
-                  Unidad de Medida Global <span className="text-red-500">*</span>
-                </label>
-                <select
-                  name="unit"
-                  value={formData.unit}
-                  onChange={handleInputChange}
-                  className="w-full px-3 py-2 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary bg-background text-sm"
-                  disabled={isLoading}
-                >
-                  {formData.saleMethod === "fcl" ? (
-                    <>
-                      <option value="Contenedor 20'">Contenedor 20'</option>
-                      <option value="Contenedor 40'">Contenedor 40'</option>
-                    </>
-                  ) : (
-                    <>
-                      <option value="kg">kg (Kilogramos)</option>
-                      <option value="lb">lb (Libras)</option>
-                      <option value="qq">qq (Quintales)</option>
-                      <option value="TM">TM (Toneladas Métricas)</option>
-                      <option value="L">L (Litros)</option>
-                      <option value="ml">ml (Mililitros)</option>
-                      <option value="gal">gal (Galones)</option>
-                      <option value="caneca_20l">Caneca (20L)</option>
-                      <option value="tambor_200l">Tambor (200L)</option>
-                      <option value="caja">Caja</option>
-                      <option value="saco">Saco</option>
-                      <option value="malla">Malla</option>
-                      <option value="unidad">Unidad</option>
-                    </>
-                  )}
-                </select>
-                <p className="text-xs text-muted-foreground mt-1.5">
-                  Esta unidad se aplicará al precio, cantidad y pedido mínimo.
-                </p>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium mb-2">
-                  Cantidad Disponible <span className="text-red-500">*</span>
-                </label>
-                <div className="flex gap-2">
-                  <div className="relative flex-1">
-                    <Input
-                      type="number"
-                      name="quantity"
-                      value={formData.quantity}
-                      onChange={handleInputChange}
-                      placeholder="Ej: 500"
-                      min="1"
-                      className="w-full pr-12"
-                      disabled={isLoading}
-                      required
-                    />
-                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm flex items-center justify-center">
-                    {formData.saleMethod === "fcl" ? "FCL" : (formData.unit || "kg")}
+                  <span className={`text-[11px] md:text-xs font-bold uppercase tracking-wider ${isActive ? 'text-primary' : 'text-muted-foreground'}`}>
+                    {step.label}
                   </span>
+                </div>
+              )
+            })}
+          </div>
+        </CardHeader>
+        
+        <CardContent className="p-5 md:p-8">
+          <form onSubmit={handleSubmit} className="min-h-[400px]">
+            
+            {/* PASO 1: INFO BÁSICA Y CERTIFICACIONES */}
+            {currentStep === 1 && (
+              <div className="space-y-8 animate-in fade-in slide-in-from-right-8 duration-500 ease-out fill-mode-forwards">
+                
+                {/* Sección Fotos */}
+                <div>
+                  <h3 className="text-sm font-bold text-foreground mb-4 flex items-center gap-2">
+                    <ImageIcon className="w-4 h-4 text-primary"/> Registro Visual <span className="text-muted-foreground font-normal text-xs">(Mín. 1 foto)</span>
+                  </h3>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+                    {[
+                      { key: 'image', prev: imagePreview, setter: setImagePreview, label: 'Foto Principal *' },
+                      { key: 'image2', prev: imagePreview2, setter: setImagePreview2, label: 'Detalle / Empaque' },
+                      { key: 'image3', prev: imagePreview3, setter: setImagePreview3, label: 'Campo / Cosecha' }
+                    ].map((imgInfo, idx) => (
+                      <div key={idx} className="relative group rounded-xl overflow-hidden bg-muted/20 border-2 border-dashed border-border hover:border-primary/50 transition-colors duration-300 aspect-[4/3] flex items-center justify-center cursor-pointer">
+                        {imgInfo.prev ? (
+                          <>
+                            <img src={imgInfo.prev} alt="Preview" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ease-out" />
+                            <button type="button" onClick={(e) => { e.preventDefault(); imgInfo.setter(""); setFormData(p => ({ ...p, [imgInfo.key]: "" })) }} className="absolute top-2 right-2 bg-background/90 backdrop-blur-sm text-foreground hover:bg-destructive hover:text-white rounded-full p-2 shadow-sm transition-all duration-200">
+                              <X className="w-4 h-4" />
+                            </button>
+                          </>
+                        ) : (
+                          <label className="w-full h-full flex flex-col items-center justify-center cursor-pointer p-4 text-center">
+                            <div className="w-10 h-10 rounded-full bg-background shadow-sm border border-border flex items-center justify-center mb-2 group-hover:bg-primary/5 group-hover:text-primary transition-colors">
+                              <Plus className="w-5 h-5 text-muted-foreground group-hover:text-primary" />
+                            </div>
+                            <span className="text-sm font-semibold text-muted-foreground">{imgInfo.label}</span>
+                            <input type="file" accept="image/*" onChange={(e) => handleImageUpload(e, imgInfo.key as any)} className="hidden" />
+                          </label>
+                        )}
+                      </div>
+                    ))}
                   </div>
                 </div>
-              </div>
 
-              <div>
-                <label className="block text-sm font-medium mb-2">
-                  Pedido Mínimo <span className="text-red-500">*</span>
-                </label>
-                <div className="flex gap-2">
-                  <div className="relative flex-1">
-                    <Input
-                      type="number"
-                      name="minOrderQuantity"
-                      value={formData.minOrderQuantity}
-                      onChange={handleInputChange}
-                      placeholder="Ej: 100"
-                      min="1"
-                      className="w-full pr-12"
-                      disabled={isLoading}
-                      required
-                    />
-                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">
-                      {formData.saleMethod === "fcl" ? "cont." : (formData.unit || "kg")}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-2">
+                    <label className="text-sm font-bold text-foreground">Nombre del Producto <span className="text-destructive">*</span></label>
+                    <Input name="title" value={formData.title} onChange={handleInputChange} placeholder="Ej: Aguacate Hass Orgánico" className="h-11 bg-muted/10 transition-all focus-visible:ring-primary/50" />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-bold text-foreground">Categoría <span className="text-destructive">*</span></label>
+                    <Select value={formData.category} onValueChange={(v) => setFormData(p => ({ ...p, category: v }))}>
+                      <SelectTrigger className="h-11 bg-muted/10"><SelectValue placeholder="Selecciona el rubro..." /></SelectTrigger>
+                      <SelectContent>{PRODUCT_CATEGORIES.map(cat => <SelectItem key={cat} value={cat}>{cat}</SelectItem>)}</SelectContent>
+                    </Select>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-sm font-bold text-foreground">Descripción Técnica y Comercial <span className="text-destructive">*</span></label>
+                  <Textarea name="description" value={formData.description} onChange={handleInputChange} placeholder="Detalla calidad, calibre, origen, condiciones de suelo, y por qué tu producto es ideal para compradores exigentes..." className="min-h-[100px] resize-y p-3 bg-muted/10 transition-all focus-visible:ring-primary/50" />
+                  <div className="flex justify-end">
+                    <span className={`text-[11px] font-bold transition-colors ${formData.description.length < 50 ? 'text-destructive' : 'text-emerald-600'}`}>
+                      {formData.description.length} / 50 min.
                     </span>
                   </div>
                 </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  <div className="space-y-2">
+                    <label className="text-sm font-bold text-foreground">País Origen <span className="text-destructive">*</span></label>
+                    <Select value={formData.country} onValueChange={(v) => setFormData(p => ({ ...p, country: v }))}>
+                      <SelectTrigger className="h-11 bg-muted/10"><SelectValue placeholder="País" /></SelectTrigger>
+                      <SelectContent>{ALL_COUNTRIES.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-bold text-foreground">Región / Zona Cosecha</label>
+                    <Input name="state" value={formData.state} onChange={handleInputChange} placeholder="Ej: Valle de..." className="h-11 bg-muted/10" />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-bold text-foreground">Maduración</label>
+                    <Select value={formData.maturity} onValueChange={(v) => setFormData(p => ({ ...p, maturity: v }))}>
+                      <SelectTrigger className="h-11 bg-muted/10"><SelectValue placeholder="Estado" /></SelectTrigger>
+                      <SelectContent>
+                        {["No aplica", "Verde (Para exportación)", "Semi-maduro", "Maduro"].map(e => <SelectItem key={e} value={e}>{e}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+
+                {/* --- NUEVO PANEL DE CERTIFICACIONES (EXPLICITO Y CLARO) --- */}
+                <div className="bg-muted/10 p-5 md:p-6 rounded-xl border border-border/60 space-y-5">
+                  <div>
+                    <div className="flex items-center gap-2 mb-1">
+                      <ShieldCheck className="w-5 h-5 text-primary" />
+                      <h3 className="font-bold text-foreground">Certificaciones y Estándares</h3>
+                    </div>
+                    <p className="text-xs text-muted-foreground">Selecciona los sellos de calidad que posee tu producto (vital para exportación).</p>
+                  </div>
+                  
+                  {/* Chips Predefinidos */}
+                  <div className="flex flex-wrap gap-2">
+                    {PREDEFINED_CERTS.map(cert => {
+                      const isActive = activeCertsArray.includes(cert);
+                      return (
+                        <button
+                          key={cert}
+                          type="button"
+                          onClick={() => toggleCertification(cert)}
+                          className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all duration-300 border ${
+                            isActive 
+                              ? 'bg-primary text-primary-foreground border-primary shadow-sm scale-105' 
+                              : 'bg-background text-muted-foreground border-border hover:border-primary/40 hover:bg-muted'
+                          }`}
+                        >
+                          {cert}
+                        </button>
+                      )
+                    })}
+                  </div>
+                  
+                  {/* Input de Certificación Personalizada (Ahora con botón) */}
+                  <div className="pt-4 border-t border-border/50">
+                    <label className="text-xs font-bold text-muted-foreground block mb-2">¿Tienes alguna otra certificación? Agrégala aquí:</label>
+                    <div className="flex gap-2 max-w-md">
+                      <Input 
+                        value={certInput} 
+                        onChange={(e) => setCertInput(e.target.value)} 
+                        onKeyDown={handleAddCustomCert} 
+                        placeholder="Ej: Certificado Fitosanitario" 
+                        className="h-10 text-sm bg-background"
+                      />
+                      <Button 
+                        type="button" 
+                        variant="secondary"
+                        onClick={handleAddCustomCert}
+                        className="h-10 px-4 font-bold shrink-0"
+                      >
+                        <Plus className="w-4 h-4 mr-1" /> Agregar
+                      </Button>
+                    </div>
+                  </div>
+
+                  {/* Chips Personalizados Agregados */}
+                  {activeCertsArray.filter(c => !PREDEFINED_CERTS.includes(c)).length > 0 && (
+                    <div className="flex flex-wrap gap-2 pt-2">
+                      {activeCertsArray.filter(c => !PREDEFINED_CERTS.includes(c)).map(cert => (
+                        <Badge key={cert} variant="default" className="pl-3 pr-1.5 py-1 flex items-center gap-1.5 text-sm font-medium bg-primary/20 text-primary hover:bg-primary/30">
+                          {cert} 
+                          <button type="button" onClick={() => toggleCertification(cert)} className="hover:bg-primary hover:text-white rounded-full p-0.5 transition-colors"><X className="w-3 h-3" /></button>
+                        </Badge>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
               </div>
-            </div>
+            )}
 
+            {/* PASO 2: LOGÍSTICA Y EMPAQUE */}
+            {currentStep === 2 && (
+              <div className="space-y-8 animate-in fade-in slide-in-from-right-8 duration-500 ease-out fill-mode-forwards">
+                
+                <div>
+                  <h3 className="text-base font-bold mb-4">Estructura de Venta <span className="text-destructive">*</span></h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    
+                    <label className={`relative cursor-pointer rounded-xl border-2 p-5 transition-all duration-300 ease-out flex gap-4 items-start ${formData.saleMethod === "standard" ? "border-primary bg-primary/5 shadow-md scale-[1.02]" : "border-muted hover:border-primary/40 bg-background hover:bg-muted/30"}`}>
+                      <input type="radio" className="peer sr-only" checked={formData.saleMethod === "standard"} onChange={() => setFormData(p => ({ ...p, saleMethod: "standard", containerSize: "", unit: "kg" }))} />
+                      <div className={`w-12 h-12 rounded-full flex shrink-0 items-center justify-center text-xl transition-colors ${formData.saleMethod === "standard" ? "bg-primary text-white" : "bg-muted"}`}>📦</div>
+                      <div>
+                        <h4 className="font-bold text-foreground">Carga General / Fraccionada</h4>
+                        <p className="text-sm text-muted-foreground mt-1 leading-relaxed">Ideal para venta local o regional por cajas, pallets o sacos.</p>
+                      </div>
+                    </label>
 
-            {/* Capacidad de Abastecimiento */}
-            <div>
-              <label htmlFor="supplyCapacity" className="block text-sm font-medium mb-2">
-                Capacidad de Abastecimiento <span className="text-red-500">*</span>
-              </label>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                <div>
-                  <Input
-                    id="supplyCapacity"
-                    type="number"
-                    name="supplyCapacity"
-                    value={formData.supplyCapacity}
-                    onChange={handleInputChange}
-                    placeholder="Ej: 50"
-                    min="0"
-                    disabled={isLoading}
-                    className="w-full"
-                  />
+                    <label className={`relative cursor-pointer rounded-xl border-2 p-5 transition-all duration-300 ease-out flex gap-4 items-start ${formData.saleMethod === "fcl" ? "border-primary bg-primary/5 shadow-md scale-[1.02]" : "border-muted hover:border-primary/40 bg-background hover:bg-muted/30"}`}>
+                      <input type="radio" className="peer sr-only" checked={formData.saleMethod === "fcl"} onChange={() => setFormData(p => ({ ...p, saleMethod: "fcl", packaging: "Contenedores", shippingUnit: "FCL", containerSize: "40HC", unit: "Contenedor 40'" }))} />
+                      <div className={`w-12 h-12 rounded-full flex shrink-0 items-center justify-center text-xl transition-colors ${formData.saleMethod === "fcl" ? "bg-primary text-white" : "bg-muted"}`}>🚢</div>
+                      <div>
+                        <h4 className="font-bold text-foreground">Exportación FCL (Contenedor)</h4>
+                        <p className="text-sm text-muted-foreground mt-1 leading-relaxed">Venta orientada a exportación en contenedores marítimos o terrestres.</p>
+                      </div>
+                    </label>
+                  </div>
                 </div>
-                <div>
-                  <select
-                    id="supplyCapacityUnit"
-                    name="supplyCapacityUnit"
-                    value={formData.supplyCapacityUnit}
-                    onChange={handleInputChange}
-                    className="w-full px-3 py-2 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary bg-background text-sm"
-                    disabled={isLoading}
-                  >
-                    <option value="kg">kg</option>
-                    <option value="toneladas">toneladas</option>
-                    <option value="libras">libras</option>
-                    <option value="TM">TM</option>
-                    <option value="unidades">unidades</option>
-                  </select>
+
+                <div className="bg-muted/10 p-5 md:p-6 rounded-xl border border-border/60">
+                  {formData.saleMethod === "standard" ? (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 animate-in fade-in duration-500">
+                      <div className="space-y-2">
+                        <label className="text-sm font-bold text-foreground">Tipo de Embalaje Principal</label>
+                        <Select value={formData.packaging} onValueChange={(v) => setFormData(p => ({ ...p, packaging: v }))}>
+                          <SelectTrigger className="h-11 bg-background"><SelectValue placeholder="Selecciona formato..." /></SelectTrigger>
+                          <SelectContent>
+                            {["Cajas de Cartón", "Cajas Plásticas", "Sacos", "Pallets", "Granel", "Totes/Octabins"].map(e => <SelectItem key={e} value={e}>{e}</SelectItem>)}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-sm font-bold text-foreground">Capacidad neta por envase <span className="text-muted-foreground font-normal">(Ej: 15kg)</span></label>
+                        <Input name="packagingSize" type="number" value={formData.packagingSize} onChange={handleInputChange} placeholder="Kilos / Litros por unidad" className="h-11 bg-background" />
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="animate-in fade-in duration-500">
+                      <label className="text-sm font-bold text-foreground mb-4 block">Capacidad Marítima / Terrestre</label>
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                        {[
+                          { id: '20ST', label: "20' Standard", desc: "Aprox. 21 tons" },
+                          { id: '40HC', label: "40' High Cube", desc: "Aprox. 26 tons" },
+                          { id: 'Ambos', label: "Ambas Opciones", desc: "Según requerimiento" }
+                        ].map(opt => (
+                          <button key={opt.id} type="button" onClick={() => setFormData(p => ({ ...p, containerSize: opt.id }))} className={`p-4 rounded-xl border-2 transition-all duration-300 text-left ${formData.containerSize === opt.id ? "border-primary bg-background shadow-sm" : "border-border hover:border-primary/30 bg-background/50"}`}>
+                            <p className="font-bold">{opt.label}</p>
+                            <p className="text-xs text-muted-foreground mt-0.5">{opt.desc}</p>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-muted-foreground text-sm font-medium px-1">/</span>
-                  <select
-                    id="supplyCapacityPeriod"
-                    name="supplyCapacityPeriod"
-                    value={formData.supplyCapacityPeriod}
-                    onChange={handleInputChange}
-                    className="w-full px-3 py-2 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary bg-background text-sm"
-                    disabled={isLoading}
-                  >
-                    <option value="mes">mes</option>
-                    <option value="semana">semana</option>
-                    <option value="día">día</option>
-                    <option value="año">año</option>
-                  </select>
+
+                <div className="space-y-2">
+                  <label className="text-sm font-bold text-foreground">Incoterm Base <span className="text-muted-foreground font-normal">(Condiciones de envío)</span></label>
+                  <Select value={formData.incoterm} onValueChange={(v) => setFormData(p => ({ ...p, incoterm: v }))}>
+                    <SelectTrigger className="h-11 max-w-md bg-muted/10"><SelectValue placeholder="Selecciona..." /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="A definir con el comprador">A definir (Negociable)</SelectItem>
+                      <SelectItem value="EXW">EXW – En finca / origen</SelectItem>
+                      <SelectItem value="FOB">FOB – Puesto en puerto/frontera</SelectItem>
+                      <SelectItem value="CIF">CIF – Entregado con seguro</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <p className="text-[11px] text-muted-foreground">Agrilpa no gestiona la logística, esta información guía al comprador sobre tu alcance de entrega.</p>
                 </div>
               </div>
-              <p className="text-xs text-muted-foreground mt-1.5">
-                Indica la cantidad máxima que puedes proveer de este producto en un periodo determinado (ej: 50 toneladas / mes).
-              </p>
-            </div>
+            )}
 
-            {/* Incoterm Field */}
-            <div>
-              <label className="block text-sm font-medium mb-2">
-                Incoterm <span className="text-xs text-muted-foreground">(Opcional)</span>
-              </label>
-              <select
-                name="incoterm"
-                value={formData.incoterm}
-                onChange={handleInputChange}
-                className="w-full px-3 py-2 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary bg-background"
-                disabled={isLoading}
-              >
-                <option value="A definir con el comprador">A definir con el comprador</option>
-                <option value="EXW">EXW – En fábrica (el comprador recoge en origen)</option>
-                <option value="FCA">FCA – Entrega al transportista</option>
-                <option value="FOB">FOB – Libre a bordo (puerto de origen)</option>
-                <option value="CIF">CIF – Costo, seguro y flete incluidos</option>
-                <option value="CFR">CFR – Costo y flete incluidos</option>
-                <option value="DAP">DAP – Entregado en destino</option>
-                <option value="DDP">DDP – Entregado con impuestos pagados</option>
-                <option value="CPT">CPT – Transporte pagado hasta destino</option>
-                <option value="CIP">CIP – Transporte y seguro pagados</option>
-              </select>
-              <p className="text-xs text-muted-foreground mt-1.5">
-                Define hasta dónde llega la responsabilidad del vendedor en el envío.
-              </p>
-              <p className="text-xs text-muted-foreground/70 mt-0.5 italic">
-                Este valor es referencial y puede ajustarse con el comprador.
-              </p>
-            </div>
+            {/* PASO 3: NEGOCIO Y ALCANCE */}
+            {currentStep === 3 && (
+              <div className="space-y-8 animate-in fade-in slide-in-from-right-8 duration-500 ease-out fill-mode-forwards">
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                  {/* Unidad y Precios */}
+                  <div className="space-y-6">
+                    <div className="space-y-2">
+                      <label className="text-sm font-bold text-foreground">Unidad Base Comercial <span className="text-destructive">*</span></label>
+                      <Select value={formData.unit} onValueChange={(v) => setFormData(p => ({ ...p, unit: v }))}>
+                        <SelectTrigger className="h-11 bg-muted/20"><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          {UNIDADES_MEDIDA.map((u) => <SelectItem key={u.value} value={u.value}>{u.label}</SelectItem>)}
+                        </SelectContent>
+                      </Select>
+                    </div>
 
-            {/* Alcance Comercial */}
-            <div className="bg-muted/10 p-5 rounded-xl border border-border mt-6">
-              <label className="block text-sm font-semibold mb-1">
-                Alcance Comercial <span className="text-red-500">*</span>
-              </label>
-              <p className="text-xs text-muted-foreground mb-4">
-                Selecciona todas las opciones que apliquen a tu capacidad actual. Esta información es obligatoria para conectar con compradores internacionales.
-              </p>
-
-              <div className="space-y-4">
-                {/* Mercado Nacional */}
-                <div>
-                  <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
-                    Mercado Nacional
-                  </h4>
-                  <div className="space-y-3 bg-background p-3 rounded-lg border border-border">
-                    <div className="flex flex-col gap-2.5">
-                      <label className="flex items-center gap-3 cursor-pointer select-none">
-                        <input
-                          type="checkbox"
-                          checked={selectedAlcance.some(item => item.startsWith("Nacional") || item.includes("nacional") || item.includes("Local"))}
-                          onChange={(e) => {
-                            if (e.target.checked) {
-                              const defaultCountry = formData.country || "El Salvador"
-                              setSelectedAlcance([
-                                ...selectedAlcance.filter(item => !item.startsWith("Nacional") && !item.includes("nacional") && !item.includes("Local")),
-                                `Nacional (Cobertura en todo ${defaultCountry})`
-                              ])
-                            } else {
-                              setSelectedAlcance(selectedAlcance.filter((item) => !item.startsWith("Nacional") && !item.includes("nacional") && !item.includes("Local")))
-                            }
-                          }}
-                          className="w-4 h-4 rounded border-gray-300 text-primary focus:ring-primary cursor-pointer"
-                        />
-                        <span className="text-sm font-medium text-foreground">
-                          Nacional (Cobertura en todo el país)
-                        </span>
-                      </label>
-
-                      {selectedAlcance.some(item => item.startsWith("Nacional") || item.includes("nacional") || item.includes("Local")) && (
-                        <div className="pl-7 space-y-1 animate-in slide-in-from-top-2 duration-200">
-                          <label className="block text-xs text-muted-foreground font-medium">
-                            Selecciona el país de cobertura nacional:
-                          </label>
-                          <select
-                            value={
-                              (() => {
-                                const currentNacional = selectedAlcance.find(item => item.startsWith("Nacional") || item.includes("nacional") || item.includes("Local"))
-                                if (currentNacional) {
-                                  const match = currentNacional.match(/Nacional \(Cobertura en todo (.*?)\)/)
-                                  return match ? match[1] : (formData.country || "El Salvador")
-                                }
-                                return formData.country || "El Salvador"
-                              })()
-                            }
-                            onChange={(e) => {
-                              const countryVal = e.target.value
-                              setSelectedAlcance([
-                                ...selectedAlcance.filter(item => !item.startsWith("Nacional") && !item.includes("nacional") && !item.includes("Local")),
-                                `Nacional (Cobertura en todo ${countryVal})`
-                              ])
-                            }}
-                            className="w-full max-w-[280px] px-3 py-1.5 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary bg-background text-sm"
-                          >
-                            {ALL_COUNTRIES.map((c) => (
-                              <option key={c} value={c}>{c}</option>
-                            ))}
-                          </select>
+                    <div className="space-y-2">
+                      <label className="text-sm font-bold text-foreground">Cotización <span className="text-destructive">*</span></label>
+                      <div className="flex bg-muted/40 p-1.5 rounded-lg border border-border/50">
+                        <button type="button" onClick={() => { setPriceType("quote"); setFormData(p => ({ ...p, price: "" })) }} className={`flex-1 py-2 text-sm font-bold rounded-md transition-all duration-300 ${priceType === "quote" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}>A Convenir (Chat)</button>
+                        <button type="button" onClick={() => setPriceType("fixed")} className={`flex-1 py-2 text-sm font-bold rounded-md transition-all duration-300 ${priceType === "fixed" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}>Precio Fijo</button>
+                      </div>
+                      
+                      {priceType === "fixed" && (
+                        <div className="flex gap-2 mt-3 animate-in slide-in-from-top-2 fade-in duration-300">
+                          <CurrencyPicker value={formData.currency} onChange={(val) => setFormData(p => ({ ...p, currency: val }))} />
+                          <Input type="number" name="price" value={formData.price} onChange={handleInputChange} placeholder="Valor por unidad" className="h-11 font-bold" />
                         </div>
                       )}
                     </div>
                   </div>
+
+                  {/* Volúmenes */}
+                  <div className="space-y-6 bg-muted/10 p-5 md:p-6 rounded-xl border border-border/50">
+                    <div className="space-y-2">
+                      <label className="text-sm font-bold text-foreground">Pedido Mínimo (MOQ) <span className="text-destructive">*</span></label>
+                      <div className="relative">
+                        <Input type="number" name="minOrderQuantity" value={formData.minOrderQuantity} onChange={handleInputChange} placeholder="Volumen mínimo" className="h-11 pr-16 bg-background" />
+                        <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xs text-muted-foreground font-bold uppercase">{formData.unit}</span>
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <label className="text-sm font-bold text-foreground">Cantidad Stock Actual <span className="text-destructive">*</span></label>
+                      <Input type="number" name="quantity" value={formData.quantity} onChange={handleInputChange} placeholder="Disp. Inmediata" className="h-11 bg-background" />
+                    </div>
+
+                    <div className="space-y-2 pt-2 border-t border-border/50">
+                      <label className="text-sm font-bold text-primary">Capacidad de Abastecimiento Continua</label>
+                      <div className="flex gap-2">
+                        <Input type="number" name="supplyCapacity" value={formData.supplyCapacity} onChange={handleInputChange} placeholder="Volumen" className="h-11 bg-background" />
+                        <Select value={formData.supplyCapacityPeriod} onValueChange={(v) => setFormData(p => ({ ...p, supplyCapacityPeriod: v }))}>
+                          <SelectTrigger className="h-11 w-32 bg-background"><SelectValue /></SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="semana">/ Semana</SelectItem>
+                            <SelectItem value="mes">/ Mes</SelectItem>
+                            <SelectItem value="temporada">/ Temporada</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+                  </div>
                 </div>
 
-
-                {/* Mercado Internacional */}
-                <div>
-                  <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
-                    Mercado Internacional
-                  </h4>
-                  <div className="space-y-3 bg-background p-3 rounded-lg border border-border">
+                <div className="space-y-4">
+                  <label className="text-sm font-bold text-foreground">Mercados de Interés (Alcance) <span className="text-destructive">*</span></label>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                    <label className={`cursor-pointer flex items-center justify-center p-3 rounded-xl border-2 text-sm font-bold text-center transition-all duration-300 ${selectedAlcance.some(i => i.startsWith("Nacional")) ? "bg-primary text-white border-primary shadow-sm" : "bg-background border-border hover:border-primary/40 text-muted-foreground"}`}>
+                      <input type="checkbox" className="hidden" checked={selectedAlcance.some(i => i.startsWith("Nacional"))} onChange={(e) => setSelectedAlcance(e.target.checked ? [...selectedAlcance, `Nacional (Cobertura en ${formData.country || "tu país"})`] : selectedAlcance.filter(i => !i.startsWith("Nacional")))} />
+                      Mercado Nacional
+                    </label>
                     {ALCANCE_OPTIONS.internacional.map((opcion) => {
-                      const isChecked = selectedAlcance.includes(opcion.value);
+                      const isSelected = selectedAlcance.includes(opcion.value);
                       return (
-                        <label key={opcion.value} className="flex items-center gap-3 cursor-pointer py-1 select-none">
-                          <input
-                            type="checkbox"
-                            checked={isChecked}
-                            onChange={(e) => {
-                              if (e.target.checked) {
-                                setSelectedAlcance([...selectedAlcance, opcion.value])
-                              } else {
-                                setSelectedAlcance(selectedAlcance.filter((item) => item !== opcion.value))
-                              }
-                            }}
-                            className="w-4 h-4 rounded border-gray-300 text-primary focus:ring-primary cursor-pointer"
-                          />
-                          <span className="text-sm font-medium text-foreground">
-                            {opcion.label}
-                          </span>
+                        <label key={opcion.value} className={`cursor-pointer flex items-center justify-center p-3 rounded-xl border-2 text-sm font-bold text-center transition-all duration-300 ${isSelected ? "bg-primary text-white border-primary shadow-sm" : "bg-background border-border hover:border-primary/40 text-muted-foreground"}`}>
+                          <input type="checkbox" className="hidden" checked={isSelected} onChange={(e) => setSelectedAlcance(e.target.checked ? [...selectedAlcance, opcion.value] : selectedAlcance.filter(i => i !== opcion.value))} />
+                          {opcion.label}
                         </label>
-                      );
+                      )
                     })}
                   </div>
                 </div>
+
               </div>
-            </div>
+            )}
 
-
-            <div>
-              <div className="flex items-center justify-between mb-2">
-                <label className="block text-sm font-medium">
-                  Descripción del Producto <span className="text-red-500">*</span>
-                </label>
-                <span className={`text-xs font-medium ${formData.description.length < 50 ? 'text-red-500' : 'text-green-600'}`}>
-                  {formData.description.length} / 50 caracteres mínimo
-                </span>
+            {/* BARRA ESTADO DE ERRORES */}
+            {statusMessage.text && (
+              <div className={`mt-6 p-4 rounded-xl text-sm font-bold flex items-center gap-3 animate-in fade-in slide-in-from-bottom-2 ${statusMessage.type === 'error' ? 'bg-destructive/10 text-destructive border border-destructive/20' : statusMessage.type === 'success' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-blue-50 text-blue-700 border border-blue-200'}`}>
+                {statusMessage.type === 'error' && <X className="w-5 h-5 shrink-0" />}
+                {statusMessage.text}
               </div>
-              <Textarea
-                name="description"
-                value={formData.description}
-                onChange={handleInputChange}
-                placeholder="Describe tu producto, características, origen, calidad, certificaciones, etc."
-                rows={5}
-                className="w-full"
-                disabled={isLoading}
-                required
-                minLength={50}
-              />
-              {formData.description.length > 0 && formData.description.length < 50 && (
-                <p className="text-red-500 text-xs mt-1">La descripción debe tener al menos 50 caracteres. Te faltan {50 - formData.description.length}.</p>
-              )}
-            </div>
+            )}
 
-            <div>
-              <label className="block text-sm font-medium mb-3">
-                Certificaciones <span className="text-xs text-muted-foreground">(Escribe y presiona Enter para agregar)</span>
-              </label>
-
-              <div className="flex gap-2 mb-3">
-                <Input
-                  value={certInput}
-                  onChange={(e) => setCertInput(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') {
-                      e.preventDefault()
-                      if (certInput.trim()) {
-                        const currentCerts = formData.certifications ? formData.certifications.split(',').map(c => c.trim()) : []
-                        if (!currentCerts.includes(certInput.trim())) {
-                          setFormData({
-                            ...formData,
-                            certifications: [...currentCerts, certInput.trim()].join(',')
-                          })
-                        }
-                        setCertInput("")
-                      }
-                    }
-                  }}
-                  placeholder="Escribe una certificación..."
-                  className="max-w-md"
-                  disabled={isLoading}
-                />
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="icon"
-                  onClick={() => {
-                    if (certInput.trim()) {
-                      const currentCerts = formData.certifications ? formData.certifications.split(',').map(c => c.trim()) : []
-                      if (!currentCerts.includes(certInput.trim())) {
-                        setFormData({
-                          ...formData,
-                          certifications: [...currentCerts, certInput.trim()].join(',')
-                        })
-                      }
-                      setCertInput("")
-                    }
-                  }}
-                >
-                  <Plus className="h-4 w-4" />
-                </Button>
-              </div>
-
-              {formData.certifications && (
-                <div className="flex flex-wrap gap-2 mb-4">
-                  {formData.certifications.split(',').map(cert => cert.trim()).filter(c => c).map((cert, index) => (
-                    <Badge key={index} variant="secondary" className="pl-2 pr-1 py-1 flex items-center gap-1 text-sm">
-                      {cert}
-                      <button
-                        type="button"
-                        onClick={() => {
-                          const newCerts = formData.certifications.split(',').map(c => c.trim()).filter(c => c !== cert)
-                          setFormData({
-                            ...formData,
-                            certifications: newCerts.join(',')
-                          })
-                        }}
-                        className="hover:bg-destructive/20 rounded-full p-0.5 transition-colors"
-                      >
-                        <X className="h-3 w-3" />
-                      </button>
-                    </Badge>
-                  ))}
-                </div>
-              )}
-
-              <div className="text-xs text-muted-foreground mb-2">Sugerencias rápidas:</div>
-              <div className="flex flex-wrap gap-2">
-                {[
-                  "No aplica",
-                  "MAID",
-                  "International",
-                  "USDA Organic",
-                  "Fair Trade",
-                  "Global GAP",
-                  "Rainforest Alliance",
-                  "HACCP",
-                  "ISO 9001",
-                  "Halal",
-                  "Kosher",
-                  "Organic EU",
-                  "FDA Registered"
-                ].map((cert) => {
-                  const isActive = formData.certifications.split(',').map(c => c.trim()).includes(cert)
-                  if (isActive) return null
-                  return (
-                    <Badge
-                      key={cert}
-                      variant="outline"
-                      className="cursor-pointer hover:bg-primary/10 transition-colors"
-                      onClick={() => {
-                        const currentCerts = formData.certifications ? formData.certifications.split(',').map(c => c.trim()) : []
-                        setFormData({
-                          ...formData,
-                          certifications: [...currentCerts, cert].join(',')
-                        })
-                      }}
-                    >
-                      + {cert}
-                    </Badge>
-                  )
-                })}
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {/* CONTROLADORES INFERIORES */}
+            <div className="flex items-center justify-between pt-6 mt-8 border-t border-border/50">
               <div>
-                <label className="block text-sm font-medium mb-2">
-                  Nombre del Vendedor
-                </label>
-                <Input
-                  type="text"
-                  name="companyName"
-                  value={formData.companyName}
-                  onChange={handleInputChange}
-                  placeholder="Se completará con el nombre de tu perfil"
-                  className="bg-muted cursor-not-allowed border-muted-foreground/20"
-                  readOnly={true}
-                  tabIndex={-1}
-                />
-                <p className="text-[11px] text-muted-foreground mt-1.5 flex items-center flex-wrap gap-1">
-                  <span className="w-1 h-1 rounded-full bg-primary shrink-0" />
-                  Este nombre se basa en tu configuración de perfil y no se puede cambiar aquí.
-                  <button 
-                    type="button"
-                    onClick={() => router.push("/dashboard/perfil")}
-                    className="text-primary hover:underline font-medium ml-1 outline-none"
-                  >
-                    Ir a configuración de perfil
-                  </button>
-                </p>
+                {currentStep > 1 && (
+                  <Button type="button" variant="outline" onClick={handlePrevStep} disabled={isLoading} className="h-12 px-6 rounded-full hover:bg-muted font-bold transition-all duration-300">
+                    <ChevronLeft className="w-4 h-4 mr-1" /> Atrás
+                  </Button>
+                )}
               </div>
+              
               <div>
-                <label className="block text-sm font-medium mb-2">
-                  Medio de Contacto
-                </label>
-                <select
-                  name="contactMethod"
-                  value={formData.contactMethod}
-                  onChange={handleInputChange}
-                  className="w-full px-3 py-2 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary bg-background"
-                  disabled={isLoading}
-                >
-                  <option value="">Selecciona un medio</option>
-                  <option value="WhatsApp">WhatsApp</option>
-                  <option value="Email">Email</option>
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-2">
-                  {formData.contactMethod === "WhatsApp" ? (
-                    <>Código y Teléfono</>
-                  ) : (
-                    <>Usuario / Correo</>
-                  )}
-                </label>
-                {formData.contactMethod === "WhatsApp" ? (
-                  <div className="flex gap-2">
-                    <div className="w-36 shrink-0">
-                      <PhoneCodePicker
-                        value={formData.countryCode}
-                        onChange={(phoneCode, countryCode) => setFormData({ ...formData, countryCode: phoneCode })}
-                      />
-                      <p className="text-xs text-muted-foreground mt-1">Código de país</p>
-                    </div>
-                    <div className="flex-1">
-                      <Input
-                        placeholder="0000 0000"
-                        type="number"
-                        value={formData.phoneNumber}
-                        onChange={(e) => setFormData({ ...formData, phoneNumber: e.target.value })}
-                        disabled={isLoading}
-                      />
-                      <p className="text-xs text-muted-foreground mt-1">Sin espacios ni guiones</p>
-                    </div>
-                  </div>
+                {currentStep < 3 ? (
+                  <Button type="button" onClick={handleNextStep} className="h-12 px-8 rounded-full font-bold shadow-md hover:shadow-lg transition-all duration-300 hover:scale-[1.02]">
+                    Siguiente <ChevronRight className="w-4 h-4 ml-1" />
+                  </Button>
                 ) : (
-                  <Input
-                    type="text"
-                    name="contactInfo"
-                    value={formData.contactInfo}
-                    onChange={handleInputChange}
-                    placeholder={
-                      formData.contactMethod === "Email"
-                        ? "email@empresa.com"
-                        : "Tu información de contacto"
-                    }
-                    disabled={isLoading}
-                  />
+                  <Button type="submit" disabled={isLoading} className="h-12 px-8 rounded-full bg-primary hover:bg-primary/90 text-primary-foreground font-bold shadow-md hover:shadow-lg transition-all duration-300 hover:scale-[1.02]">
+                    {isLoading ? <><Loader className="w-5 h-5 mr-2 animate-spin" /> Guardando...</> : <><Check className="w-5 h-5 mr-2" /> Guardar Cambios</>}
+                  </Button>
                 )}
               </div>
             </div>
 
-            <div className="flex flex-col gap-4 pt-6">
-              {statusMessage.text && (
-                <div className={`p-3 rounded-md text-sm font-medium ${statusMessage.type === 'error' ? 'bg-red-100 text-red-700' :
-                  statusMessage.type === 'success' ? 'bg-green-100 text-green-700' :
-                    'bg-blue-50 text-blue-700'
-                  }`}>
-                  {statusMessage.text}
-                </div>
-              )}
-              <div className="flex gap-4">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => router.push("/admin/publicaciones")}
-                  disabled={isLoading}
-                  className="flex-1 hover:bg-red-600 hover:text-white hover:border-red-600"
-                >
-                  Cancelar
-                </Button>
-                <Button type="submit" disabled={isLoading} className="flex-1 gap-2">
-                  {isLoading ? (
-                    <>
-                      <Loader className="w-4 h-4 animate-spin" />
-                      Guardando...
-                    </>
-                  ) : (
-                    <>
-                      <Check className="w-4 h-4" />
-                      Guardar Cambios
-                    </>
-                  )}
-                </Button>
-              </div>
-            </div>
           </form>
         </CardContent>
       </Card>
