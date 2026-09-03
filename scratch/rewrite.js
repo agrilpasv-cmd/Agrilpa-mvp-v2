@@ -1,223 +1,24 @@
-"use client"
+const fs = require('fs');
+const path = require('path');
 
-import type React from "react"
-import { useState, useEffect, use } from "react"
-import { useRouter } from "next/navigation"
-import { Card, CardContent, CardHeader } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Badge } from "@/components/ui/badge"
-import { Textarea } from "@/components/ui/textarea"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { ArrowLeft, Check, Loader, X, Plus, ChevronRight, ChevronLeft, ShieldCheck, Image as ImageIcon , ArrowRight} from "lucide-react"
-import { createClient } from "@/lib/supabase/client"
-import { PRODUCT_CATEGORIES, UNIDADES_MEDIDA } from "@/lib/constants"
-import { useDashboard } from "../../../context"
-import { CurrencyPicker } from "@/components/ui/currency-picker"
-import { compressImage, MAX_FILE_SIZE_MB } from "@/lib/compress-image"
+const filePath = path.join(__dirname, '../app/dashboard/mis-publicaciones/nueva/page.tsx');
+let content = fs.readFileSync(filePath, 'utf8');
 
-const PREDEFINED_CERTS = [
-  "Global GAP", "USDA Organic", "Fair Trade", "Rainforest Alliance",
-  "HACCP", "ISO 9001", "FDA Registered", "SMETA", "Kosher", "Halal", "Organic EU"
-]
+const splitIndex = content.indexOf('  const validateStep = (step: number) => {');
+if (splitIndex === -1) {
+    console.error('Could not find split point');
+    process.exit(1);
+}
 
-export default function EditarPublicacionPage({ params }: { params: Promise<{ id: string }> }) {
-  const resolvedParams = use(params)
-  const router = useRouter()
-  const [isLoading, setIsLoading] = useState(false)
-  const [isLoadingData, setIsLoadingData] = useState(true)
-  const [currentStep, setCurrentStep] = useState(1)
+const topHalf = content.substring(0, splitIndex);
 
-  const [formData, setFormData] = useState({
-    title: "", category: "", price: "", quantity: "", unit: "kg", description: "",
-    country: "", state: "", minOrderQuantity: "", maturity: "", image: "", image2: "", image3: "",
-    packaging: "", packagingSize: "", shippingUnit: "", containerSize: "", companyName: "",
-    contactEmail: "", countryCode: "", phoneNumber: "", certifications: "",
-    incoterm: "A definir con el comprador", saleMethod: "standard", supplyCapacity: "",
-    supplyCapacityUnit: "toneladas", supplyCapacityPeriod: "mes", currency: "US$",
-  })
-  
-  const [priceType, setPriceType] = useState<"fixed" | "quote">("fixed")
-  const [certInput, setCertInput] = useState("")
-  const [statusMessage, setStatusMessage] = useState<{ type: 'success' | 'error' | 'loading' | null, text: string }>({ type: null, text: "" })
-  const [imagePreview, setImagePreview] = useState<string>("")
-  const [imagePreview2, setImagePreview2] = useState<string>("")
-  const [imagePreview3, setImagePreview3] = useState<string>("")
-  const [selectedAlcance, setSelectedAlcance] = useState<string[]>([])
-
-  const ALL_COUNTRIES = [
-    "El Salvador", "Guatemala", "Honduras", "Nicaragua", "Costa Rica", "Panamá", "Belice",
-    "México", "Estados Unidos", "Canadá", "Argentina", "Bolivia", "Brasil", "Chile", 
-    "Colombia", "Ecuador", "Paraguay", "Perú", "Uruguay", "Venezuela",
-    "España", "Alemania", "Países Bajos", "Reino Unido", "China", "Japón"
-  ]
-
-  const ALCANCE_OPTIONS = {
-    internacional: [
-      { value: 'Regional (Centroamérica)', label: 'Centroamérica' },
-      { value: 'Norteamérica (EE.UU./Canadá)', label: 'Norteamérica (EE.UU./Canadá)' },
-      { value: 'Europa', label: 'Europa' },
-      { value: 'Mercado Global (Otros destinos)', label: 'Mercado Global' }
-    ]
-  }
-
-  const { refreshCounts } = useDashboard()
-
-  // Load existing product data
-  useEffect(() => {
-    const loadProduct = async () => {
-      try {
-        const res = await fetch(`/api/products/get-user-product-by-id?id=${resolvedParams.id}`)
-        const data = await res.json()
-        if (data.product) {
-          const p = data.product
-          let cleanDesc = p.description || ""
-          if (cleanDesc.includes("---\nInformación del Vendedor:")) {
-            cleanDesc = cleanDesc.split("---\nInformación del Vendedor:")[0].trim()
-          }
-          // Parse quantity number only
-          const qtyNum = p.quantity ? p.quantity.toString().replace(/[^\d.]/g, "") : ""
-          const minNum = p.min_order_quantity ? p.min_order_quantity.toString() : (p.min_order ? p.min_order.toString().replace(/[^\d.]/g, "") : "")
-          setPriceType(p.price_type || (p.price === "Por Cotizar" ? "quote" : "fixed"))
-          setFormData(prev => ({
-            ...prev,
-            title: p.title || "",
-            category: p.category || "",
-            price: p.price === "Por Cotizar" ? "" : (p.price || ""),
-            currency: p.currency || "US$",
-            quantity: qtyNum,
-            unit: p.unit || "kg",
-            description: cleanDesc,
-            country: p.country || "",
-            state: p.state || "",
-            minOrderQuantity: minNum,
-            maturity: p.maturity || "",
-            image: p.image || "",
-            image2: p.image2 || "",
-            image3: p.image3 || "",
-            packaging: p.packaging || "",
-            packagingSize: (p.packaging_size?.toString() || "").replace(/[a-zA-Z\s]+$/g, ""),
-            shippingUnit: p.shipping_unit_type || "",
-            containerSize: p.container_size || "",
-            companyName: p.company_name || "",
-            contactEmail: p.contact_email || "",
-            countryCode: p.country_code || "503",
-            phoneNumber: p.phone_number || "",
-            certifications: p.certifications || "",
-            incoterm: p.incoterm || "A definir con el comprador",
-            saleMethod: p.shipping_unit_type === "FCL" ? "fcl" : "standard",
-            supplyCapacity: "",
-            supplyCapacityUnit: "toneladas",
-            supplyCapacityPeriod: "mes",
-          }))
-          setImagePreview(p.image || "")
-          setImagePreview2(p.image2 || "")
-          setImagePreview3(p.image3 || "")
-          setSelectedAlcance(p.alcance_comercial || [])
-        }
-      } catch (e) {
-        setStatusMessage({ type: 'error', text: "Error al cargar el producto." })
-      } finally {
-        setIsLoadingData(false)
-      }
-    }
-    loadProduct()
-  }, [resolvedParams.id])
-
-  useEffect(() => {
-    const checkAuth = async () => {
-      const supabase = createClient()
-      const { data: { session } } = await supabase.auth.getSession()
-      if (!session) router.push("/auth")
-    }
-    const timer = setTimeout(() => checkAuth(), 500)
-    return () => clearTimeout(timer)
-  }, [router])
-
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-    const { name, value } = e.target
-    let processedValue = value
-    if (name === "state") {
-      const cleanVal = value.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s]/g, "")
-      processedValue = cleanVal.split(" ").map((word) => word.charAt(0).toUpperCase() + word.slice(1)).join(" ")
-    }
-    if (name === "price") {
-      let cleanVal = value.replace(/[^0-9.]/g, "")
-      const firstDotIndex = cleanVal.indexOf('.')
-      if (firstDotIndex !== -1) {
-          cleanVal = cleanVal.substring(0, firstDotIndex + 1) + cleanVal.substring(firstDotIndex + 1).replace(/\./g, '')
-      }
-      const parts = cleanVal.split(".")
-      
-      if (parts.length === 1 && parts[0].length >= 2) {
-          parts[0] = parts[0].slice(0, 2)
-          cleanVal = parts[0] + "."
-      } else if (parts[0].length > 2) {
-          parts[0] = parts[0].slice(0, 2)
-      }
-      if (parts.length > 1) {
-          parts[1] = parts[1].slice(0, 2)
-          cleanVal = `${parts[0]}.${parts[1]}`
-      }
-      processedValue = cleanVal
-    }
-    setFormData((prev) => ({ ...prev, [name]: processedValue }))
-  }
-
-  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>, imageKey: "image" | "image2" | "image3") => {
-    const file = e.target.files?.[0]
-    if (!file) return
-    if (file.size > MAX_FILE_SIZE_MB * 1024 * 1024) {
-      setStatusMessage({ type: 'error', text: `La imagen no debe superar los ${MAX_FILE_SIZE_MB}MB.` })
-      e.target.value = ""
-      return
-    }
-    setStatusMessage({ type: 'loading', text: "Optimizando imagen..." })
-    try {
-      const compressed = await compressImage(file)
-      if (imageKey === "image") setImagePreview(compressed)
-      if (imageKey === "image2") setImagePreview2(compressed)
-      if (imageKey === "image3") setImagePreview3(compressed)
-      setFormData((prev) => ({ ...prev, [imageKey]: compressed }))
-      setStatusMessage({ type: null, text: "" })
-    } catch (err) {
-      setStatusMessage({ type: 'error', text: "Error al procesar la imagen." })
-    }
-  }
-
-  // --- LÓGICA DE CERTIFICACIONES MEJORADA ---
-  const toggleCertification = (cert: string) => {
-    const currentCerts = formData.certifications ? formData.certifications.split(',').map(c => c.trim()).filter(Boolean) : []
-    if (currentCerts.includes(cert)) {
-      setFormData({ ...formData, certifications: currentCerts.filter(c => c !== cert).join(',') })
-    } else {
-      setFormData({ ...formData, certifications: [...currentCerts, cert].join(',') })
-    }
-  }
-
-  const handleAddCustomCert = (e?: React.KeyboardEvent<HTMLInputElement> | React.MouseEvent<HTMLButtonElement>) => {
-    // Si viene de teclado y no es Enter, no hacemos nada
-    if (e && 'key' in e && e.key !== 'Enter') return;
-    
-    e?.preventDefault()
-    const newCert = certInput.trim()
-    if (newCert) {
-      const currentCerts = formData.certifications ? formData.certifications.split(',').map(c => c.trim()).filter(Boolean) : []
-      if (!currentCerts.includes(newCert)) {
-        setFormData({ ...formData, certifications: [...currentCerts, newCert].join(',') })
-      }
-      setCertInput("")
-    }
-  }
-
-  const validateStep = (step: number) => {
+const newBottomHalf = `  const validateStep = (step: number) => {
     setStatusMessage({ type: null, text: "" })
     if (step === 1) {
       if (!formData.image) return "La Foto Principal es obligatoria."
       if (!formData.title) return "Debes ingresar el Título del Producto."
       if (!formData.category) return "Selecciona una Categoría."
       if (!formData.country) return "Selecciona el País de Origen."
-      if (!formData.state) return "Debes ingresar el Estado / Región."
     }
     if (step === 2) {
       if (priceType === "fixed" && !formData.price) return "Debes indicar un precio o seleccionar 'Cotización'."
@@ -249,53 +50,56 @@ export default function EditarPublicacionPage({ params }: { params: Promise<{ id
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    const error = validateStep(3)
+    const error = validateStep(4)
     if (error) return setStatusMessage({ type: 'error', text: error })
 
     setIsLoading(true)
-    setStatusMessage({ type: 'loading', text: "Guardando cambios..." })
+    setStatusMessage({ type: 'loading', text: "Creando perfil comercial del producto..." })
 
     try {
-      const response = await fetch("/api/products/update-product", {
-        method: "PUT",
+      const supabase = createClient()
+      let user = null
+      const { data: { user: dbUser } } = await supabase.auth.getUser()
+      if (dbUser) user = dbUser
+      else {
+        const { data: { session } } = await supabase.auth.getSession()
+        if (session?.user) user = session.user
+      }
+
+      if (!user) throw new Error("Sesión no encontrada.")
+
+      const payload = {
+        userId: user.id,
+        ...formData,
+        companyName: formData.companyName || user.user_metadata?.company_name || user.email?.split("@")[0] || "Empresa Agrícola",
+        contactEmail: formData.contactEmail || user.email || "contacto@agrilpa.com",
+        countryCode: formData.countryCode || user.user_metadata?.country_code || "503",
+        phoneNumber: formData.phoneNumber || user.user_metadata?.phone_number || "70000000",
+        packaging: formData.packaging || (formData.saleMethod === "fcl" ? "Contenedores" : "Cajas de Cartón"),
+        packagingSize: formData.packagingSize || "15",
+        price: priceType === "quote" ? "Por Cotizar" : formData.price,
+        price_type: priceType,
+        quantity: \`\${formData.quantity} \${formData.unit}\`,
+        minOrder: \`\${formData.minOrderQuantity} \${formData.unit}\`,
+        min_order_quantity: Number(formData.minOrderQuantity) || null,
+        alcanceComercial: selectedAlcance,
+      }
+
+      const response = await fetch("/api/products/create-user-product", {
+        method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          id: resolvedParams.id,
-          title: formData.title,
-          category: formData.category,
-          price: priceType === "quote" ? "Por Cotizar" : formData.price,
-          price_type: priceType,
-          currency: formData.currency,
-          unit: formData.unit,
-          quantity: `${formData.quantity} ${formData.unit}`,
-          description: formData.description,
-          country: formData.country,
-          state: formData.state,
-          min_order: `${formData.minOrderQuantity} ${formData.unit}`,
-          min_order_quantity: Number(formData.minOrderQuantity) || null,
-          maturity: formData.maturity,
-          packaging: formData.packaging || (formData.saleMethod === "fcl" ? "Contenedores" : "Cajas de Cartón"),
-          packaging_size: formData.packagingSize ? parseInt(formData.packagingSize) : null,
-          image: formData.image,
-          image2: formData.image2,
-          image3: formData.image3,
-          certifications: formData.certifications,
-          incoterm: formData.incoterm,
-          shipping_unit_type: formData.saleMethod === "fcl" ? "FCL" : null,
-          container_size: formData.containerSize || null,
-          alcanceComercial: selectedAlcance,
-        }),
+        body: JSON.stringify(payload),
       })
 
       const responseData = await response.json()
 
       if (!response.ok) {
-        throw new Error(responseData.error || "Error al actualizar la publicación.")
+        throw new Error(responseData.error || "Error al crear la publicación.")
       }
 
-      setStatusMessage({ type: 'success', text: "¡Publicación actualizada exitosamente!" })
+      setStatusMessage({ type: 'success', text: "¡Producto publicado con éxito en la red B2B!" })
       await refreshCounts()
-      setTimeout(() => router.push("/dashboard/mis-publicaciones"), 2500)
+      setTimeout(() => router.push("/dashboard/mis-publicaciones"), 1500)
     } catch (error: any) {
       setStatusMessage({ type: 'error', text: error.message || "Ocurrió un problema de conexión. Intenta de nuevo." })
       setIsLoading(false)
@@ -322,16 +126,16 @@ export default function EditarPublicacionPage({ params }: { params: Promise<{ id
               <ArrowLeft className="w-5 h-5 text-foreground" />
             </Button>
             <div>
-              <h1 className="text-2xl font-bold text-foreground tracking-tight">Editar publicación</h1>
+              <h1 className="text-2xl font-bold text-foreground tracking-tight">Nueva publicación</h1>
               <p className="text-sm text-muted-foreground mt-0.5">Completa los detalles de tu producto para publicarlo</p>
             </div>
           </div>
           <div className="hidden md:flex flex-col items-end gap-1">
             <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">COMPLETADO</div>
             <div className="flex items-center gap-2">
-              <span className="font-bold text-primary text-sm">{Math.round(((currentStep - 1) / 3) * 100)}%</span>
-              <div className="w-32 h-1.5 bg-primary/20 rounded-full overflow-hidden">
-                <div className="h-full bg-primary rounded-full transition-all duration-700 ease-in-out" style={{ width: `${((currentStep - 1) / 3) * 100}%` }} />
+              <span className="font-bold text-emerald-600 text-sm">{Math.round(((currentStep - 1) / 3) * 100)}%</span>
+              <div className="w-32 h-1.5 bg-emerald-100/50 rounded-full overflow-hidden">
+                <div className="h-full bg-emerald-500 rounded-full transition-all duration-700 ease-in-out" style={{ width: \`\${((currentStep - 1) / 3) * 100}%\` }} />
               </div>
             </div>
           </div>
@@ -344,16 +148,16 @@ export default function EditarPublicacionPage({ params }: { params: Promise<{ id
             const isPast = currentStep > step.num;
             return (
               <div key={step.num} className="flex items-center shrink-0">
-                <div className={`flex items-center gap-3 px-4 py-2 rounded-full border transition-all duration-300 ${
-                  isActive ? 'border-primary bg-primary/5 shadow-sm' : isPast ? 'border-primary/30 bg-primary/10' : 'border-transparent opacity-50 grayscale'
-                }`}>
-                  <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold transition-all ${
-                    isActive ? 'bg-primary text-white' : isPast ? 'bg-primary text-white' : 'bg-muted-foreground text-white'
-                  }`}>
+                <div className={\`flex items-center gap-3 px-4 py-2 rounded-full border transition-all duration-300 \${
+                  isActive ? 'border-primary bg-primary/5 shadow-sm' : isPast ? 'border-emerald-200 bg-emerald-50' : 'border-transparent opacity-50 grayscale'
+                }\`}>
+                  <div className={\`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold transition-all \${
+                    isActive ? 'bg-primary text-white' : isPast ? 'bg-emerald-600 text-white' : 'bg-muted-foreground text-white'
+                  }\`}>
                     {isPast ? <Check className="w-3.5 h-3.5" /> : step.num}
                   </div>
                   <div className="flex flex-col">
-                    <span className={`text-sm font-bold ${isActive || isPast ? 'text-foreground' : 'text-muted-foreground'}`}>{step.title}</span>
+                    <span className={\`text-sm font-bold \${isActive || isPast ? 'text-foreground' : 'text-muted-foreground'}\`}>{step.title}</span>
                     <span className="text-[10px] text-muted-foreground hidden sm:block">{step.desc}</span>
                   </div>
                 </div>
@@ -418,7 +222,7 @@ export default function EditarPublicacionPage({ params }: { params: Promise<{ id
                           <label className="text-sm font-bold text-foreground">Categoría <span className="text-destructive">*</span></label>
                           <Select value={formData.category} onValueChange={(v) => setFormData(p => ({ ...p, category: v }))}>
                             <SelectTrigger className="h-11 bg-transparent rounded-xl"><SelectValue placeholder="Selecciona una categoría" /></SelectTrigger>
-                            <SelectContent position="popper" className="max-h-60">{PRODUCT_CATEGORIES.map(cat => <SelectItem key={cat} value={cat}>{cat}</SelectItem>)}</SelectContent>
+                            <SelectContent>{PRODUCT_CATEGORIES.map(cat => <SelectItem key={cat} value={cat}>{cat}</SelectItem>)}</SelectContent>
                           </Select>
                         </div>
                       </div>
@@ -428,18 +232,18 @@ export default function EditarPublicacionPage({ params }: { params: Promise<{ id
                           <label className="text-sm font-bold text-foreground">País de origen <span className="text-destructive">*</span></label>
                           <Select value={formData.country} onValueChange={(v) => setFormData(p => ({ ...p, country: v }))}>
                             <SelectTrigger className="h-11 bg-transparent rounded-xl"><SelectValue placeholder="Selecciona un país" /></SelectTrigger>
-                            <SelectContent position="popper" className="max-h-60">{ALL_COUNTRIES.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent>
+                            <SelectContent>{ALL_COUNTRIES.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent>
                           </Select>
                         </div>
                         <div className="space-y-2">
-                          <label className="text-sm font-bold text-foreground">Estado / Región <span className="text-destructive">*</span></label>
+                          <label className="text-sm font-bold text-foreground">Estado / Región</label>
                           <Input name="state" value={formData.state} onChange={handleInputChange} placeholder="Ej: Jalisco, San Salvador" className="h-11 bg-transparent rounded-xl" />
                         </div>
                         <div className="space-y-2">
                           <label className="text-sm font-bold text-foreground">Tipo de maduración <span className="text-destructive">*</span></label>
                           <Select value={formData.maturity} onValueChange={(v) => setFormData(p => ({ ...p, maturity: v }))}>
                             <SelectTrigger className="h-11 bg-transparent rounded-xl"><SelectValue placeholder="Selecciona una opción" /></SelectTrigger>
-                            <SelectContent position="popper" className="max-h-60">
+                            <SelectContent>
                               {["No aplica", "Verde (Para exportación)", "Semi-maduro", "Maduro"].map(e => <SelectItem key={e} value={e}>{e}</SelectItem>)}
                             </SelectContent>
                           </Select>
@@ -456,17 +260,17 @@ export default function EditarPublicacionPage({ params }: { params: Promise<{ id
                       </div>
 
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <label className={`relative cursor-pointer rounded-xl border-2 p-4 transition-all duration-300 ease-out flex gap-4 items-center ${formData.saleMethod === "standard" ? "border-primary bg-primary/5 shadow-sm" : "border-border hover:border-primary/40 bg-white"}`}>
+                        <label className={\`relative cursor-pointer rounded-xl border-2 p-4 transition-all duration-300 ease-out flex gap-4 items-center \${formData.saleMethod === "standard" ? "border-primary bg-primary/5 shadow-sm" : "border-border hover:border-primary/40 bg-white"}\`}>
                           <input type="radio" className="peer sr-only" checked={formData.saleMethod === "standard"} onChange={() => setFormData(p => ({ ...p, saleMethod: "standard", containerSize: "", unit: "kg" }))} />
-                          <div className={`w-10 h-10 rounded-full flex shrink-0 items-center justify-center text-lg transition-colors ${formData.saleMethod === "standard" ? "bg-primary text-white" : "bg-[#F3F4F6]"}`}>📦</div>
+                          <div className={\`w-10 h-10 rounded-full flex shrink-0 items-center justify-center text-lg transition-colors \${formData.saleMethod === "standard" ? "bg-primary text-white" : "bg-[#F3F4F6]"}\`}>📦</div>
                           <div>
                             <h4 className="font-bold text-sm">Carga general / Sacos</h4>
                             <p className="text-[11px] text-muted-foreground">Venta por sacos, cajas o bultos</p>
                           </div>
                         </label>
-                        <label className={`relative cursor-pointer rounded-xl border-2 p-4 transition-all duration-300 ease-out flex gap-4 items-center ${formData.saleMethod === "fcl" ? "border-primary bg-primary/5 shadow-sm" : "border-border hover:border-primary/40 bg-white"}`}>
+                        <label className={\`relative cursor-pointer rounded-xl border-2 p-4 transition-all duration-300 ease-out flex gap-4 items-center \${formData.saleMethod === "fcl" ? "border-primary bg-primary/5 shadow-sm" : "border-border hover:border-primary/40 bg-white"}\`}>
                           <input type="radio" className="peer sr-only" checked={formData.saleMethod === "fcl"} onChange={() => setFormData(p => ({ ...p, saleMethod: "fcl", packaging: "Contenedores", shippingUnit: "FCL", containerSize: "40HC", unit: "Contenedor 40'" }))} />
-                          <div className={`w-10 h-10 rounded-full flex shrink-0 items-center justify-center text-lg transition-colors ${formData.saleMethod === "fcl" ? "bg-primary text-white" : "bg-[#F3F4F6]"}`}>🚢</div>
+                          <div className={\`w-10 h-10 rounded-full flex shrink-0 items-center justify-center text-lg transition-colors \${formData.saleMethod === "fcl" ? "bg-primary text-white" : "bg-[#F3F4F6]"}\`}>🚢</div>
                           <div>
                             <h4 className="font-bold text-sm">Venta por contenedor</h4>
                             <p className="text-[11px] text-muted-foreground">Exportación FCL (Full Container)</p>
@@ -480,7 +284,7 @@ export default function EditarPublicacionPage({ params }: { params: Promise<{ id
                             <label className="text-sm font-bold text-foreground">Tipo de embalaje <span className="text-destructive">*</span></label>
                             <Select value={formData.packaging} onValueChange={(v) => setFormData(p => ({ ...p, packaging: v }))}>
                               <SelectTrigger className="h-11 bg-transparent rounded-xl"><SelectValue placeholder="Selecciona un tipo de embalaje" /></SelectTrigger>
-                              <SelectContent position="popper" className="max-h-60">
+                              <SelectContent>
                                 {["Cajas de Cartón", "Cajas Plásticas", "Sacos", "Pallets", "Granel", "Totes/Octabins"].map(e => <SelectItem key={e} value={e}>{e}</SelectItem>)}
                               </SelectContent>
                             </Select>
@@ -489,7 +293,7 @@ export default function EditarPublicacionPage({ params }: { params: Promise<{ id
                             <label className="text-sm font-bold text-foreground">Peso por embalaje <span className="text-destructive">*</span></label>
                             <div className="relative">
                                <Input name="packagingSize" type="number" value={formData.packagingSize} onChange={handleInputChange} placeholder="Ej: 50, 25, 100" className="h-11 bg-transparent rounded-xl pr-12" />
-                               <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-bold text-primary bg-primary/10 px-2 py-0.5 rounded-md">kg</span>
+                               <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-md">kg</span>
                             </div>
                           </div>
                         </div>
@@ -500,7 +304,7 @@ export default function EditarPublicacionPage({ params }: { params: Promise<{ id
                             { id: '40HC', label: "40' High Cube" },
                             { id: 'Ambos', label: "Ambas Opciones" }
                           ].map(opt => (
-                            <button key={opt.id} type="button" onClick={() => setFormData(p => ({ ...p, containerSize: opt.id }))} className={`p-4 rounded-xl border-2 transition-all duration-300 text-center ${formData.containerSize === opt.id ? "border-primary bg-primary/5 shadow-sm" : "border-border hover:border-primary/30 bg-white"}`}>
+                            <button key={opt.id} type="button" onClick={() => setFormData(p => ({ ...p, containerSize: opt.id }))} className={\`p-4 rounded-xl border-2 transition-all duration-300 text-center \${formData.containerSize === opt.id ? "border-primary bg-primary/5 shadow-sm" : "border-border hover:border-primary/30 bg-white"}\`}>
                               <p className="font-bold text-sm">{opt.label}</p>
                             </button>
                           ))}
@@ -515,17 +319,17 @@ export default function EditarPublicacionPage({ params }: { params: Promise<{ id
                            <div className="space-y-2">
                              <label className="text-sm font-bold text-foreground">Precio <span className="text-destructive">*</span></label>
                              <div className="flex bg-[#F3F4F6] p-1 rounded-full w-full max-w-xs mb-3">
-                               <button type="button" onClick={() => { setPriceType("quote"); setFormData(p => ({ ...p, price: "" })) }} className={`flex-1 py-1.5 text-sm font-bold rounded-full transition-all duration-300 ${priceType === "quote" ? "bg-primary text-white shadow-sm" : "text-muted-foreground hover:text-foreground"}`}>Cotización</button>
-                               <button type="button" onClick={() => setPriceType("fixed")} className={`flex-1 py-1.5 text-sm font-bold rounded-full transition-all duration-300 ${priceType === "fixed" ? "bg-primary text-white shadow-sm" : "text-muted-foreground hover:text-foreground"}`}>Precio fijo</button>
+                               <button type="button" onClick={() => { setPriceType("quote"); setFormData(p => ({ ...p, price: "" })) }} className={\`flex-1 py-1.5 text-sm font-bold rounded-full transition-all duration-300 \${priceType === "quote" ? "bg-primary text-white shadow-sm" : "text-muted-foreground hover:text-foreground"}\`}>Cotización</button>
+                               <button type="button" onClick={() => setPriceType("fixed")} className={\`flex-1 py-1.5 text-sm font-bold rounded-full transition-all duration-300 \${priceType === "fixed" ? "bg-primary text-white shadow-sm" : "text-muted-foreground hover:text-foreground"}\`}>Precio fijo</button>
                              </div>
                              
                              {priceType === "fixed" ? (
                                <div className="flex gap-2">
                                  <CurrencyPicker value={formData.currency} onChange={(val) => setFormData(p => ({ ...p, currency: val }))} />
-                                 <Input type="text" name="price" value={formData.price} onChange={handleInputChange} onBlur={(e) => { const v = e.target.value; if (v) { const parts = v.split('.'); if (parts.length === 1) { setFormData(p => ({...p, price: v + '.00'})); } else if (parts.length === 2 && parts[1] === '') { setFormData(p => ({...p, price: v + '00'})); } else if (parts.length === 2 && parts[1].length === 1) { setFormData(p => ({...p, price: v + '0'})); } } }} placeholder="0.00" className="h-11 font-bold rounded-xl" />
+                                 <Input type="number" name="price" value={formData.price} onChange={handleInputChange} placeholder="0.00" className="h-11 font-bold rounded-xl" />
                                  <Select value={formData.unit} onValueChange={(v) => setFormData(p => ({ ...p, unit: v }))}>
                                     <SelectTrigger className="h-11 bg-transparent rounded-xl w-32"><SelectValue /></SelectTrigger>
-                                    <SelectContent position="popper" className="max-h-60">
+                                    <SelectContent>
                                       {UNIDADES_MEDIDA.map((u) => <SelectItem key={u.value} value={u.value}>{u.label}</SelectItem>)}
                                     </SelectContent>
                                  </Select>
@@ -564,12 +368,12 @@ export default function EditarPublicacionPage({ params }: { params: Promise<{ id
                                 </div>
                                 <Select value={formData.supplyCapacityUnit} onValueChange={(v) => setFormData(p => ({ ...p, supplyCapacityUnit: v }))}>
                                   <SelectTrigger className="h-11 w-32 bg-transparent rounded-xl"><SelectValue /></SelectTrigger>
-                                  <SelectContent position="popper" className="max-h-60"><SelectItem value="toneladas">Toneladas</SelectItem><SelectItem value="kg">kg</SelectItem></SelectContent>
+                                  <SelectContent><SelectItem value="toneladas">Toneladas</SelectItem><SelectItem value="kg">kg</SelectItem></SelectContent>
                                 </Select>
                                 <div className="flex items-center text-muted-foreground px-2">/</div>
                                 <Select value={formData.supplyCapacityPeriod} onValueChange={(v) => setFormData(p => ({ ...p, supplyCapacityPeriod: v }))}>
                                   <SelectTrigger className="h-11 w-28 bg-transparent rounded-xl"><SelectValue /></SelectTrigger>
-                                  <SelectContent position="popper" className="max-h-60"><SelectItem value="mes">mes</SelectItem><SelectItem value="semana">semana</SelectItem></SelectContent>
+                                  <SelectContent><SelectItem value="mes">mes</SelectItem><SelectItem value="semana">semana</SelectItem></SelectContent>
                                 </Select>
                               </div>
                               <p className="text-[11px] text-muted-foreground mt-1">Cantidad máxima que puedes proveer en un periodo determinado.</p>
@@ -589,9 +393,9 @@ export default function EditarPublicacionPage({ params }: { params: Promise<{ id
                       <div className="space-y-4">
                         <div>
                           <h4 className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-2">MERCADO NACIONAL</h4>
-                          <label className={`cursor-pointer flex items-center p-4 rounded-xl border-2 transition-all duration-300 ${selectedAlcance.some(i => i.startsWith("Nacional")) ? "border-primary bg-primary/5 shadow-sm" : "border-border hover:border-primary/40 bg-white"}`}>
-                            <input type="checkbox" className="hidden" checked={selectedAlcance.some(i => i.startsWith("Nacional"))} onChange={(e) => setSelectedAlcance(e.target.checked ? [...selectedAlcance, `Nacional (Cobertura en ${formData.country || "tu país"})`] : selectedAlcance.filter(i => !i.startsWith("Nacional")))} />
-                            <div className={`w-5 h-5 rounded-full border flex items-center justify-center mr-3 ${selectedAlcance.some(i => i.startsWith("Nacional")) ? "border-primary" : "border-muted-foreground/30"}`}>
+                          <label className={\`cursor-pointer flex items-center p-4 rounded-xl border-2 transition-all duration-300 \${selectedAlcance.some(i => i.startsWith("Nacional")) ? "border-primary bg-primary/5 shadow-sm" : "border-border hover:border-primary/40 bg-white"}\`}>
+                            <input type="checkbox" className="hidden" checked={selectedAlcance.some(i => i.startsWith("Nacional"))} onChange={(e) => setSelectedAlcance(e.target.checked ? [...selectedAlcance, \`Nacional (Cobertura en \${formData.country || "tu país"})\`] : selectedAlcance.filter(i => !i.startsWith("Nacional")))} />
+                            <div className={\`w-5 h-5 rounded-full border flex items-center justify-center mr-3 \${selectedAlcance.some(i => i.startsWith("Nacional")) ? "border-primary" : "border-muted-foreground/30"}\`}>
                               {selectedAlcance.some(i => i.startsWith("Nacional")) && <div className="w-3 h-3 rounded-full bg-primary" />}
                             </div>
                             <div>
@@ -607,9 +411,9 @@ export default function EditarPublicacionPage({ params }: { params: Promise<{ id
                             {ALCANCE_OPTIONS.internacional.map((opcion) => {
                               const isSelected = selectedAlcance.includes(opcion.value);
                               return (
-                                <label key={opcion.value} className={`cursor-pointer flex items-center p-4 rounded-xl border-2 transition-all duration-300 ${isSelected ? "border-primary bg-primary/5 shadow-sm" : "border-border hover:border-primary/40 bg-white"}`}>
+                                <label key={opcion.value} className={\`cursor-pointer flex items-center p-4 rounded-xl border-2 transition-all duration-300 \${isSelected ? "border-primary bg-primary/5 shadow-sm" : "border-border hover:border-primary/40 bg-white"}\`}>
                                   <input type="checkbox" className="hidden" checked={isSelected} onChange={(e) => setSelectedAlcance(e.target.checked ? [...selectedAlcance, opcion.value] : selectedAlcance.filter(i => i !== opcion.value))} />
-                                  <div className={`w-5 h-5 rounded-full border flex items-center justify-center mr-3 ${isSelected ? "border-primary" : "border-muted-foreground/30"}`}>
+                                  <div className={\`w-5 h-5 rounded-full border flex items-center justify-center mr-3 \${isSelected ? "border-primary" : "border-muted-foreground/30"}\`}>
                                     {isSelected && <div className="w-3 h-3 rounded-full bg-primary" />}
                                   </div>
                                   <div>
@@ -634,7 +438,7 @@ export default function EditarPublicacionPage({ params }: { params: Promise<{ id
                            </div>
                            <Select value={formData.incoterm} onValueChange={(v) => setFormData(p => ({ ...p, incoterm: v }))}>
                              <SelectTrigger className="h-11 bg-transparent rounded-xl"><SelectValue placeholder="Selecciona..." /></SelectTrigger>
-                             <SelectContent position="popper" className="max-h-60">
+                             <SelectContent>
                                <SelectItem value="A definir con el comprador">A definir con el comprador</SelectItem>
                                <SelectItem value="EXW">EXW – En finca / origen</SelectItem>
                                <SelectItem value="FOB">FOB – Libre a bordo</SelectItem>
@@ -657,7 +461,7 @@ export default function EditarPublicacionPage({ params }: { params: Promise<{ id
                       <div className="space-y-2">
                         <div className="flex justify-between items-center">
                            <label className="text-sm font-bold text-foreground">Descripción del producto <span className="text-destructive">*</span></label>
-                           <span className={`text-[10px] font-bold transition-colors ${formData.description.length < 50 ? 'text-destructive' : 'text-primary'}`}>
+                           <span className={\`text-[10px] font-bold transition-colors \${formData.description.length < 50 ? 'text-destructive' : 'text-emerald-600'}\`}>
                              {formData.description.length} / 50 caracteres mínimos
                            </span>
                         </div>
@@ -684,11 +488,11 @@ export default function EditarPublicacionPage({ params }: { params: Promise<{ id
                                    key={cert}
                                    type="button"
                                    onClick={() => toggleCertification(cert)}
-                                   className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all duration-300 border ${
+                                   className={\`px-3 py-1.5 rounded-full text-xs font-medium transition-all duration-300 border \${
                                      isActive 
                                        ? 'bg-primary/10 text-primary border-primary/30 shadow-sm' 
                                        : 'bg-transparent text-muted-foreground border-border hover:border-primary/40 hover:bg-muted/50'
-                                   }`}
+                                   }\`}
                                  >
                                    + {cert}
                                  </button>
@@ -713,7 +517,7 @@ export default function EditarPublicacionPage({ params }: { params: Promise<{ id
 
                   {/* BARRA ESTADO DE ERRORES */}
                   {statusMessage.text && (
-                    <div className={`mt-4 p-4 rounded-xl text-sm font-bold flex items-center gap-3 animate-in fade-in slide-in-from-bottom-2 ${statusMessage.type === 'error' ? 'bg-destructive/10 text-destructive' : statusMessage.type === 'success' ? 'bg-primary/10 text-primary' : 'bg-blue-50 text-blue-700'}`}>
+                    <div className={\`mt-4 p-4 rounded-xl text-sm font-bold flex items-center gap-3 animate-in fade-in slide-in-from-bottom-2 \${statusMessage.type === 'error' ? 'bg-destructive/10 text-destructive' : statusMessage.type === 'success' ? 'bg-emerald-50 text-emerald-700' : 'bg-blue-50 text-blue-700'}\`}>
                       {statusMessage.type === 'error' && <X className="w-4 h-4 shrink-0" />}
                       {statusMessage.text}
                     </div>
@@ -721,7 +525,7 @@ export default function EditarPublicacionPage({ params }: { params: Promise<{ id
 
                   {/* CONTROLADORES INFERIORES */}
                   <div className="flex items-center justify-between pt-4 mt-8 border-t border-border/40">
-                    <Button type="button" variant="ghost" onClick={handlePrevStep} disabled={isLoading || currentStep === 1} className={`font-bold text-muted-foreground hover:text-foreground rounded-full ${currentStep === 1 ? 'opacity-0 pointer-events-none' : ''}`}>
+                    <Button type="button" variant="ghost" onClick={handlePrevStep} disabled={isLoading || currentStep === 1} className={\`font-bold text-muted-foreground hover:text-foreground rounded-full \${currentStep === 1 ? 'opacity-0 pointer-events-none' : ''}\`}>
                       <ArrowLeft className="w-4 h-4 mr-2" /> Atrás
                     </Button>
                     
@@ -736,7 +540,7 @@ export default function EditarPublicacionPage({ params }: { params: Promise<{ id
                         </Button>
                       ) : (
                         <Button type="submit" disabled={isLoading} className="h-10 px-6 rounded-full font-bold bg-primary hover:bg-primary/90 text-white shadow-md transition-all hover:scale-[1.02]">
-                          {isLoading ? <><Loader className="w-4 h-4 mr-2 animate-spin" /> Publicando...</> : 'Guardar cambios'}
+                          {isLoading ? <><Loader className="w-4 h-4 mr-2 animate-spin" /> Publicando...</> : 'Publicar producto'}
                         </Button>
                       )}
                     </div>
@@ -781,19 +585,19 @@ export default function EditarPublicacionPage({ params }: { params: Promise<{ id
                    
                    <div className="flex items-center text-[#6B7280] text-[11px] font-medium">
                       <svg className="w-3 h-3 mr-1 opacity-70" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
-                      {formData.state ? `${formData.state}, ` : ""}{formData.country || "Origen por definir"}
+                      {formData.state ? \`\${formData.state}, \` : ""}{formData.country || "Origen por definir"}
                    </div>
 
                    <div className="pt-3 mt-1 border-t border-border/50 flex justify-between items-end">
                       <div>
                         <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-0.5">PRECIO</p>
-                        <p className="font-bold text-primary text-lg leading-none">
-                           {priceType === "quote" ? "A cotizar" : formData.price ? `${formData.currency === 'US$' ? '$' : formData.currency} ${formData.price}` : "A cotizar"}
+                        <p className="font-bold text-emerald-700 text-lg leading-none">
+                           {priceType === "quote" ? "A cotizar" : formData.price ? \`\${formData.currency === 'US$' ? '$' : formData.currency} \${formData.price}\` : "A cotizar"}
                         </p>
                       </div>
                       <div className="text-right">
                         <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider mb-1">DISPONIBLE</p>
-                        <p className="font-bold text-foreground text-xs">{formData.quantity ? `${formData.quantity} ${formData.unit}` : "-"}</p>
+                        <p className="font-bold text-foreground text-xs">{formData.quantity ? \`\${formData.quantity} \${formData.unit}\` : "-"}</p>
                       </div>
                    </div>
                 </div>
@@ -811,10 +615,10 @@ export default function EditarPublicacionPage({ params }: { params: Promise<{ id
                      { done: formData.description.length >= 50, text: "Descripción (50+)" }
                    ].map((item, i) => (
                      <div key={i} className="flex items-center gap-2">
-                        <div className={`w-4 h-4 rounded-full flex items-center justify-center shrink-0 transition-colors ${item.done ? 'bg-primary text-white' : 'bg-white border border-muted-foreground/30 text-transparent'}`}>
+                        <div className={\`w-4 h-4 rounded-full flex items-center justify-center shrink-0 transition-colors \${item.done ? 'bg-emerald-500 text-white' : 'bg-white border border-muted-foreground/30 text-transparent'}\`}>
                            <Check className="w-2.5 h-2.5" />
                         </div>
-                        <span className={`text-xs transition-colors ${item.done ? 'text-foreground font-medium' : 'text-muted-foreground'}`}>{item.text}</span>
+                        <span className={\`text-xs transition-colors \${item.done ? 'text-foreground font-medium' : 'text-muted-foreground'}\`}>{item.text}</span>
                      </div>
                    ))}
                 </div>
@@ -822,21 +626,11 @@ export default function EditarPublicacionPage({ params }: { params: Promise<{ id
            </div>
         </div>
       </div>
-      {/* SUCCESS OVERLAY ANIMATION */}
-      {statusMessage.type === 'success' && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#FDFCF8]/90 backdrop-blur-md animate-in fade-in duration-500">
-          <div className="flex flex-col items-center animate-in zoom-in-75 slide-in-from-bottom-8 duration-700 ease-out">
-            <div className="w-28 h-28 rounded-full bg-primary/10 flex items-center justify-center mb-6 relative">
-                <div className="absolute inset-0 rounded-full bg-primary animate-ping opacity-20" style={{ animationDuration: '2s' }}></div>
-                <div className="w-20 h-20 rounded-full bg-primary flex items-center justify-center shadow-xl shadow-primary/30 transform transition-transform animate-in zoom-in delay-200 duration-500">
-                  <Check className="w-10 h-10 text-white" strokeWidth={3} />
-                </div>
-            </div>
-            <h2 className="text-3xl md:text-4xl font-bold text-[#1a202c] text-center mb-3 tracking-tight">¡Misión Cumplida!</h2>
-            <p className="text-[#6B7280] font-medium text-center text-lg">{statusMessage.text}</p>
-          </div>
-        </div>
-      )}
     </div>
   )
 }
+`;
+
+content = topHalf + newBottomHalf;
+fs.writeFileSync(filePath, content, 'utf8');
+console.log('Successfully wrote to ' + filePath);
