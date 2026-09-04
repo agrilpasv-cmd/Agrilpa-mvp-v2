@@ -528,27 +528,78 @@ export default function DashboardShell({
             {/* Modal de Configuración Inicial (Para usuarios Google OAuth nuevos o perfiles incompletos) */}
             {/* Note: backdrop does NOT have onClick to prevent dismissal - modal is mandatory */}
             {isProfileIncomplete && (
-                <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 backdrop-blur-sm p-4 overflow-y-auto">
-                    <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto flex flex-col transition-all transform scale-100">
-                        {/* Header */}
-                        <div className="p-6 border-b border-border bg-gradient-to-r from-primary/10 to-primary/5 rounded-t-2xl">
-                            <div className="flex flex-col items-center mb-3">
+                <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 md:p-6 overflow-y-auto">
+                    <div className="bg-[#FDFCF8] rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col md:flex-row overflow-hidden transition-all transform scale-100 border border-border/50">
+                        
+                        {/* Left Sidebar Stepper (Desktop) */}
+                        <div className="hidden md:flex flex-col w-[300px] bg-white p-8 border-r border-border/50 shrink-0 relative overflow-hidden">
+                            <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-bl-full -mr-10 -mt-10 pointer-events-none"></div>
+                            
+                            <div className="mb-10 relative z-10">
                                 <Image src="/agrilpa-logo.svg" alt="Agrilpa" width={140} height={50} priority />
-                                <p className="text-sm text-muted-foreground mt-2 text-center">
-                                    Completa tu perfil comercial en 3 sencillos pasos para empezar a utilizar tu panel.
-                                </p>
+                                <p className="text-sm text-muted-foreground mt-4 font-medium">Configura tu perfil comercial para desbloquear todas las herramientas de negociación B2B.</p>
                             </div>
 
-                            {/* Step indicators */}
-                            <div className="flex items-center gap-1 mt-3">
-                                {[1, 2, 3].map((step) => (
-                                    <div key={step} className="flex items-center flex-1">
-                                        <div className={`flex-1 h-2 rounded-full transition-all duration-300 ${setupStep >= step ? "bg-primary" : "bg-gray-200"}`} />
+                            <div className="flex-1 relative z-10">
+                                <div className="space-y-6">
+                                    {/* Step 1 */}
+                                    <div className="flex gap-4">
+                                        <div className="flex flex-col items-center">
+                                            <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm border-2 transition-colors ${setupStep >= 1 ? 'border-primary bg-primary text-white shadow-md shadow-primary/20' : 'border-gray-200 text-muted-foreground bg-white'}`}>
+                                                {setupStep > 1 ? <Check className="w-4 h-4" /> : "1"}
+                                            </div>
+                                            <div className={`w-0.5 h-full mt-2 transition-colors ${setupStep > 1 ? 'bg-primary' : 'bg-gray-100'}`}></div>
+                                        </div>
+                                        <div className="pb-6">
+                                            <p className={`font-bold ${setupStep >= 1 ? 'text-foreground' : 'text-muted-foreground'}`}>Perfil Comercial</p>
+                                            <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">Información básica y tipo de empresa</p>
+                                        </div>
                                     </div>
-                                ))}
+
+                                    {/* Step 2 */}
+                                    <div className="flex gap-4">
+                                        <div className="flex flex-col items-center">
+                                            <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm border-2 transition-colors ${setupStep >= 2 ? 'border-primary bg-primary text-white shadow-md shadow-primary/20' : 'border-gray-200 text-muted-foreground bg-white'}`}>
+                                                {setupStep > 2 ? <Check className="w-4 h-4" /> : "2"}
+                                            </div>
+                                            <div className={`w-0.5 h-full mt-2 transition-colors ${setupStep > 2 ? 'bg-primary' : 'bg-gray-100'}`}></div>
+                                        </div>
+                                        <div className="pb-6">
+                                            <p className={`font-bold ${setupStep >= 2 ? 'text-foreground' : 'text-muted-foreground'}`}>Ubicación</p>
+                                            <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">Datos de contacto y origen</p>
+                                        </div>
+                                    </div>
+
+                                    {/* Step 3 */}
+                                    <div className="flex gap-4">
+                                        <div className="flex flex-col items-center">
+                                            <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm border-2 transition-colors ${setupStep >= 3 ? 'border-primary bg-primary text-white shadow-md shadow-primary/20' : 'border-gray-200 text-muted-foreground bg-white'}`}>
+                                                3
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <p className={`font-bold ${setupStep >= 3 ? 'text-foreground' : 'text-muted-foreground'}`}>Preferencias Comerciales</p>
+                                            <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">Productos de interés y volúmenes</p>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
-                            <p className="text-xs font-semibold text-primary mt-1 text-right">Paso {setupStep} de 3</p>
                         </div>
+
+                        {/* Right Content Area */}
+                        <div className="flex-1 flex flex-col relative h-[90vh] overflow-y-auto">
+                            {/* Mobile Header (Hidden on Desktop) */}
+                            <div className="md:hidden p-5 border-b border-border bg-white sticky top-0 z-10">
+                                <div className="flex justify-between items-center mb-4">
+                                    <Image src="/agrilpa-logo.svg" alt="Agrilpa" width={110} height={40} priority />
+                                    <span className="text-xs font-bold text-primary bg-primary/10 px-2.5 py-1 rounded-full">Paso {setupStep} de 3</span>
+                                </div>
+                                <div className="flex items-center gap-1">
+                                    {[1, 2, 3].map((step) => (
+                                        <div key={step} className={`flex-1 h-1.5 rounded-full transition-all duration-300 ${setupStep >= step ? "bg-primary" : "bg-gray-100"}`} />
+                                    ))}
+                                </div>
+                            </div>
 
                         {setupError && (
                             <div className="mx-6 mt-4 p-3 bg-red-50 border border-red-200 text-red-600 rounded-lg text-sm font-medium">
@@ -557,7 +608,18 @@ export default function DashboardShell({
                         )}
 
                         {/* Content */}
-                        <form onSubmit={handleSetupSubmit} className="p-6 flex-1 space-y-4">
+                            {isSubmittingSetup && !setupError && (
+                                <div className="absolute inset-0 z-50 bg-white/90 backdrop-blur-sm flex flex-col items-center justify-center animate-in fade-in duration-300">
+                                    <div className="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center mb-6 animate-pulse">
+                                        <div className="w-16 h-16 bg-primary rounded-full flex items-center justify-center">
+                                            <Check className="w-8 h-8 text-white" />
+                                        </div>
+                                    </div>
+                                    <h3 className="text-2xl font-bold text-foreground mb-2">¡Perfil Completado!</h3>
+                                    <p className="text-muted-foreground font-medium">Configurando tu panel B2B...</p>
+                                </div>
+                            )}
+                        <form onSubmit={handleSetupSubmit} className="p-6 md:p-8 flex-1 space-y-5">
                             {setupStep === 1 && (
                                 <div className="space-y-4">
                                     <div>
@@ -922,6 +984,7 @@ export default function DashboardShell({
                                 )}
                             </div>
                         </form>
+                        </div>
                     </div>
                 </div>
             )}

@@ -18,6 +18,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import { ChatOverlay } from "@/components/chat-overlay"
+import { useGlobalChat } from "@/components/chat/chat-context"
 import { Star, MapPin, MessageCircle, Check, ChevronLeft, FileText, ShoppingCart, Copy, Calendar, Package, Loader, AlertCircle, ArrowRight, ShieldCheck, X, Globe, Mail } from "lucide-react"
 import { ProductHero } from "@/components/product-hero"
 import { createClient } from "@/lib/supabase/client"
@@ -272,6 +273,27 @@ export default function ProductPage() {
   }, [slug])
 
   const product = userProduct
+  
+  const { setActiveChat } = useGlobalChat()
+
+  useEffect(() => {
+    if (product && product.id && product.vendorId) {
+      setActiveChat({
+        sellerName: product.producer,
+        sellerOnline: true,
+        vendorId: product.vendorId,
+        product: {
+          id: product.id,
+          title: product.name,
+          price: product.price ? product.price.split(' ')[0] : 'Por Cotizar',
+          currency: product.price && product.price.includes('USD') ? 'USD' : '$',
+          image: product.image || '/placeholder.svg',
+          quantity: product.unit || 'kg'
+        }
+      })
+    }
+  }, [product, setActiveChat])
+
 
   const relatedData = useMemo(() => {
     if (!product) return { relatedProducts: [], relatedTitle: "" }
@@ -351,7 +373,7 @@ export default function ProductPage() {
     }
 
     console.log(`[v0] handleContactVendor called for: ${product.name}`)
-    setIsContactDialogOpen(true)
+    setIsChatOpen(true)
     setShowEmailCopy(false)
     setTimeout(() => trackContactClick("generic"), 0)
   }
@@ -769,14 +791,7 @@ export default function ProductPage() {
         )}
       </main>
 
-      {isChatOpen && (
-        <ChatOverlay
-          vendorName={product.producer}
-          vendorId={product.vendorId}
-          productName={product.name}
-          onClose={() => setIsChatOpen(false)}
-        />
-      )}
+      {/* Global Chat Wrapper renders the chat widget */}
 
       {/* Quotation Dialog */}
       <Dialog open={isQuotationDialogOpen} onOpenChange={(open) => {

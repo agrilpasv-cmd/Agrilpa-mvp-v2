@@ -10,6 +10,9 @@ import { RouteTracker } from "@/components/route-tracker"
 import { Toaster } from "@/components/ui/sonner"
 import "./globals.css"
 
+import { ChatProvider } from "@/components/chat/chat-context"
+import { GlobalChatWrapper } from "@/components/chat/global-chat-wrapper"
+
 const _geist = Geist({ subsets: ["latin"] })
 const _geistMono = Geist_Mono({ subsets: ["latin"] })
 
@@ -42,11 +45,14 @@ export default function RootLayout({
   return (
     <html lang="es">
       <body className={`font-sans antialiased`}>
-        <RouteTracker />
-        <NavbarWrapper />
-        {children}
-        <Toaster />
-        <FooterWrapper />
+        <ChatProvider>
+          <RouteTracker />
+          <NavbarWrapper />
+          {children}
+          <Toaster />
+          <FooterWrapper />
+          <GlobalChatWrapper />
+        </ChatProvider>
         <Analytics />
         <SpeedInsights />
       </body>
