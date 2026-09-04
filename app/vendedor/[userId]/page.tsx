@@ -160,6 +160,8 @@ export default function VendedorPage() {
                   <img
                     src={(profile as any).avatar_url}
                     alt={displayName}
+                    loading="lazy"
+                    decoding="async"
                     className="w-full h-full object-cover"
                   />
                 </div>
@@ -313,6 +315,8 @@ export default function VendedorPage() {
                         <img
                           src={item.url}
                           alt={item.label}
+                          loading="lazy"
+                          decoding="async"
                           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                         />
                       </div>
@@ -356,6 +360,8 @@ export default function VendedorPage() {
                       <img
                         src={product.image || "/placeholder.svg"}
                         alt={product.title}
+                        loading="lazy"
+                        decoding="async"
                         className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                       />
                       <div className="absolute top-3 left-3">

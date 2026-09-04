@@ -1,0 +1,27 @@
+{
+  "presences": [
+    [
+      "705b9441-d34f-42f8-993f-3bd5734443ac",
+      {
+        "lastSeen": 1788555096587,
+        "inMessagesPage": false
+      }
+    ],
+    [
+      "c00ee604-74ab-4589-aef1-5b8c067b2a5d",
+      {
+        "lastSeen": 1788551945451,
+        "inMessagesPage": true
+      }
+    ],
+    [
+      "57b0c950-5397-42c9-b560-1459b21f8d8f",
+      {
+        "lastSeen": 1788555087362,
+        "inMessagesPage": false
+      }
+    ]
+  ],
+  "queuedEmails": [],
+  "reminders": []
+}

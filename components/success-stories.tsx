@@ -300,6 +300,8 @@ export function SuccessStories() {
                               <img
                                 src={testimonial.logo}
                                 alt={testimonial.company}
+                                loading="lazy"
+                                decoding="async"
                                 className="w-full h-full object-cover"
                                 onError={(e) => {
                                   (e.target as HTMLImageElement).style.display = 'none';

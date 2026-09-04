@@ -280,6 +280,8 @@ export default function MisPublicacionesPage() {
                   <img
                     src={pub.image || `/api/products/${pub.id}/thumb`}
                     alt={pub.title}
+                    loading="lazy"
+                    decoding="async"
                     className="w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-300"
                     onError={(e) => {
                       (e.target as HTMLImageElement).src = `/api/products/${pub.id}/thumb`

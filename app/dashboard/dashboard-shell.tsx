@@ -35,7 +35,8 @@ import {
     ShoppingBag,
     ArrowLeft,
     ArrowRight,
-    Phone
+    Phone,
+    Check
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -330,6 +331,7 @@ export default function DashboardShell({
         { href: "/admin/financiamiento", label: "Financiamiento", icon: DollarSign, notifications: 0 },
         { href: "/admin/logistica", label: "Logística", icon: Truck, notifications: 0 },
         { href: "/admin/compras", label: "Compras Globales", icon: ShoppingCart, notifications: 0 },
+        { href: "/dashboard/mensajes", label: "Mensajes B2B", icon: MessageSquare, notifications: counts.mensajes || 0 },
         { href: "/admin/contactanos", label: "Contáctanos", icon: MessageSquare, notifications: counts.contactanos || 0 },
         { href: "/admin/newsletter", label: "Newsletter", icon: Newspaper, notifications: 0 },
         { href: "/admin/bajas", label: "Reportes de Bajas", icon: UserMinus, notifications: 0 },
@@ -338,6 +340,7 @@ export default function DashboardShell({
     const userMenuItems = [
         { href: "/", label: "Inicio", icon: Home, notifications: 0 },
         { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard, notifications: 0 },
+        { href: "/dashboard/mensajes", label: "Mensajes B2B", icon: MessageSquare, notifications: counts.mensajes || 0 },
         { href: "/dashboard/perfil", label: "Mi Perfil", icon: FileText, notifications: counts.perfil },
         {
             href: "/dashboard/mis-publicaciones",
@@ -371,7 +374,6 @@ export default function DashboardShell({
             icon: Receipt,
             notifications: counts.transacciones,
         },
-        { href: "/dashboard/mensajes", label: "Mensajes", icon: MessageSquare, notifications: counts.mensajes },
         { href: "/dashboard/configuracion", label: "Configuración", icon: Settings, notifications: 0 },
     ]
 
@@ -436,10 +438,11 @@ export default function DashboardShell({
                         <div className="hidden md:flex items-center space-x-3">
                             {/* Hide profile link and show only logout when setup is pending */}
                             {!isProfileIncomplete && (
-                                <Link href="/dashboard/perfil">
-                                    <Button variant="ghost" className="text-base font-medium px-4 py-2">
-                                        Mi Perfil
-                                    </Button>
+                                <Link
+                                    href="/dashboard/perfil"
+                                    className="inline-flex items-center gap-1.5 px-4 py-2 text-base font-medium text-foreground hover:text-primary transition-colors group"
+                                >
+                                    <span>Mi Perfil</span>
                                 </Link>
                             )}
                             {isProfileIncomplete && (
@@ -447,15 +450,14 @@ export default function DashboardShell({
                                     ⚠ Completa tu perfil para continuar
                                 </span>
                             )}
-                            <Button
-                                variant="outline"
+                            <button
                                 onClick={handleLogout}
                                 disabled={isLoggingOut}
-                                className="text-base font-medium px-4 py-2 gap-2 hover:bg-red-500 hover:text-white hover:border-red-500 active:bg-red-600 bg-transparent disabled:opacity-70"
+                                className="inline-flex items-center gap-1.5 px-4 py-2 text-base font-medium text-foreground hover:text-red-600 transition-colors group cursor-pointer disabled:opacity-70"
                             >
-                                <LogOut className={`w-4 h-4 ${isLoggingOut ? "animate-spin" : ""}`} />
-                                {isLoggingOut ? "Cerrando..." : "Cerrar Sesión"}
-                            </Button>
+                                <span>{isLoggingOut ? "Cerrando..." : "Cerrar Sesión"}</span>
+                                <LogOut className={`w-4 h-4 transition-transform duration-200 group-hover:translate-x-0.5 ${isLoggingOut ? "animate-spin" : ""}`} />
+                            </button>
                         </div>
 
                         {/* Mobile Menu Button */}

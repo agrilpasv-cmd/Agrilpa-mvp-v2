@@ -128,6 +128,8 @@ export default function Compradores() {
               <img
                 src="/wholesale-buyer-checking-agricultural-products-qua.jpg"
                 alt="Comprador mayorista verificando calidad de productos"
+                loading="lazy"
+                decoding="async"
                 className="rounded-xl shadow-2xl"
               />
             </div>

@@ -239,51 +239,35 @@ export function Navbar() {
           <div className="hidden md:flex items-center space-x-3">
             {isLoggedIn ? (
               <>
-                <Link href={getPanelUrl()}>
-                  <Button className="text-base font-medium px-4 py-2 gap-2 bg-primary hover:bg-primary/90 text-white relative">
-                    <User className="h-4 w-4" />
-                    Panel
-                    {notificationCount > 0 && (
-                      <span className="absolute -top-1 -right-1 flex h-3 w-3">
-                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
-                        <span className="relative inline-flex rounded-full h-3 w-3 bg-red-500"></span>
-                      </span>
-                    )}
-                  </Button>
+                <Link
+                  href={getPanelUrl()}
+                  className="inline-flex items-center gap-1.5 px-4 py-2 text-base font-medium text-foreground hover:text-primary transition-colors group relative"
+                >
+                  <span>Panel</span>
+                  {notificationCount > 0 && (
+                    <span className="absolute -top-0.5 -right-0.5 flex h-2.5 w-2.5">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                      <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-red-500"></span>
+                    </span>
+                  )}
                 </Link>
-                <Button
-                  variant="outline"
-                  className="text-base font-medium px-4 py-2 gap-2 hover:bg-red-500 hover:text-white hover:border-red-500 active:bg-red-600 bg-transparent disabled:opacity-70"
+                <button
                   onClick={handleLogout}
                   disabled={isLoggingOut}
+                  className="inline-flex items-center gap-1.5 px-4 py-2 text-base font-medium text-foreground hover:text-red-600 transition-colors group cursor-pointer disabled:opacity-70"
                 >
-                  <LogOut className={`h-4 w-4 ${isLoggingOut ? "animate-spin" : ""}`} />
-                  {isLoggingOut ? "Cerrando..." : "Cerrar Sesión"}
-                </Button>
+                  <span>{isLoggingOut ? "Cerrando..." : "Cerrar Sesión"}</span>
+                  <LogOut className={`h-4 w-4 transition-transform duration-200 group-hover:translate-x-0.5 ${isLoggingOut ? "animate-spin" : ""}`} />
+                </button>
               </>
             ) : (
-              <>
-                <Link href="/auth">
-                  <Button variant="outline" size="default">
-                    Iniciar sesión
-                  </Button>
-                </Link>
-                <Link href="/auth?mode=register" className="relative group">
-                  {pathname === "/" && (
-                    <div className="absolute top-full right-0 mt-5 w-72 bg-card border border-primary/20 text-card-foreground p-5 rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.12)] hidden md:block z-50 animate-in fade-in slide-in-from-top-4 duration-1000">
-                      <div className="absolute -top-2.5 right-8 w-5 h-5 bg-card border-t border-l border-primary/20 transform rotate-45"></div>
-                      <div className="relative z-10">
-                        <p className="font-medium text-center text-sm leading-relaxed">
-                          🚀 ¡Únete ahora en <span className="font-bold text-primary">Agrilpa</span> y empieza a comprar y vender globalmente!
-                        </p>
-                      </div>
-                    </div>
-                  )}
-                  <Button size="default" className="bg-primary hover:bg-primary/90 shadow-lg shadow-primary/20">
-                    Crear Cuenta
-                  </Button>
-                </Link>
-              </>
+              <Link
+                href="/auth"
+                className="inline-flex items-center gap-1.5 px-4 py-2 text-base font-medium text-foreground hover:text-primary transition-colors group"
+              >
+                <span>Iniciar sesión</span>
+                <span className="text-base font-normal transition-transform duration-200 group-hover:translate-x-1">→</span>
+              </Link>
             )}
           </div>
 
@@ -332,42 +316,39 @@ export function Navbar() {
             <div className="space-y-2 pt-2 border-t border-border">
               {isLoggedIn ? (
                 <>
-                  <Link href={getPanelUrl()} className="block">
-                    <Button size="sm" className="w-full gap-2 bg-primary hover:bg-primary/90 text-white relative">
-                      <User className="h-4 w-4" />
-                      Panel
-                      {notificationCount > 0 && (
-                        <span className="absolute top-2 right-2 flex h-3 w-3">
-                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
-                          <span className="relative inline-flex rounded-full h-3 w-3 bg-red-500"></span>
-                        </span>
-                      )}
-                    </Button>
-                  </Link>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="w-full gap-2 hover:bg-red-500 hover:text-white hover:border-red-500 active:bg-red-600 bg-transparent disabled:opacity-70"
-                    onClick={handleLogout}
-                    disabled={isLoggingOut}
+                  <Link
+                    href={getPanelUrl()}
+                    className="flex items-center justify-between px-3 py-2.5 text-sm font-semibold text-foreground hover:bg-muted rounded-lg transition-colors group"
+                    onClick={() => setIsOpen(false)}
                   >
-                    <LogOut className={`h-4 w-4 ${isLoggingOut ? "animate-spin" : ""}`} />
-                    {isLoggingOut ? "Cerrando..." : "Cerrar Sesión"}
-                  </Button>
+                    <span className="flex items-center gap-2">
+                      <span>Panel</span>
+                      {notificationCount > 0 && (
+                        <span className="flex h-2 w-2 rounded-full bg-red-500"></span>
+                      )}
+                    </span>
+                  </Link>
+                  <button
+                    onClick={() => {
+                      setIsOpen(false)
+                      handleLogout()
+                    }}
+                    disabled={isLoggingOut}
+                    className="flex items-center justify-between w-full px-3 py-2.5 text-sm font-semibold text-foreground hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/20 rounded-lg transition-colors group text-left cursor-pointer disabled:opacity-70"
+                  >
+                    <span>{isLoggingOut ? "Cerrando sesión..." : "Cerrar Sesión"}</span>
+                    <LogOut className={`h-4 w-4 transition-transform duration-200 group-hover:translate-x-0.5 ${isLoggingOut ? "animate-spin" : ""}`} />
+                  </button>
                 </>
               ) : (
-                <>
-                  <Link href="/auth" className="block">
-                    <Button variant="outline" size="sm" className="w-full bg-transparent">
-                      Iniciar sesión
-                    </Button>
-                  </Link>
-                  <Link href="/auth?mode=register" className="block">
-                    <Button size="sm" className="w-full bg-primary hover:bg-primary/90">
-                      Crear Cuenta
-                    </Button>
-                  </Link>
-                </>
+                <Link
+                  href="/auth"
+                  className="flex items-center justify-between px-3 py-2.5 text-sm font-semibold text-foreground hover:bg-muted rounded-lg transition-colors group"
+                  onClick={() => setIsOpen(false)}
+                >
+                  <span>Iniciar sesión</span>
+                  <span className="text-sm text-muted-foreground group-hover:translate-x-1 transition-transform">→</span>
+                </Link>
               )}
             </div>
           </div>

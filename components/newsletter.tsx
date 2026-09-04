@@ -175,6 +175,8 @@ export function Newsletter() {
                 <img
                   src="/manos-cultivando-en-la-tierra.jpg"
                   alt=""
+                  loading="lazy"
+                  decoding="async"
                   className="w-full h-full object-cover"
                 />
               </div>
@@ -182,6 +184,8 @@ export function Newsletter() {
                 <img
                   src="/exportaci-n-de-productos-agr-colas-en-contenedores.jpg"
                   alt=""
+                  loading="lazy"
+                  decoding="async"
                   className="w-full h-full object-cover"
                 />
               </div>
@@ -191,6 +195,8 @@ export function Newsletter() {
                 <img
                   src="/agricultural-landscape-modern-farm.jpg"
                   alt="Comunidad Agrilpa"
+                  loading="lazy"
+                  decoding="async"
                   className="w-full h-auto object-cover aspect-[4/3]"
                 />
               </div>

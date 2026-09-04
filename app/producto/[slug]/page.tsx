@@ -274,13 +274,12 @@ export default function ProductPage() {
 
   const product = userProduct
   
-  const { setActiveChat } = useGlobalChat()
+  const { setActiveChat, setIsOpen, openChat } = useGlobalChat()
 
   useEffect(() => {
     if (product && product.id && product.vendorId) {
       setActiveChat({
         sellerName: product.producer,
-        sellerOnline: true,
         vendorId: product.vendorId,
         product: {
           id: product.id,
@@ -366,16 +365,28 @@ export default function ProductPage() {
       e.preventDefault()
       e.stopPropagation()
     }
-    if (!currentUserId) {
-      setAuthDialogAction("contactar al vendedor")
-      setIsAuthDialogOpen(true)
-      return
+
+    if (product && product.id && product.vendorId) {
+      openChat({
+        sellerName: product.producer,
+        vendorId: product.vendorId,
+        product: {
+          id: product.id,
+          title: product.name,
+          price: product.price ? product.price.split(' ')[0] : 'Por Cotizar',
+          currency: product.price && product.price.includes('USD') ? 'USD' : '$',
+          image: product.image || '/placeholder.svg',
+          quantity: product.unit || 'kg'
+        }
+      })
+    } else {
+      setIsOpen(true)
     }
 
-    console.log(`[v0] handleContactVendor called for: ${product.name}`)
-    setIsChatOpen(true)
     setShowEmailCopy(false)
-    setTimeout(() => trackContactClick("generic"), 0)
+    if (currentUserId) {
+      setTimeout(() => trackContactClick("chat"), 0)
+    }
   }
 
   const trackContactClick = async (type: string) => {
@@ -386,8 +397,6 @@ export default function ProductPage() {
       const { data: { session } } = await supabase.auth.getSession()
 
       if (!session?.user?.id) {
-        setAuthDialogAction("contactar al vendedor")
-        setIsAuthDialogOpen(true)
         return
       }
 
@@ -824,6 +833,8 @@ export default function ProductPage() {
                   <img
                     src={product.image || "/placeholder.svg"}
                     alt={product.name}
+                    loading="lazy"
+                    decoding="async"
                     className="w-16 h-16 rounded-lg object-cover"
                   />
                   <div className="text-left">
@@ -871,6 +882,8 @@ export default function ProductPage() {
                       <img
                         src={product.image || "/placeholder.svg"}
                         alt={product.name}
+                        loading="lazy"
+                        decoding="async"
                         className="w-full h-full object-cover"
                       />
                     </div>
@@ -1425,6 +1438,8 @@ export default function ProductPage() {
             <img
               src={selectedImage || product.image || "/placeholder.svg"}
               alt={product.name}
+              loading="lazy"
+              decoding="async"
               className="min-w-[100%] md:min-w-[150%] h-auto object-contain cursor-zoom-out"
               onClick={() => setIsZoomOpen(false)}
             />

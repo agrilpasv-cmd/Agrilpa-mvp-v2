@@ -117,6 +117,8 @@ export default function ParaVendedores() {
               <img
                 src="/exportacion-contenedor-aguacates.jpg"
                 alt="Exportación de aguacates en contenedor"
+                loading="lazy"
+                decoding="async"
                 className="rounded-xl shadow-2xl"
               />
             </div>

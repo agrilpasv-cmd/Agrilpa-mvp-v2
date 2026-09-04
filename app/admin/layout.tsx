@@ -27,6 +27,8 @@ import {
   UserMinus,
   Image as ImageIcon,
   Activity,
+  Headphones,
+  MessageCircle,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Toaster } from "@/components/ui/toaster"
@@ -42,14 +44,18 @@ export default function AdminLayout({
   const [isLoggingOut, setIsLoggingOut] = useState(false)
   const [unreadContactCount, setUnreadContactCount] = useState(0)
   const [unreadContactanosCount, setUnreadContactanosCount] = useState(0)
+  const [unreadSupportCount, setUnreadSupportCount] = useState(0)
+  const [unreadMensajesCount, setUnreadMensajesCount] = useState(0)
 
-  // Fetch unread contact count
+  // Fetch unread counts
   useEffect(() => {
     const fetchUnreadCount = async () => {
       try {
-        const [resContactar, resContactanos] = await Promise.all([
+        const [resContactar, resContactanos, resSupport, resMensajes] = await Promise.all([
           fetch('/api/admin/contact-clicks/unread-count'),
-          fetch('/api/admin/contact-submissions/unread-count')
+          fetch('/api/admin/contact-submissions/unread-count'),
+          fetch('/api/admin/support/unread-count'),
+          fetch('/api/admin/conversations/unread-count')
         ])
         
         if (resContactar.ok) {
@@ -65,6 +71,20 @@ export default function AdminLayout({
             setUnreadContactanosCount(data2.unreadCount)
           }
         }
+
+        if (resSupport.ok) {
+          const data3 = await resSupport.json()
+          if (typeof data3.unreadCount === 'number') {
+            setUnreadSupportCount(data3.unreadCount)
+          }
+        }
+
+        if (resMensajes.ok) {
+          const data4 = await resMensajes.json()
+          if (typeof data4.unreadCount === 'number') {
+            setUnreadMensajesCount(data4.unreadCount)
+          }
+        }
       } catch (error) {
         console.error("Failed to fetch unread contact counts:", error)
       }
@@ -72,20 +92,26 @@ export default function AdminLayout({
     fetchUnreadCount()
     
     // Set up polling and event listener for instant updates
-    const interval = setInterval(fetchUnreadCount, 60000)
+    const interval = setInterval(fetchUnreadCount, 30000)
     window.addEventListener('update-unread-count', fetchUnreadCount)
     window.addEventListener('update-contactanos-unread-count', fetchUnreadCount)
+    window.addEventListener('update-support-unread-count', fetchUnreadCount)
+    window.addEventListener('update-mensajes-unread-count', fetchUnreadCount)
     
     return () => {
         clearInterval(interval)
         window.removeEventListener('update-unread-count', fetchUnreadCount)
         window.removeEventListener('update-contactanos-unread-count', fetchUnreadCount)
+        window.removeEventListener('update-support-unread-count', fetchUnreadCount)
+        window.removeEventListener('update-mensajes-unread-count', fetchUnreadCount)
     }
   }, [])
 
   const menuItems = [
     { href: "/", label: "Inicio", icon: Home },
     { href: "/admin", label: "Dashboard", icon: LayoutDashboard },
+    { href: "/admin/mensajes", label: "Mensajes", icon: MessageCircle },
+    { href: "/admin/soporte", label: "Soporte", icon: Headphones },
     { href: "/admin/analitica", label: "Analítica", icon: Activity },
     { href: "/admin/hero", label: "Hero", icon: ImageIcon },
     { href: "/admin/usuarios", label: "Gestión de Usuarios", icon: Users },
@@ -194,6 +220,8 @@ export default function AdminLayout({
                 const Icon = item.icon
                 const isContactar = item.href === '/admin/contactar'
                 const isContactanos = item.href === '/admin/contactanos'
+                const isSoporte = item.href === '/admin/soporte'
+                const isMensajes = item.href === '/admin/mensajes'
                 return (
                   <Link
                     key={item.href}
@@ -206,6 +234,16 @@ export default function AdminLayout({
                       <span className="font-medium">{item.label}</span>
                     </div>
                     <div className="flex items-center gap-2">
+                      {isMensajes && unreadMensajesCount > 0 && (
+                        <span className="flex items-center justify-center min-w-[20px] h-[20px] text-[10px] font-bold text-white bg-red-500 rounded-full px-1.5 animate-pulse">
+                          {unreadMensajesCount > 99 ? '99+' : unreadMensajesCount}
+                        </span>
+                      )}
+                      {isSoporte && unreadSupportCount > 0 && (
+                        <span className="flex items-center justify-center min-w-[20px] h-[20px] text-[10px] font-bold text-white bg-red-500 rounded-full px-1.5 animate-pulse">
+                          {unreadSupportCount > 99 ? '99+' : unreadSupportCount}
+                        </span>
+                      )}
                       {isContactar && unreadContactCount > 0 && (
                         <span className="flex items-center justify-center min-w-[20px] h-[20px] text-[10px] font-bold text-white bg-red-500 rounded-full px-1.5">
                           {unreadContactCount > 99 ? '99+' : unreadContactCount}

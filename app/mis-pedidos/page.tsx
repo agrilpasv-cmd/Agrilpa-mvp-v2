@@ -196,6 +196,8 @@ export default function MisPedidosPage() {
                                                     <img
                                                         src={order.product_image || "/placeholder.svg"}
                                                         alt={order.product_title}
+                                                        loading="lazy"
+                                                        decoding="async"
                                                         className="w-full h-full object-cover"
                                                     />
                                                 </div>

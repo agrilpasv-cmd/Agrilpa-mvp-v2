@@ -487,3 +487,55 @@ export async function sendChatNotificationEmail({
         return { success: false, error: { message: err.message } }
     }
 }
+
+/**
+ * 24-hour reminder for unread messages
+ */
+export async function sendUnreadChatReminderEmail({
+    recipientEmail,
+    recipientName,
+    senderName,
+    productName,
+    hoursWaiting = 24,
+}: {
+    recipientEmail: string
+    recipientName: string
+    senderName: string
+    productName: string
+    hoursWaiting?: number
+}) {
+    try {
+        const resend = getResendClient()
+
+        const content = `
+            <p>Hola <strong>${recipientName}</strong>,</p>
+            <p style="font-size: 18px; color: ${THEME.primary}; font-weight: 600;">Tienes una negociación pendiente en Agrilpa.</p>
+            
+            <p>Hace más de ${hoursWaiting} horas, <strong>${senderName}</strong> te envió un mensaje respecto a <strong>${productName}</strong> y aún está esperando tu lectura y respuesta.</p>
+            
+            <div style="background-color: ${THEME.secondary}; padding: 18px; border-radius: 8px; margin: 20px 0; border: 1px solid ${THEME.border};">
+                <p style="margin: 0; color: ${THEME.text}; font-size: 14px; line-height: 1.5;">
+                    💡 <em>Consejo Agrilpa:</em> Responder oportunamente a tus compradores y vendedores mejora tu reputación comercial y asegura tus tratos antes que otros competidores.
+                </p>
+            </div>
+            
+            <p style="font-size: 14px; color: #6b7280;">Si ya respondiste este mensaje recientemente, puedes ignorar este aviso.</p>
+        `
+
+        const { data, error } = await resend.emails.send({
+            from: FROM_EMAIL,
+            to: recipientEmail,
+            subject: `⏰ Recordatorio: Mensaje pendiente de ${senderName} sobre ${productName}`,
+            html: getMinimalistTemplate('Recordatorio de negociación pendiente', content, { text: 'Responder Mensaje', url: 'https://agrilpa.com/dashboard/mensajes' }),
+        })
+
+        if (error) {
+            console.error('[Email] Error sending 24h chat reminder:', error)
+            return { success: false, error }
+        }
+        return { success: true, data }
+    } catch (err: any) {
+        console.error('[Email] Failed to send 24h chat reminder:', err)
+        return { success: false, error: { message: err.message } }
+    }
+}

@@ -33,6 +33,8 @@ function ProductImage({ productId, title }: { productId: string; title: string }
       <img
         src={src}
         alt={title}
+        loading="lazy"
+        decoding="async"
         onLoad={() => setLoaded(true)}
         onError={(e) => {
           setLoaded(true)

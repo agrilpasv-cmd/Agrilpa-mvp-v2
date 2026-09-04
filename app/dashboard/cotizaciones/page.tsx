@@ -314,7 +314,7 @@ export default function CotizacionesPage() {
                       <div className="flex items-center gap-3 min-w-0 pr-4">
                         <div className="w-[72px] h-[72px] rounded-xl overflow-hidden bg-muted border border-border flex-shrink-0">
                           {quotation.product_image && quotation.product_image !== "/placeholder.svg" ? (
-                            <img src={quotation.product_image} alt={quotation.product_title} className="w-full h-full object-cover" />
+                            <img src={quotation.product_image} alt={quotation.product_title} loading="lazy" decoding="async" className="w-full h-full object-cover" />
                           ) : (
                             <div className="w-full h-full flex items-center justify-center">
                               <Package className="w-7 h-7 text-muted-foreground/40" />

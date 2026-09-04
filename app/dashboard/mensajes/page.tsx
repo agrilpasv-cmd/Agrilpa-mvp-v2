@@ -1,43 +1,42 @@
-import React from 'react'
+"use client"
+
+import React, { useEffect, useState } from 'react'
 import { ChatDashboard } from '@/components/chat/chat-dashboard'
-import { createServerClient } from '@supabase/ssr'
-import { cookies } from 'next/headers'
-import { redirect } from 'next/navigation'
+import { createClient } from '@/lib/supabase/client'
+import { useRouter } from 'next/navigation'
 
-export const metadata = {
-  title: 'Mensajes B2B | Agrilpa',
-  description: 'Centro de negociación y mensajería en tiempo real B2B.',
-}
+export default function MensajesPage() {
+  const router = useRouter()
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null)
+  const [loading, setLoading] = useState(true)
 
-export default async function MensajesPage() {
-  const cookieStore = cookies()
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        get(name: string) {
-          return cookieStore.get(name)?.value
-        },
-      },
-    }
-  )
+  useEffect(() => {
+    const supabase = createClient()
+    supabase.auth.getUser().then(({ data }) => {
+      if (data.user) {
+        setCurrentUserId(data.user.id)
+      } else {
+        router.push('/auth?redirectTo=/dashboard/mensajes')
+      }
+      setLoading(false)
+    })
+  }, [router])
 
-  const { data: { user } } = await supabase.auth.getUser()
+  if (loading) {
+    return (
+      <div className="w-full max-w-7xl mx-auto px-4 py-16 flex flex-col items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mb-4"></div>
+        <p className="text-muted-foreground text-sm">Cargando tus mensajes...</p>
+      </div>
+    )
+  }
 
-  // Note: For demonstration/dummy data purposes, if no user is found we can pass a fake ID
-  // In production, we'd uncomment this redirect:
-  // if (!user) redirect('/login')
-
-  const currentUserId = user?.id || "u1"
+  if (!currentUserId) {
+    return null
+  }
 
   return (
-    <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-foreground tracking-tight">Centro de Negocios</h1>
-        <p className="text-muted-foreground text-sm">Gestiona tus negociaciones, envía cotizaciones y cierra tratos en tiempo real.</p>
-      </div>
-      
+    <div className="w-full px-2 sm:px-4 md:px-6 py-6">
       <ChatDashboard currentUserId={currentUserId} />
     </div>
   )

@@ -162,6 +162,8 @@ export function About() {
                 <img
                   src="/dashboard-preview.png"
                   alt="Plataforma Agrilpa"
+                  loading="lazy"
+                  decoding="async"
                   className="w-full h-auto object-cover"
                 />
               </div>

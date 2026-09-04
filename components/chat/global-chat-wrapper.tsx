@@ -1,41 +1,233 @@
 "use client"
 
-import React, { useEffect, useState } from 'react'
-import { usePathname } from 'next/navigation'
+import React from 'react'
+import { usePathname, useRouter } from 'next/navigation'
+import Link from 'next/link'
+import { MessageCircle, X, Box, Headphones } from 'lucide-react'
 import { ChatWidget } from './chat-widget'
 import { useGlobalChat } from './chat-context'
-import { createClient } from '@/lib/supabase/client'
+import { Button } from '@/components/ui/button'
 
 export function GlobalChatWrapper() {
-  const { activeChat, isOpen, setIsOpen } = useGlobalChat()
+  const {
+    activeChat,
+    setActiveChat,
+    isOpen,
+    setIsOpen,
+    currentUserId,
+    unreadCount,
+    pendingNotification,
+    clearPendingNotification,
+    openChatForNotification,
+    openSupportChat,
+    isUserOnline,
+    conversations
+  } = useGlobalChat()
   const pathname = usePathname()
-  const [currentUserId, setCurrentUserId] = useState<string | null>(null)
+  const router = useRouter()
 
-  useEffect(() => {
-    const supabase = createClient()
-    supabase.auth.getUser().then(({ data }) => {
-      if (data.user) {
-        setCurrentUserId(data.user.id)
+  // STRICT REQUIREMENT: Do not show on the full messages page (/dashboard/mensajes) or auth pages (/auth)
+  if (pathname?.startsWith('/dashboard/mensajes') || pathname?.startsWith('/auth')) {
+    return null
+  }
+
+  // Handle clicking the floating button when widget is closed
+  const handleFloatingButtonClick = () => {
+    if (pendingNotification) {
+      openChatForNotification(pendingNotification)
+    } else if (activeChat && !activeChat.isSupport) {
+      // If there is an active regular product chat, open it
+      setIsOpen(true)
+    } else {
+      // Find the latest regular product conversation
+      const regularConvo = conversations?.find((c) => c.product_id && !c.is_support)
+      if (regularConvo) {
+        setActiveChat({
+          sellerName: regularConvo.other_user?.companyName || regularConvo.other_user?.name || "Chat",
+          sellerOnline: regularConvo.other_user?.id ? isUserOnline(regularConvo.other_user.id) : false,
+          product: regularConvo.product || {
+            id: 'generic',
+            title: 'Negociación',
+            price: '',
+            currency: '$',
+            image: '/placeholder.svg',
+            quantity: ''
+          },
+          vendorId: regularConvo.other_user?.id,
+          isSupport: false
+        })
+        setIsOpen(true)
+      } else if (conversations && conversations.length > 0) {
+        openChatForNotification()
+      } else {
+        router.push('/dashboard/mensajes')
       }
-    })
-  }, [])
-
-  if (!activeChat) return null;
-
-  // Don't show the floating widget if the user is in the full chat dashboard
-  if (pathname?.startsWith('/dashboard/mensajes')) {
-    return null;
+    }
   }
 
   return (
-    <ChatWidget 
-      sellerName={activeChat.sellerName}
-      sellerOnline={activeChat.sellerOnline}
-      product={activeChat.product}
-      isOpen={isOpen}
-      setIsOpen={setIsOpen}
-      buyerId={currentUserId}
-      vendorId={activeChat.vendorId}
-    />
+    <>
+      {/* 1. When chat popup is open with an active conversation, render the widget */}
+      {isOpen && activeChat && (
+        <ChatWidget
+          key={`widget-${currentUserId || 'guest'}-${activeChat.vendorId || 'novendor'}-${activeChat.product?.id || 'noproduct'}-${activeChat.isSupport ? 'support' : 'regular'}`}
+          sellerName={activeChat.sellerName}
+          sellerOnline={activeChat.sellerOnline}
+          product={activeChat.product}
+          isOpen={isOpen}
+          setIsOpen={setIsOpen}
+          buyerId={currentUserId}
+          vendorId={activeChat.vendorId}
+          isSupport={activeChat.isSupport}
+        />
+      )}
+
+      {/* 2. When popup is closed, render the real-time notification alert and floating trigger button */}
+      {!isOpen && (
+        <div className="fixed bottom-6 right-6 z-50 flex flex-col items-end pointer-events-none">
+          
+          {/* Real-time Floating Message Alert Card matching ChatWidget design */}
+          {pendingNotification && (
+            <div className="pointer-events-auto w-72 sm:w-80 bg-white rounded-2xl shadow-2xl border border-border/70 overflow-hidden mb-3.5 animate-in slide-in-from-bottom-5 fade-in duration-300 flex flex-col">
+              
+              {/* Header - Sleek & Compact */}
+              <div className="bg-primary px-3.5 py-2.5 text-white flex items-center justify-between shrink-0">
+                <div className="flex items-center gap-2 min-w-0 pr-1">
+                  <div className="w-6 h-6 rounded-full bg-white/20 flex items-center justify-center text-[10px] font-bold shrink-0 border border-white/30">
+                    {pendingNotification.senderName?.charAt(0)?.toUpperCase() || "U"}
+                  </div>
+                  <div className="min-w-0">
+                    <h3 className="font-bold text-xs leading-none truncate">
+                      {pendingNotification.senderName}
+                    </h3>
+                    <div className="flex items-center gap-1 mt-0.5">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-300 animate-pulse"></span>
+                      <span className="text-[10px] text-white/90">Nuevo mensaje</span>
+                    </div>
+                  </div>
+                </div>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="text-white hover:bg-white/20 h-6 w-6 rounded-full shrink-0"
+                  onClick={clearPendingNotification}
+                  title="Cerrar notificación"
+                >
+                  <X className="w-4 h-4" />
+                </Button>
+              </div>
+
+              {/* Product Mini Pill (If linked to a product) */}
+              {pendingNotification.productTitle && (
+                <div className="bg-emerald-50/50 hover:bg-emerald-50/80 px-3 py-1.5 border-b border-border/50 flex items-center gap-2 shrink-0 transition-colors">
+                  <div className="w-7 h-7 rounded-md bg-white overflow-hidden border border-border/60 shrink-0 flex items-center justify-center">
+                    {pendingNotification.productImage ? (
+                      <img
+                        src={pendingNotification.productImage}
+                        alt={pendingNotification.productTitle}
+                        loading="lazy"
+                        decoding="async"
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <Box className="w-3.5 h-3.5 text-muted-foreground" />
+                    )}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-[11px] font-semibold text-foreground truncate">
+                      {pendingNotification.productTitle}
+                    </p>
+                    <p className="text-[10px] text-primary font-medium truncate">
+                      {pendingNotification.product?.price ? (
+                        <>
+                          {pendingNotification.product.price} {pendingNotification.product.currency || '$'}
+                          <span className="text-muted-foreground font-normal">/{pendingNotification.product.quantity || 'ud'}</span>
+                        </>
+                      ) : (
+                        "Consulta de producto"
+                      )}
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {/* Message Bubble - Styled exactly like the chat popup card */}
+              <div 
+                onClick={() => openChatForNotification(pendingNotification)}
+                className="p-3 bg-gray-50/60 cursor-pointer hover:bg-gray-100/60 transition-colors group"
+                title="Clic para abrir y responder"
+              >
+                <div className="bg-white border border-border/80 group-hover:border-primary/40 rounded-xl rounded-tl-xs p-2.5 text-xs text-foreground shadow-2xs transition-all">
+                  <p className="leading-relaxed whitespace-pre-wrap break-words line-clamp-3 text-xs text-foreground/90">
+                    {pendingNotification.content}
+                  </p>
+                  <div className="flex items-center justify-between gap-2 mt-1.5 pt-1 text-[9px] text-muted-foreground border-t border-border/40">
+                    <span className="font-medium text-primary truncate">{pendingNotification.senderName}</span>
+                    <span className="shrink-0">Ahora</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Footer Actions - Sleek & Compact */}
+              <div className="px-3 py-2 bg-white border-t border-border/50 flex items-center gap-1.5">
+                <Button
+                  onClick={() => openChatForNotification(pendingNotification)}
+                  size="sm"
+                  className="flex-1 bg-primary hover:bg-primary/90 text-white text-xs font-medium h-8 rounded-lg shadow-xs transition-transform active:scale-95 flex items-center justify-center gap-1.5"
+                >
+                  <MessageCircle className="w-3.5 h-3.5" />
+                  Responder
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  asChild
+                  className="h-8 px-2.5 text-xs text-muted-foreground hover:text-foreground hover:bg-gray-100 rounded-lg"
+                  onClick={() => clearPendingNotification()}
+                >
+                  <Link href="/dashboard/mensajes">
+                    Bandeja
+                  </Link>
+                </Button>
+              </div>
+
+            </div>
+          )}
+
+          {/* Quick Help / Support Pill */}
+          <button
+            onClick={(e) => {
+              e.stopPropagation()
+              openSupportChat()
+            }}
+            className="pointer-events-auto mb-2.5 flex items-center gap-2 bg-white/95 hover:bg-white text-emerald-950 px-3.5 py-1.5 rounded-full shadow-lg border border-emerald-200/80 text-xs font-semibold backdrop-blur-sm transition-all hover:scale-105 active:scale-95 group hover:shadow-xl hover:border-primary/50"
+            title="Pedir ayuda o asistencia técnica a Soporte Agrilpa"
+          >
+            <span className="flex h-2 w-2 relative">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+            </span>
+            <Headphones className="w-3.5 h-3.5 text-primary group-hover:rotate-12 transition-transform" />
+            <span className="text-[11px] sm:text-xs">¿Ayuda o Soporte?</span>
+          </button>
+
+          {/* Floating Trigger Button (Bottom-Right) - Matches ChatWidget trigger button exactly */}
+          <Button 
+            onClick={handleFloatingButtonClick}
+            className="pointer-events-auto w-14 h-14 rounded-full bg-primary hover:bg-primary/90 text-white shadow-xl shadow-primary/30 flex items-center justify-center relative transition-transform hover:scale-105 active:scale-95"
+            aria-label="Abrir chat"
+          >
+            <MessageCircle className="w-6 h-6" />
+
+            {/* Unread badge indicator */}
+            {unreadCount > 0 && (
+              <span className="absolute -top-1 -right-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-red-600 px-1 text-[11px] font-bold text-white shadow-lg ring-2 ring-white animate-pulse">
+                {unreadCount > 9 ? '9+' : unreadCount}
+              </span>
+            )}
+          </Button>
+        </div>
+      )}
+    </>
   )
 }

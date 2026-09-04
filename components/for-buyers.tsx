@@ -51,6 +51,8 @@ export function ForBuyers() {
               <img
                 src="/para-vendedores-camion.jpg"
                 alt="Camión cargado con productos agrícolas"
+                loading="lazy"
+                decoding="async"
                 className="w-full h-auto object-cover transform group-hover:scale-105 transition-transform duration-700"
               />
               <div className="absolute inset-0 ring-1 ring-inset ring-black/10 rounded-[2rem]" />
