@@ -59,6 +59,7 @@ export async function GET(request: NextRequest) {
           .order("created_at", { ascending: true });
 
         const lastMessage = messages && messages.length > 0 ? messages[messages.length - 1] : null;
+        const effectiveUpdatedAt = lastMessage?.created_at || conv.updated_at;
 
         const isSupport = !conv.product_id;
         const convCode = `CHAT-${conv.id.replace(/-/g, '').slice(0, 8).toUpperCase()}`;
@@ -72,9 +73,9 @@ export async function GET(request: NextRequest) {
           buyer_id: conv.buyer_id,
           seller_id: conv.seller_id,
           created_at: conv.created_at,
-          updated_at: conv.updated_at,
+          updated_at: effectiveUpdatedAt,
           is_support: isSupport,
-          is_seen: isConversationSeenByAdmin(conv.id, conv.updated_at),
+          is_seen: isConversationSeenByAdmin(conv.id, effectiveUpdatedAt),
           messages_count: messages?.length || 0,
           last_message: lastMessage,
           messages: messages || [],

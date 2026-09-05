@@ -95,6 +95,36 @@ export default function AdminSoportePage() {
     prevTicketIdRef.current = selectedTicketId
   }, [selectedTicketId, tickets, attachment])
 
+  // Mark ticket as read in DB and sync admin seen state
+  const markTicketAsRead = useCallback(async (ticketId: string, currentAdminId?: string | null) => {
+    setTickets((prev) =>
+      prev.map((t) => (t.id === ticketId ? { ...t, unreadCount: 0 } : t))
+    )
+    const effectiveAdminId = currentAdminId || adminId || "admin"
+    try {
+      await Promise.allSettled([
+        fetch("/api/chat/mark-as-read", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            conversationId: ticketId,
+            userId: effectiveAdminId,
+          }),
+        }),
+        fetch("/api/admin/conversations/mark-seen", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ conversationId: ticketId, seen: true }),
+        }),
+      ])
+      window.dispatchEvent(new Event("update-support-unread-count"))
+      window.dispatchEvent(new Event("update-mensajes-unread-count"))
+      window.dispatchEvent(new Event("update-unread-count"))
+    } catch (e) {
+      console.error("Error marking ticket as read:", e)
+    }
+  }, [adminId])
+
   // 1. Fetch all support tickets
   const fetchTickets = useCallback(async (silent = false) => {
     if (!silent) setIsRefreshing(true)
@@ -105,12 +135,27 @@ export default function AdminSoportePage() {
       if (!res.ok) throw new Error("Error fetching support tickets")
       const data = await res.json()
       if (data.tickets) {
-        setTickets(data.tickets)
+        // Keep active ticket unread count 0 while viewing
+        const updated = data.tickets.map((t: SupportTicket) => {
+          if (selectedTicketIdRef.current && t.id === selectedTicketIdRef.current) {
+            return { ...t, unreadCount: 0 }
+          }
+          return t
+        })
+        setTickets(updated)
         if (data.adminId) setAdminId(data.adminId)
 
-        // Select first ticket if none selected
-        if (!selectedTicketIdRef.current && data.tickets.length > 0) {
-          setSelectedTicketId(data.tickets[0].id)
+        const activeId = selectedTicketIdRef.current || (updated.length > 0 ? updated[0].id : null)
+        if (!selectedTicketIdRef.current && updated.length > 0) {
+          setSelectedTicketId(updated[0].id)
+        }
+
+        // Con solo entrar al chat de soporte, marcar como visto automáticamente
+        if (activeId) {
+          const currentT = data.tickets.find((t: SupportTicket) => t.id === activeId)
+          if (currentT && currentT.unreadCount > 0) {
+            markTicketAsRead(activeId, data.adminId)
+          }
         }
       }
     } catch (err) {
@@ -119,7 +164,7 @@ export default function AdminSoportePage() {
       setLoading(false)
       if (!silent) setIsRefreshing(false)
     }
-  }, [])
+  }, [markTicketAsRead])
 
   useEffect(() => {
     fetchTickets()
@@ -140,6 +185,8 @@ export default function AdminSoportePage() {
           const newMsg = payload.new as any
           if (!newMsg) return
 
+          const isCurrentActive = newMsg.conversation_id === selectedTicketIdRef.current
+
           // Update ticket list state
           setTickets((prev) =>
             prev.map((t) => {
@@ -150,7 +197,7 @@ export default function AdminSoportePage() {
                   ...t,
                   messages: updatedMessages,
                   lastMessage: newMsg,
-                  unreadCount: isFromAdmin ? t.unreadCount : t.unreadCount + 1,
+                  unreadCount: isCurrentActive ? 0 : (isFromAdmin ? t.unreadCount : t.unreadCount + 1),
                   updatedAt: newMsg.created_at,
                 }
               }
@@ -158,18 +205,12 @@ export default function AdminSoportePage() {
             })
           )
 
-          // If current conversation is active, mark read
-          if (selectedTicketIdRef.current && newMsg.conversation_id === selectedTicketIdRef.current) {
-            if (adminId && newMsg.sender_id !== adminId) {
-              fetch("/api/chat/mark-as-read", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                  conversationId: selectedTicketIdRef.current,
-                  userId: adminId,
-                }),
-              }).catch(() => {})
-            }
+          // If current conversation is active, mark read immediately
+          if (isCurrentActive) {
+            markTicketAsRead(newMsg.conversation_id, adminId)
+          } else {
+            window.dispatchEvent(new Event("update-support-unread-count"))
+            window.dispatchEvent(new Event("update-mensajes-unread-count"))
           }
         }
       )
@@ -178,30 +219,42 @@ export default function AdminSoportePage() {
     return () => {
       supabase.removeChannel(channel)
     }
-  }, [adminId])
+  }, [adminId, markTicketAsRead])
 
-  // 3. Mark ticket as read when selected
-  const handleSelectTicket = async (ticket: SupportTicket) => {
+  // 3. Mark ticket as read when selected - auto-seen on entrance
+  const handleSelectTicket = (ticket: SupportTicket) => {
     setSelectedTicketId(ticket.id)
-    if (ticket.unreadCount > 0 && adminId) {
-      try {
+    markTicketAsRead(ticket.id, adminId)
+  }
+
+  // 4. Manual toggle read / unread for active ticket
+  const handleToggleTicketSeen = async (ticket: SupportTicket) => {
+    const isCurrentlyRead = ticket.unreadCount === 0
+    const nextUnread = isCurrentlyRead ? 1 : 0
+    setTickets((prev) =>
+      prev.map((t) => (t.id === ticket.id ? { ...t, unreadCount: nextUnread } : t))
+    )
+    try {
+      await fetch("/api/admin/conversations/mark-seen", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ conversationId: ticket.id, seen: !isCurrentlyRead }),
+      })
+      if (!isCurrentlyRead) {
         await fetch("/api/chat/mark-as-read", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            conversationId: ticket.id,
-            userId: adminId,
-          }),
+          body: JSON.stringify({ conversationId: ticket.id, userId: adminId || "admin" }),
         })
-        setTickets((prev) =>
-          prev.map((t) => (t.id === ticket.id ? { ...t, unreadCount: 0 } : t))
-        )
-        window.dispatchEvent(new Event("update-unread-count"))
-      } catch (e) {}
+      }
+      window.dispatchEvent(new Event("update-support-unread-count"))
+      window.dispatchEvent(new Event("update-mensajes-unread-count"))
+    } catch (e) {
+      console.error("Error toggling ticket seen:", e)
     }
   }
 
-  // 4. Update status
+  // 5. Update status
   const handleStatusChange = async (newStatus: 'open' | 'in_progress' | 'resolved') => {
     if (!selectedTicketId) return
     try {
@@ -683,9 +736,28 @@ export default function AdminSoportePage() {
                   </div>
                 </div>
 
-                {/* Status Switcher */}
+                {/* Actions: Mark as seen & Status Switcher */}
                 <div className="flex items-center gap-2">
-                  <span className="text-xs font-medium text-muted-foreground">Estado:</span>
+                  <Button
+                    size="sm"
+                    variant={activeTicket.unreadCount === 0 ? "outline" : "default"}
+                    onClick={() => handleToggleTicketSeen(activeTicket)}
+                    className="h-8 text-xs gap-1.5 rounded-xl font-semibold shadow-2xs"
+                  >
+                    {activeTicket.unreadCount === 0 ? (
+                      <>
+                        <CheckCheck className="w-3.5 h-3.5 text-emerald-600" />
+                        <span className="hidden sm:inline">Revisado</span>
+                      </>
+                    ) : (
+                      <>
+                        <Check className="w-3.5 h-3.5" />
+                        <span>Marcar como visto</span>
+                      </>
+                    )}
+                  </Button>
+
+                  <span className="text-xs font-medium text-muted-foreground ml-1">Estado:</span>
                   <Select
                     value={activeTicket.status}
                     onValueChange={(val: any) => handleStatusChange(val)}

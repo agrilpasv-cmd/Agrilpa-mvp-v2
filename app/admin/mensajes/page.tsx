@@ -90,6 +90,24 @@ export default function AdminMensajesPage() {
     setTimeout(() => setCopiedKey(null), 2000)
   }
 
+  // Mark conversation as seen on server & UI
+  const markConvAsSeen = useCallback(async (convId: string) => {
+    setConversations((prev) =>
+      prev.map((c) => (c.id === convId ? { ...c, is_seen: true } : c))
+    )
+    try {
+      await fetch("/api/admin/conversations/mark-seen", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ conversationId: convId, seen: true }),
+      })
+      window.dispatchEvent(new Event("update-mensajes-unread-count"))
+      window.dispatchEvent(new Event("update-support-unread-count"))
+    } catch (err) {
+      console.error("Error marking seen:", err)
+    }
+  }, [])
+
   // 1. Fetch all conversations across the platform
   const fetchConversations = useCallback(async (silent = false) => {
     if (!silent) setIsRefreshing(true)
@@ -98,9 +116,27 @@ export default function AdminMensajesPage() {
       if (!res.ok) throw new Error("Error al consultar conversaciones")
       const data = await res.json()
       if (data.conversations) {
-        setConversations(data.conversations)
-        if (!selectedIdRef.current && data.conversations.length > 0) {
-          setSelectedId(data.conversations[0].id)
+        // Keep currently active conversation marked as seen
+        const updated = data.conversations.map((c: PlatformConversation) => {
+          if (selectedIdRef.current && c.id === selectedIdRef.current) {
+            return { ...c, is_seen: true }
+          }
+          return c
+        })
+
+        setConversations(updated)
+
+        const activeId = selectedIdRef.current || (updated.length > 0 ? updated[0].id : null)
+        if (!selectedIdRef.current && updated.length > 0) {
+          setSelectedId(updated[0].id)
+        }
+
+        // Con solo entrar al centro de mensajes, marcar el chat abierto como visto automáticamente
+        if (activeId) {
+          const activeItem = data.conversations.find((c: PlatformConversation) => c.id === activeId)
+          if (activeItem && !activeItem.is_seen) {
+            markConvAsSeen(activeId)
+          }
         }
       }
     } catch (err) {
@@ -109,7 +145,7 @@ export default function AdminMensajesPage() {
       setLoading(false)
       if (!silent) setIsRefreshing(false)
     }
-  }, [])
+  }, [markConvAsSeen])
 
   useEffect(() => {
     fetchConversations()
@@ -129,6 +165,8 @@ export default function AdminMensajesPage() {
           const newMsg = payload.new as any
           if (!newMsg) return
 
+          const isCurrentActive = newMsg.conversation_id === selectedIdRef.current
+
           setConversations((prev) => {
             const exists = prev.some((c) => c.id === newMsg.conversation_id)
             if (!exists) {
@@ -138,7 +176,6 @@ export default function AdminMensajesPage() {
             return prev.map((c) => {
               if (c.id === newMsg.conversation_id) {
                 const updatedMsgs = [...c.messages.filter((m) => m.id !== newMsg.id), newMsg]
-                const isCurrentActive = c.id === selectedIdRef.current
                 return {
                   ...c,
                   messages: updatedMsgs,
@@ -152,8 +189,13 @@ export default function AdminMensajesPage() {
             })
           })
 
-          // Update sidebar badge
-          window.dispatchEvent(new Event("update-mensajes-unread-count"))
+          // If the message is in the currently open chat, automatically mark as seen
+          if (isCurrentActive) {
+            markConvAsSeen(newMsg.conversation_id)
+          } else {
+            window.dispatchEvent(new Event("update-mensajes-unread-count"))
+            window.dispatchEvent(new Event("update-support-unread-count"))
+          }
         }
       )
       .subscribe()
@@ -161,7 +203,7 @@ export default function AdminMensajesPage() {
     return () => {
       supabase.removeChannel(channel)
     }
-  }, [fetchConversations])
+  }, [fetchConversations, markConvAsSeen])
 
   // Active conversation object
   const activeConv = useMemo(() => {
@@ -175,7 +217,7 @@ export default function AdminMensajesPage() {
     }
   }, [selectedId, activeConv?.messages.length])
 
-  // Mark conversation as seen / unseen
+  // Mark conversation as seen / unseen manually
   const handleToggleSeen = async (convId: string, currentSeenState: boolean) => {
     const nextSeenState = !currentSeenState
     try {
@@ -191,31 +233,16 @@ export default function AdminMensajesPage() {
 
       // Notify layout sidebar to decrement/increment unread badge
       window.dispatchEvent(new Event("update-mensajes-unread-count"))
+      window.dispatchEvent(new Event("update-support-unread-count"))
     } catch (err) {
       console.error("Error toggling seen status:", err)
     }
   }
 
-  // Handle selecting a conversation
-  const handleSelectConversation = async (conv: PlatformConversation) => {
+  // Handle selecting a conversation - with just clicking or entering, mark as seen automatically
+  const handleSelectConversation = (conv: PlatformConversation) => {
     setSelectedId(conv.id)
-
-    // If unseen, automatically mark as seen upon opening
-    if (!conv.is_seen) {
-      setConversations((prev) =>
-        prev.map((c) => (c.id === conv.id ? { ...c, is_seen: true } : c))
-      )
-      try {
-        await fetch("/api/admin/conversations/mark-seen", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ conversationId: conv.id, seen: true }),
-        })
-        window.dispatchEvent(new Event("update-mensajes-unread-count"))
-      } catch (err) {
-        console.error("Error marking seen on select:", err)
-      }
-    }
+    markConvAsSeen(conv.id)
   }
 
   // Metrics

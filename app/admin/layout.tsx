@@ -3,7 +3,7 @@
 import type React from "react"
 import { useState } from "react"
 import Link from "next/link"
-import { useRouter } from "next/navigation"
+import { useRouter, usePathname } from "next/navigation"
 import Image from "next/image"
 import {
   Menu,
@@ -32,7 +32,7 @@ import {
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Toaster } from "@/components/ui/toaster"
-import { useEffect } from "react"
+import { useEffect, useCallback } from "react"
 
 export default function AdminLayout({
   children,
@@ -40,6 +40,7 @@ export default function AdminLayout({
   children: React.ReactNode
 }) {
   const router = useRouter()
+  const pathname = usePathname()
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
   const [isLoggingOut, setIsLoggingOut] = useState(false)
   const [unreadContactCount, setUnreadContactCount] = useState(0)
@@ -48,51 +49,55 @@ export default function AdminLayout({
   const [unreadMensajesCount, setUnreadMensajesCount] = useState(0)
 
   // Fetch unread counts
-  useEffect(() => {
-    const fetchUnreadCount = async () => {
-      try {
-        const [resContactar, resContactanos, resSupport, resMensajes] = await Promise.all([
-          fetch('/api/admin/contact-clicks/unread-count'),
-          fetch('/api/admin/contact-submissions/unread-count'),
-          fetch('/api/admin/support/unread-count'),
-          fetch('/api/admin/conversations/unread-count')
-        ])
-        
-        if (resContactar.ok) {
-          const data = await resContactar.json()
-          if (typeof data.unreadCount === 'number') {
-            setUnreadContactCount(data.unreadCount)
-          }
+  const fetchUnreadCount = useCallback(async () => {
+    try {
+      const [resContactar, resContactanos, resSupport, resMensajes] = await Promise.all([
+        fetch(`/api/admin/contact-clicks/unread-count?t=${Date.now()}`, { cache: "no-store" }),
+        fetch(`/api/admin/contact-submissions/unread-count?t=${Date.now()}`, { cache: "no-store" }),
+        fetch(`/api/admin/support/unread-count?t=${Date.now()}`, { cache: "no-store" }),
+        fetch(`/api/admin/conversations/unread-count?t=${Date.now()}`, { cache: "no-store" })
+      ])
+      
+      if (resContactar.ok) {
+        const data = await resContactar.json()
+        if (typeof data.unreadCount === 'number') {
+          setUnreadContactCount(data.unreadCount)
         }
-        
-        if (resContactanos.ok) {
-          const data2 = await resContactanos.json()
-          if (typeof data2.unreadCount === 'number') {
-            setUnreadContactanosCount(data2.unreadCount)
-          }
-        }
-
-        if (resSupport.ok) {
-          const data3 = await resSupport.json()
-          if (typeof data3.unreadCount === 'number') {
-            setUnreadSupportCount(data3.unreadCount)
-          }
-        }
-
-        if (resMensajes.ok) {
-          const data4 = await resMensajes.json()
-          if (typeof data4.unreadCount === 'number') {
-            setUnreadMensajesCount(data4.unreadCount)
-          }
-        }
-      } catch (error) {
-        console.error("Failed to fetch unread contact counts:", error)
       }
+      
+      if (resContactanos.ok) {
+        const data2 = await resContactanos.json()
+        if (typeof data2.unreadCount === 'number') {
+          setUnreadContactanosCount(data2.unreadCount)
+        }
+      }
+
+      if (resSupport.ok) {
+        const data3 = await resSupport.json()
+        if (typeof data3.unreadCount === 'number') {
+          setUnreadSupportCount(data3.unreadCount)
+        }
+      }
+
+      if (resMensajes.ok) {
+        const data4 = await resMensajes.json()
+        if (typeof data4.unreadCount === 'number') {
+          setUnreadMensajesCount(data4.unreadCount)
+        }
+      }
+    } catch (error) {
+      console.error("Failed to fetch unread contact counts:", error)
     }
+  }, [])
+
+  // Refresh counts on route changes and on load
+  useEffect(() => {
     fetchUnreadCount()
-    
+  }, [pathname, fetchUnreadCount])
+
+  useEffect(() => {
     // Set up polling and event listener for instant updates
-    const interval = setInterval(fetchUnreadCount, 30000)
+    const interval = setInterval(fetchUnreadCount, 15000)
     window.addEventListener('update-unread-count', fetchUnreadCount)
     window.addEventListener('update-contactanos-unread-count', fetchUnreadCount)
     window.addEventListener('update-support-unread-count', fetchUnreadCount)
@@ -105,7 +110,7 @@ export default function AdminLayout({
         window.removeEventListener('update-support-unread-count', fetchUnreadCount)
         window.removeEventListener('update-mensajes-unread-count', fetchUnreadCount)
     }
-  }, [])
+  }, [fetchUnreadCount])
 
   const menuItems = [
     { href: "/", label: "Inicio", icon: Home },

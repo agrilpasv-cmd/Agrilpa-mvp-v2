@@ -200,32 +200,32 @@ export function GlobalChatWrapper() {
               e.stopPropagation()
               openSupportChat()
             }}
-            className="pointer-events-auto mb-2.5 flex items-center gap-2 bg-white/95 hover:bg-white text-emerald-950 px-3.5 py-1.5 rounded-full shadow-lg border border-emerald-200/80 text-xs font-semibold backdrop-blur-sm transition-all hover:scale-105 active:scale-95 group hover:shadow-xl hover:border-primary/50"
+            className={`pointer-events-auto flex items-center gap-2 bg-white hover:bg-emerald-50/40 text-foreground px-3.5 py-1.5 rounded-full shadow-md border border-primary text-xs font-semibold backdrop-blur-sm transition-all hover:scale-105 active:scale-95 group hover:shadow-lg ${
+              (unreadCount > 0 || Boolean(pendingNotification)) ? 'mb-2.5' : 'mb-0'
+            }`}
             title="Pedir ayuda o asistencia técnica a Soporte Agrilpa"
           >
-            <span className="flex h-2 w-2 relative">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-            </span>
             <Headphones className="w-3.5 h-3.5 text-primary group-hover:rotate-12 transition-transform" />
-            <span className="text-[11px] sm:text-xs">¿Ayuda o Soporte?</span>
+            <span className="text-[11px] sm:text-xs font-medium">¿Ayuda o Soporte?</span>
           </button>
 
-          {/* Floating Trigger Button (Bottom-Right) - Matches ChatWidget trigger button exactly */}
-          <Button 
-            onClick={handleFloatingButtonClick}
-            className="pointer-events-auto w-14 h-14 rounded-full bg-primary hover:bg-primary/90 text-white shadow-xl shadow-primary/30 flex items-center justify-center relative transition-transform hover:scale-105 active:scale-95"
-            aria-label="Abrir chat"
-          >
-            <MessageCircle className="w-6 h-6" />
+          {/* Floating Trigger Button (Bottom-Right) - Only visible when another user sends a message */}
+          {(unreadCount > 0 || Boolean(pendingNotification)) && (
+            <Button 
+              onClick={handleFloatingButtonClick}
+              className="pointer-events-auto w-14 h-14 rounded-full bg-primary hover:bg-primary/90 text-white shadow-xl shadow-primary/30 flex items-center justify-center relative transition-transform hover:scale-105 active:scale-95 animate-in zoom-in-75 duration-200"
+              aria-label="Abrir chat"
+            >
+              <MessageCircle className="w-6 h-6" />
 
-            {/* Unread badge indicator */}
-            {unreadCount > 0 && (
-              <span className="absolute -top-1 -right-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-red-600 px-1 text-[11px] font-bold text-white shadow-lg ring-2 ring-white animate-pulse">
-                {unreadCount > 9 ? '9+' : unreadCount}
-              </span>
-            )}
-          </Button>
+              {/* Unread badge indicator */}
+              {unreadCount > 0 && (
+                <span className="absolute -top-1 -right-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-red-600 px-1 text-[11px] font-bold text-white shadow-lg ring-2 ring-white animate-pulse">
+                  {unreadCount > 9 ? '9+' : unreadCount}
+                </span>
+              )}
+            </Button>
+          )}
         </div>
       )}
     </>

@@ -37,6 +37,7 @@ export async function POST(request: NextRequest) {
         message,
         user_id: user?.id || null,
         is_registered: !!user,
+        is_read: false,
       },
     ])
 

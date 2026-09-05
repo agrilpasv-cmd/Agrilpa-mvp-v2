@@ -20,7 +20,7 @@ export async function GET() {
     const { count, error } = await supabase
       .from("contact_submissions")
       .select("*", { count: "exact", head: true })
-      .eq("is_read", false)
+      .or('is_read.eq.false,is_read.is.null')
 
     if (error) {
       if (error.code === '42703') {

@@ -39,7 +39,7 @@ export function markConversationAdminSeen(conversationId: string, seen = true): 
 
   const record: AdminSeenRecord = {
     conversationId,
-    seenAt: seen ? new Date().toISOString() : '1970-01-01T00:00:00.000Z',
+    seenAt: seen ? new Date(Date.now() + 2000).toISOString() : '1970-01-01T00:00:00.000Z',
     isUnseenManual: !seen
   }
 
@@ -72,7 +72,8 @@ export function isConversationSeenByAdmin(conversationId: string, lastMessageDat
   if (lastMessageDate) {
     const lastMsgTime = new Date(lastMessageDate).getTime()
     const seenTime = new Date(record.seenAt).getTime()
-    if (lastMsgTime > seenTime) {
+    // 2-second grace period for clock drift / database timestamp skew
+    if (lastMsgTime > (seenTime + 2000)) {
       return false
     }
   }

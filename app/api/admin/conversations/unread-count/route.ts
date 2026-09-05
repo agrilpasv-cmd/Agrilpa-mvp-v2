@@ -13,14 +13,30 @@ export async function GET() {
       .from("conversations")
       .select("id, updated_at");
 
-    if (error || !convos) {
+    if (error || !convos || convos.length === 0) {
       return NextResponse.json({ unreadCount: 0 });
+    }
+
+    // Fetch latest message dates
+    const { data: latestMsgs } = await adminClient
+      .from("messages")
+      .select("conversation_id, created_at")
+      .order("created_at", { ascending: false });
+
+    const latestMsgMap = new Map<string, string>();
+    if (latestMsgs) {
+      for (const m of latestMsgs) {
+        if (!latestMsgMap.has(m.conversation_id)) {
+          latestMsgMap.set(m.conversation_id, m.created_at);
+        }
+      }
     }
 
     // Count how many conversations are unseen by the admin
     let unseenCount = 0;
     for (const c of convos) {
-      const seen = isConversationSeenByAdmin(c.id, c.updated_at);
+      const effectiveDate = latestMsgMap.get(c.id) || c.updated_at;
+      const seen = isConversationSeenByAdmin(c.id, effectiveDate);
       if (!seen) {
         unseenCount++;
       }

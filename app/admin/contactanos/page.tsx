@@ -75,15 +75,14 @@ export default function ContactanosPage() {
 
   const markAsRead = async (submission: ContactSubmission) => {
     setSelectedMessage(submission)
-    // Avoid marking as read if it already is, or if the column doesn't exist yet (indicated by undefined if that's the case)
-    if (submission.is_read === false) {
+    if (!submission.is_read) {
+      setSubmissions(prev => prev.map(s => s.id === submission.id ? { ...s, is_read: true } : s))
       try {
         await fetch("/api/admin/contact-submissions/mark-read", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ id: submission.id })
         })
-        setSubmissions(prev => prev.map(s => s.id === submission.id ? { ...s, is_read: true } : s))
         window.dispatchEvent(new Event('update-contactanos-unread-count'))
       } catch (error) {
         console.error("Error marking as read", error)
@@ -238,7 +237,7 @@ export default function ContactanosPage() {
               </TableHeader>
               <TableBody>
                 {submissions.map((submission) => (
-                  <TableRow key={submission.id} className={submission.is_read === false ? "bg-red-50/50 hover:bg-red-100/50 font-medium" : ""}>
+                  <TableRow key={submission.id} className={!submission.is_read ? "bg-red-50/50 hover:bg-red-100/50 font-medium" : ""}>
                     <TableCell>
                       <Checkbox 
                         checked={selectedIds.has(submission.id)}
@@ -247,7 +246,7 @@ export default function ContactanosPage() {
                     </TableCell>
                     <TableCell>
                       {submission.name}
-                      {submission.is_read === false && (
+                      {!submission.is_read && (
                         <span className="ml-2 inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-medium bg-red-100 text-red-800">
                           Nuevo
                         </span>
@@ -259,7 +258,7 @@ export default function ContactanosPage() {
                     <TableCell className="capitalize text-sm">{submission.user_type}</TableCell>
                     <TableCell>{submission.is_registered ? "Sí" : "No"}</TableCell>
                     <TableCell className="text-sm">
-                      <Button variant={submission.is_read === false ? "default" : "outline"} size="sm" onClick={() => markAsRead(submission)}>
+                      <Button variant={!submission.is_read ? "default" : "outline"} size="sm" onClick={() => markAsRead(submission)}>
                         Ver Mensaje
                       </Button>
                     </TableCell>

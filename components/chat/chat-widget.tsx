@@ -530,7 +530,7 @@ export function ChatWidget({ sellerName, sellerOnline = false, product, isOpen, 
         
         {/* Floating Widget Content */}
         {isOpen && (
-          <div className="w-80 sm:w-96 bg-white rounded-2xl shadow-2xl border border-border/50 overflow-hidden mb-4 animate-in slide-in-from-bottom-5 fade-in duration-300 flex flex-col max-h-[560px]">
+          <div className="w-[305px] sm:w-[330px] h-[590px] sm:h-[620px] max-h-[86vh] bg-white rounded-2xl shadow-2xl border border-border/50 overflow-hidden mb-3 animate-in slide-in-from-bottom-5 fade-in duration-300 flex flex-col">
             
             {/* Header */}
             <div className="bg-primary p-3.5 sm:p-4 text-white flex items-center justify-between shrink-0">
