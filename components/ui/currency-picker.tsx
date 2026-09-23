@@ -51,24 +51,24 @@ export function CurrencyPicker({ value, onChange, disabled = false, className = 
   }, [])
 
   return (
-    <div ref={containerRef} className={`relative min-w-[140px] ${className}`}>
+    <div ref={containerRef} className={`relative min-w-[150px] shrink-0 ${className}`}>
       <button
         type="button"
         disabled={disabled}
         onClick={() => setOpen(p => !p)}
-        className={`w-full h-10 flex items-center justify-between gap-2 px-3 border rounded-md text-left transition bg-background focus:outline-none focus:ring-2 focus:ring-primary ${
+        className={`w-full h-11 flex items-center justify-between gap-2 px-3 border rounded-xl text-left transition bg-background focus:outline-none focus:ring-2 focus:ring-primary whitespace-nowrap ${
           open ? "border-primary ring-2 ring-primary" : "border-border hover:border-gray-400"
         } disabled:opacity-50 disabled:cursor-not-allowed`}
       >
-        <span className="flex items-center gap-2">
-          <FlagImg code={selected.code} size={14} />
-          <span className="text-sm text-foreground">{selected.label}</span>
+        <span className="flex items-center gap-2 shrink-0">
+          <FlagImg code={selected.code} size={15} />
+          <span className="text-sm font-medium text-foreground whitespace-nowrap">{selected.label}</span>
         </span>
         <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform shrink-0 ${open ? "rotate-180" : ""}`} />
       </button>
 
       {open && !disabled && (
-        <div className="absolute z-50 mt-1 w-full bg-background border border-border rounded-md shadow-lg overflow-hidden py-1">
+        <div className="absolute z-50 mt-1 min-w-full w-max bg-background border border-border rounded-xl shadow-lg overflow-hidden py-1">
           {CURRENCIES.map(curr => (
             <button
               key={curr.value}
@@ -77,13 +77,13 @@ export function CurrencyPicker({ value, onChange, disabled = false, className = 
                 onChange(curr.value)
                 setOpen(false)
               }}
-              className={`w-full flex items-center gap-2 px-3 py-2 text-left hover:bg-muted transition-colors text-sm ${
+              className={`w-full flex items-center gap-2 px-3 py-2 text-left hover:bg-muted transition-colors text-sm whitespace-nowrap ${
                 curr.value === value ? "bg-primary/10 font-medium text-primary" : ""
               }`}
             >
-              <FlagImg code={curr.code} size={14} />
-              <span className="flex-1 text-foreground">{curr.label}</span>
-              {curr.value === value && <span className="text-primary text-xs">✓</span>}
+              <FlagImg code={curr.code} size={15} />
+              <span className="flex-1 text-foreground whitespace-nowrap">{curr.label}</span>
+              {curr.value === value && <span className="text-primary text-xs ml-2">✓</span>}
             </button>
           ))}
         </div>

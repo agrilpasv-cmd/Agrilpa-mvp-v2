@@ -257,6 +257,20 @@ export default function AdminSoportePage() {
   // 5. Update status
   const handleStatusChange = async (newStatus: 'open' | 'in_progress' | 'resolved') => {
     if (!selectedTicketId) return
+    
+    // Immediate optimistic local update
+    setTickets((prev) =>
+      prev.map((t) =>
+        t.id === selectedTicketId
+          ? {
+              ...t,
+              status: newStatus,
+              unreadCount: newStatus === "resolved" ? 0 : t.unreadCount,
+            }
+          : t
+      )
+    )
+
     try {
       await fetch("/api/admin/support/status", {
         method: "POST",
@@ -266,9 +280,10 @@ export default function AdminSoportePage() {
           status: newStatus,
         }),
       })
-      setTickets((prev) =>
-        prev.map((t) => (t.id === selectedTicketId ? { ...t, status: newStatus } : t))
-      )
+
+      window.dispatchEvent(new Event("update-support-unread-count"))
+      window.dispatchEvent(new Event("update-mensajes-unread-count"))
+      window.dispatchEvent(new Event("update-unread-count"))
     } catch (err) {
       console.error("[Admin Support] Error updating status:", err)
     }

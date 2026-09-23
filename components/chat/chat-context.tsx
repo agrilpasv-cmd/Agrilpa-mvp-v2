@@ -68,9 +68,16 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
 
   // Function to refresh conversations and calculate unread count
   const refreshUnreadCount = useCallback(async () => {
-    if (!currentUserId) return
+    if (!currentUserId) {
+      setUnreadCount(0)
+      setPendingNotification(null)
+      return
+    }
     try {
-      const res = await fetch(`/api/chat/conversations?userId=${currentUserId}`)
+      const res = await fetch(`/api/chat/conversations?userId=${currentUserId}&_t=${Date.now()}`, {
+        cache: 'no-store',
+        headers: { 'Pragma': 'no-cache' }
+      })
       if (!res.ok) return
       const data = await res.json()
       const convList: any[] = data.conversations || []
@@ -92,12 +99,14 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
       conversationMapRef.current = map
       setUnreadCount(totalUnread)
 
-      // If closed, and user has unread messages, prepare the pending notification
-      if (latestUnreadConvo && !isOpenRef.current) {
+      // If user has 0 unread messages, ensure pendingNotification is cleared completely
+      if (totalUnread === 0) {
+        setPendingNotification(null)
+      } else if (latestUnreadConvo && !isOpenRef.current) {
+        // ONLY if user genuinely has unread messages, prepare the pending notification
         const lastMsg = latestUnreadConvo.last_message
         setPendingNotification((prev) => {
-          // Keep existing if already present
-          if (prev) return prev
+          if (prev && prev.conversationId === latestUnreadConvo.id) return prev
           return {
             conversationId: latestUnreadConvo.id,
             senderName: latestUnreadConvo.other_user?.companyName || latestUnreadConvo.other_user?.name || "Usuario de Agrilpa",
@@ -216,8 +225,29 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
           }
         })
 
+        // Re-track periodically to ensure presence doesn't drop
+        const presenceInterval = setInterval(async () => {
+          if (!isMounted || !presenceChannel) return
+          
+          // Check if connection is actually joined
+          if (presenceChannel.state !== 'joined') return
+          
+          const { data: { session } } = await supabase.auth.getSession()
+          const activeUid = session?.user?.id
+          
+          if (activeUid) {
+            try {
+              await presenceChannel.track({
+                user_id: activeUid,
+                online_at: new Date().toISOString(),
+              })
+            } catch (e) {}
+          }
+        }, 30000)
+
         return () => {
           authListener?.subscription?.unsubscribe()
+          clearInterval(presenceInterval)
         }
       } catch (err) {
         console.error('[Presence] Setup error:', err)
@@ -329,7 +359,9 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
             if (!conv) {
               // Might be a brand new conversation created by another user!
               try {
-                const res = await fetch(`/api/chat/conversations?userId=${currentUserId}`)
+                const res = await fetch(`/api/chat/conversations?userId=${currentUserId}&_t=${Date.now()}`, {
+                  cache: 'no-store'
+                })
                 if (res.ok) {
                   const data = await res.json()
                   const convList: any[] = data.conversations || []

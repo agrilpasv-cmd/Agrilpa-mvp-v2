@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { useToast } from "@/hooks/use-toast"
-import { Loader2, RefreshCw, Trash2, AlertTriangle } from "lucide-react"
+import { Loader2, RefreshCw, Trash2, AlertTriangle, Download } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
 interface User {
@@ -177,6 +177,52 @@ export default function AdminUsersPage() {
     fetchUsers(true)
   }
 
+  const handleExportCSV = () => {
+    if (users.length === 0) return
+
+    const headers = [
+      "Nombre", "Email", "Empresa", "Web/Link", "Teléfono", "País", "Estado",
+      "Dirección", "Certificados", "Productos de Interés", "Países Destino",
+      "Países Proveedores", "Volumen Anual", "Tipo", "Sub Tipo", "¿Cómo supo de Agrilpa?", "Rol", "Registro"
+    ]
+
+    const csvContent = [
+      headers.join(";"),
+      ...users.map((u: any) => {
+        return [
+          `"${(u.full_name || "").replace(/"/g, '""')}"`,
+          `"${(u.email || "").replace(/"/g, '""')}"`,
+          `"${(u.company_name || "").replace(/"/g, '""')}"`,
+          `"${(u.company_website || "").replace(/"/g, '""')}"`,
+          `"${(u.phone || "").replace(/"/g, '""')}"`,
+          `"${(u.country || "").replace(/"/g, '""')}"`,
+          `"${(u.state || "").replace(/"/g, '""')}"`,
+          `"${(u.address || "").replace(/"/g, '""')}"`,
+          `"${u.has_export_certificates ? "Sí" : "No"}"`,
+          `"${(u.products_of_interest?.join(" | ") || "").replace(/"/g, '""')}"`,
+          `"${(u.supply_countries?.join(" | ") || "").replace(/"/g, '""')}"`,
+          `"${(u.provider_countries?.join(" | ") || "").replace(/"/g, '""')}"`,
+          `"${(u.annual_volume || "").replace(/"/g, '""')}"`,
+          `"${(u.user_type || "").replace(/"/g, '""')}"`,
+          `"${(u.user_sub_type || "").replace(/"/g, '""')}"`,
+          `"${(u.how_heard_about_us ? HOW_HEARD_LABELS[u.how_heard_about_us] || u.how_heard_about_us : "").replace(/"/g, '""')}"`,
+          `"${(u.role || "").replace(/"/g, '""')}"`,
+          `"${new Date(u.created_at).toLocaleDateString()}"`
+        ].join(";")
+      })
+    ].join("\n")
+
+    // Adding BOM for Excel UTF-8 compatibility
+    const blob = new Blob(["\uFEFF" + csvContent], { type: "text/csv;charset=utf-8;" })
+    const link = document.createElement("a")
+    const url = URL.createObjectURL(blob)
+    link.setAttribute("href", url)
+    link.setAttribute("download", `agrilpa_usuarios_${new Date().toLocaleDateString().replace(/\//g, '-')}.csv`)
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+  }
+
   if (loading && users.length === 0) {
     return (
       <div className="flex items-center justify-center h-[calc(100vh-64px)]">
@@ -198,6 +244,10 @@ export default function AdminUsersPage() {
               Última actualización: {lastUpdate.toLocaleTimeString()}
             </span>
           )}
+          <Button variant="outline" size="sm" onClick={handleExportCSV} disabled={loading || users.length === 0} className="bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border-emerald-200">
+            <Download className="w-4 h-4 mr-2" />
+            Descargar CSV
+          </Button>
           <Button variant="outline" size="sm" onClick={handleManualRefresh} disabled={loading}>
             <RefreshCw className={`w-4 h-4 mr-2 ${loading ? "animate-spin" : ""}`} />
             Actualizar

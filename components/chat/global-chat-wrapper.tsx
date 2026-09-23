@@ -86,9 +86,9 @@ export function GlobalChatWrapper() {
       {!isOpen && (
         <div className="fixed bottom-6 right-6 z-50 flex flex-col items-end pointer-events-none">
           
-          {/* Real-time Floating Message Alert Card matching ChatWidget design */}
-          {pendingNotification && (
-            <div className="pointer-events-auto w-72 sm:w-80 bg-white rounded-2xl shadow-2xl border border-border/70 overflow-hidden mb-3.5 animate-in slide-in-from-bottom-5 fade-in duration-300 flex flex-col">
+          {/* Real-time Floating Message Alert Card matching ChatWidget design - ONLY when there are unread messages */}
+          {pendingNotification && unreadCount > 0 && (
+            <div className="pointer-events-auto w-[340px] sm:w-[360px] bg-white rounded-2xl shadow-2xl border border-border/70 overflow-hidden mb-3.5 animate-in slide-in-from-bottom-5 fade-in duration-300 flex flex-col">
               
               {/* Header - Sleek & Compact */}
               <div className="bg-primary px-3.5 py-2.5 text-white flex items-center justify-between shrink-0">
@@ -201,7 +201,7 @@ export function GlobalChatWrapper() {
               openSupportChat()
             }}
             className={`pointer-events-auto flex items-center gap-2 bg-white hover:bg-emerald-50/40 text-foreground px-3.5 py-1.5 rounded-full shadow-md border border-primary text-xs font-semibold backdrop-blur-sm transition-all hover:scale-105 active:scale-95 group hover:shadow-lg ${
-              (unreadCount > 0 || Boolean(pendingNotification)) ? 'mb-2.5' : 'mb-0'
+              unreadCount > 0 ? 'mb-2.5' : 'mb-0'
             }`}
             title="Pedir ayuda o asistencia técnica a Soporte Agrilpa"
           >
@@ -209,8 +209,8 @@ export function GlobalChatWrapper() {
             <span className="text-[11px] sm:text-xs font-medium">¿Ayuda o Soporte?</span>
           </button>
 
-          {/* Floating Trigger Button (Bottom-Right) - Only visible when another user sends a message */}
-          {(unreadCount > 0 || Boolean(pendingNotification)) && (
+          {/* Floating Trigger Button (Bottom-Right) - Only visible when another user sends a new unread message */}
+          {unreadCount > 0 && (
             <Button 
               onClick={handleFloatingButtonClick}
               className="pointer-events-auto w-14 h-14 rounded-full bg-primary hover:bg-primary/90 text-white shadow-xl shadow-primary/30 flex items-center justify-center relative transition-transform hover:scale-105 active:scale-95 animate-in zoom-in-75 duration-200"
@@ -219,11 +219,9 @@ export function GlobalChatWrapper() {
               <MessageCircle className="w-6 h-6" />
 
               {/* Unread badge indicator */}
-              {unreadCount > 0 && (
-                <span className="absolute -top-1 -right-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-red-600 px-1 text-[11px] font-bold text-white shadow-lg ring-2 ring-white animate-pulse">
-                  {unreadCount > 9 ? '9+' : unreadCount}
-                </span>
-              )}
+              <span className="absolute -top-1 -right-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-red-600 px-1 text-[11px] font-bold text-white shadow-lg ring-2 ring-white animate-pulse">
+                {unreadCount > 9 ? '9+' : unreadCount}
+              </span>
             </Button>
           )}
         </div>

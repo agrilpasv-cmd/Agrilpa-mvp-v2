@@ -8,10 +8,11 @@ export async function GET() {
   try {
     const adminClient = createAdminClient();
 
-    // Fetch all conversations with updated_at
+    // Fetch user-to-user conversations with updated_at (excluding support tickets)
     const { data: convos, error } = await adminClient
       .from("conversations")
-      .select("id, updated_at");
+      .select("id, updated_at")
+      .not("product_id", "is", null);
 
     if (error || !convos || convos.length === 0) {
       return NextResponse.json({ unreadCount: 0 });

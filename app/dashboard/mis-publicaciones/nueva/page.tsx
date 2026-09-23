@@ -15,6 +15,7 @@ import { PRODUCT_CATEGORIES, UNIDADES_MEDIDA } from "@/lib/constants"
 import { useDashboard } from "../../context"
 import { CurrencyPicker } from "@/components/ui/currency-picker"
 import { compressImage, MAX_FILE_SIZE_MB } from "@/lib/compress-image"
+import { smartCapitalize } from "@/lib/text-format"
 
 const PREDEFINED_CERTS = [
   "Global GAP", "USDA Organic", "Fair Trade", "Rainforest Alliance",
@@ -95,9 +96,10 @@ export default function NuevaPublicacionPage() {
     let processedValue = value
     if (name === "state") {
       const cleanVal = value.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s]/g, "")
-      processedValue = cleanVal.split(" ").map((word) => word.charAt(0).toUpperCase() + word.slice(1)).join(" ")
-    }
-    if (name === "price") {
+      processedValue = smartCapitalize(cleanVal)
+    } else if (name === "title" || name === "description" || name === "variety" || name === "harvestPeriod" || name === "packaging") {
+      processedValue = smartCapitalize(value)
+    } else if (name === "price") {
       let cleanVal = value.replace(/[^0-9.]/g, "")
       const firstDotIndex = cleanVal.indexOf('.')
       if (firstDotIndex !== -1) {
@@ -483,7 +485,7 @@ export default function NuevaPublicacionPage() {
                                  <CurrencyPicker value={formData.currency} onChange={(val) => setFormData(p => ({ ...p, currency: val }))} />
                                  <Input type="text" name="price" value={formData.price} onChange={handleInputChange} onBlur={(e) => { const v = e.target.value; if (v) { const parts = v.split('.'); if (parts.length === 1) { setFormData(p => ({...p, price: v + '.00'})); } else if (parts.length === 2 && parts[1] === '') { setFormData(p => ({...p, price: v + '00'})); } else if (parts.length === 2 && parts[1].length === 1) { setFormData(p => ({...p, price: v + '0'})); } } }} placeholder="0.00" className="h-11 font-bold rounded-xl" />
                                  <Select value={formData.unit} onValueChange={(v) => setFormData(p => ({ ...p, unit: v }))}>
-                                    <SelectTrigger className="h-11 bg-transparent rounded-xl w-32"><SelectValue /></SelectTrigger>
+                                    <SelectTrigger className="h-11 bg-transparent rounded-xl w-44 shrink-0"><SelectValue /></SelectTrigger>
                                     <SelectContent position="popper" className="max-h-60">
                                       {UNIDADES_MEDIDA.map((u) => <SelectItem key={u.value} value={u.value}>{u.label}</SelectItem>)}
                                     </SelectContent>

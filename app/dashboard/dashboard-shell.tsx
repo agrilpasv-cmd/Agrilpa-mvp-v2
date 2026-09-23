@@ -43,6 +43,7 @@ import { Badge } from "@/components/ui/badge"
 import { useDashboard } from "./context"
 import { AuthStorage } from "@/lib/auth-storage"
 import { CountryPicker, PhoneCodePicker } from "@/components/ui/country-picker"
+import { useGlobalChat } from "@/components/chat/chat-context"
 
 export default function DashboardShell({
     children,
@@ -54,6 +55,7 @@ export default function DashboardShell({
     const [isSidebarOpen, setIsSidebarOpen] = useState(false)
     const [isLoggingOut, setIsLoggingOut] = useState(false)
     const { counts } = useDashboard()
+    const { unreadCount } = useGlobalChat()
 
     // Profile Setup Wizard states (for incomplete/OAuth registrations)
     const [isVerifyingSession, setIsVerifyingSession] = useState(true)  // block render until DB check completes
@@ -331,7 +333,7 @@ export default function DashboardShell({
         { href: "/admin/financiamiento", label: "Financiamiento", icon: DollarSign, notifications: 0 },
         { href: "/admin/logistica", label: "Logística", icon: Truck, notifications: 0 },
         { href: "/admin/compras", label: "Compras Globales", icon: ShoppingCart, notifications: 0 },
-        { href: "/dashboard/mensajes", label: "Mensajes B2B", icon: MessageSquare, notifications: counts.mensajes || 0 },
+        { href: "/dashboard/mensajes", label: "Mensajes B2B", icon: MessageSquare, notifications: unreadCount || 0 },
         { href: "/admin/contactanos", label: "Contáctanos", icon: MessageSquare, notifications: counts.contactanos || 0 },
         { href: "/admin/newsletter", label: "Newsletter", icon: Newspaper, notifications: 0 },
         { href: "/admin/bajas", label: "Reportes de Bajas", icon: UserMinus, notifications: 0 },
@@ -340,7 +342,7 @@ export default function DashboardShell({
     const userMenuItems = [
         { href: "/", label: "Inicio", icon: Home, notifications: 0 },
         { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard, notifications: 0 },
-        { href: "/dashboard/mensajes", label: "Mensajes B2B", icon: MessageSquare, notifications: counts.mensajes || 0 },
+        { href: "/dashboard/mensajes", label: "Mensajes B2B", icon: MessageSquare, notifications: unreadCount || 0 },
         { href: "/dashboard/perfil", label: "Mi Perfil", icon: FileText, notifications: counts.perfil },
         {
             href: "/dashboard/mis-publicaciones",

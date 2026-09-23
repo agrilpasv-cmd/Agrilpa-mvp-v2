@@ -17,7 +17,14 @@
     [
       "57b0c950-5397-42c9-b560-1459b21f8d8f",
       {
-        "lastSeen": 1788624234383,
+        "lastSeen": 1790106039530,
+        "inMessagesPage": false
+      }
+    ],
+    [
+      "ffa57d80-fe73-49ad-8777-21907c401236",
+      {
+        "lastSeen": 1790121830331,
         "inMessagesPage": true
       }
     ]

@@ -530,7 +530,7 @@ export function ChatWidget({ sellerName, sellerOnline = false, product, isOpen, 
         
         {/* Floating Widget Content */}
         {isOpen && (
-          <div className="w-[305px] sm:w-[330px] h-[590px] sm:h-[620px] max-h-[86vh] bg-white rounded-2xl shadow-2xl border border-border/50 overflow-hidden mb-3 animate-in slide-in-from-bottom-5 fade-in duration-300 flex flex-col">
+          <div className="w-[340px] sm:w-[360px] h-[600px] sm:h-[620px] max-h-[86vh] bg-white rounded-2xl shadow-2xl border border-border/50 overflow-hidden mb-3 animate-in slide-in-from-bottom-5 fade-in duration-300 flex flex-col">
             
             {/* Header */}
             <div className="bg-primary p-3.5 sm:p-4 text-white flex items-center justify-between shrink-0">
@@ -625,10 +625,10 @@ export function ChatWidget({ sellerName, sellerOnline = false, product, isOpen, 
                      {product.title}
                      <ExternalLink className="w-3 h-3 text-muted-foreground group-hover:text-primary shrink-0 opacity-70" />
                    </h4>
-                   <p className="text-xs text-primary font-medium">{product.price} {product.currency} <span className="text-muted-foreground font-normal">/{product.quantity}</span></p>
+                   <p className="text-xs text-primary font-medium">{product.price ? `${product.price} ${product.currency || '$'}` : 'Cotización abierta'} {product.quantity && <span className="text-muted-foreground font-normal">/{product.quantity}</span>}</p>
                  </div>
               </Link>
-            ) : !isActualSupport && product.title ? (
+            ) : !isActualSupport && product.title && product.id !== 'generic' ? (
               <div className="bg-gray-50 p-3 border-b border-border/50 flex items-center gap-3 shrink-0">
                  <div className="w-10 h-10 rounded bg-white overflow-hidden border border-border/50 shrink-0">
                    {product.image ? (
@@ -639,7 +639,7 @@ export function ChatWidget({ sellerName, sellerOnline = false, product, isOpen, 
                  </div>
                  <div className="min-w-0 flex-1">
                    <h4 className="text-xs font-bold text-foreground truncate">{product.title}</h4>
-                   <p className="text-xs text-primary font-medium">{product.price} {product.currency} <span className="text-muted-foreground font-normal">/{product.quantity}</span></p>
+                   <p className="text-xs text-primary font-medium">{product.price ? `${product.price} ${product.currency || '$'}` : 'Cotización abierta'} {product.quantity && <span className="text-muted-foreground font-normal">/{product.quantity}</span>}</p>
                  </div>
               </div>
             ) : null}

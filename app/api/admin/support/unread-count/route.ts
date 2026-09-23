@@ -1,5 +1,6 @@
 import { createAdminClient } from "@/lib/supabase/admin";
 import { NextResponse } from "next/server";
+import { getAllTicketMeta } from "@/lib/support-state";
 
 export const dynamic = "force-dynamic";
 
@@ -17,7 +18,7 @@ export async function GET() {
 
     const adminId = adminUser?.id || "57b0c950-5397-42c9-b560-1459b21f8d8f";
 
-    // 2. Fetch support conversations
+    // 2. Fetch support conversations (where product_id is null)
     const { data: convos } = await adminClient
       .from("conversations")
       .select("id")
@@ -27,13 +28,25 @@ export async function GET() {
       return NextResponse.json({ unreadCount: 0 });
     }
 
-    const convIds = convos.map((c) => c.id);
+    const allMeta = getAllTicketMeta();
 
-    // 3. Count unread messages sent to admin
+    // Filter out tickets marked as resolved
+    const activeConvIds = convos
+      .filter((c) => {
+        const meta = allMeta[c.id];
+        return !meta || meta.status !== "resolved";
+      })
+      .map((c) => c.id);
+
+    if (activeConvIds.length === 0) {
+      return NextResponse.json({ unreadCount: 0 });
+    }
+
+    // 3. Count unread messages sent to admin in open / in-progress tickets
     const { count, error } = await adminClient
       .from("messages")
       .select("*", { count: "exact", head: true })
-      .in("conversation_id", convIds)
+      .in("conversation_id", activeConvIds)
       .neq("sender_id", adminId)
       .is("read_at", null);
 

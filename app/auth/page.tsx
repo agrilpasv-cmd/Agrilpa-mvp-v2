@@ -6,12 +6,14 @@ import Link from "next/link"
 import Image from "next/image"
 import { useRouter } from "next/navigation"
 import { useSearchParams } from "next/navigation"
-import { Mail, Lock, User, Phone, ArrowRight, ArrowLeft, Eye, EyeOff } from "lucide-react"
+import { Mail, Lock, User, Phone, ArrowRight, ArrowLeft, Eye, EyeOff, CheckCircle2, XCircle, ShieldCheck } from "lucide-react"
 import { CountryPicker, PhoneCodePicker } from "@/components/ui/country-picker"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { MapPin } from "lucide-react"
 import { createBrowserClient } from "@/lib/supabase/client"
 import { AuthStorage } from "@/lib/auth-storage"
 import { trackActivity } from "@/lib/track"
+import { smartCapitalize } from "@/lib/text-format"
 
 function AuthPageContent() {
   const router = useRouter()
@@ -53,6 +55,7 @@ function AuthPageContent() {
   const [requiresVerification, setRequiresVerification] = useState(false)
   const [error, setError] = useState("")
   const [loading, setLoading] = useState(false)
+  const [registrationStartTime, setRegistrationStartTime] = useState<number | null>(null)
   // Show/hide password toggles
   const [showLoginPwd, setShowLoginPwd] = useState(false)
   const [showRegPwd, setShowRegPwd] = useState(false)
@@ -63,6 +66,53 @@ function AuthPageContent() {
   const [resendSuccess, setResendSuccess] = useState(false)
   const [verifyLoading, setVerifyLoading] = useState(false)
   const [verifyError, setVerifyError] = useState("")
+
+  // Password criteria verification and security scoring
+  const regPassword = formData.password || ""
+  const pwdChecks = {
+    minLength: regPassword.length >= 8,
+    hasUpper: /[A-ZÁÉÍÓÚÑ]/.test(regPassword),
+    hasNumber: /[0-9]/.test(regPassword),
+    hasSpecial: /[^A-Za-z0-9\s]/.test(regPassword),
+    noName: (() => {
+      if (!regPassword || regPassword.length < 3) return true
+      const lowerPwd = regPassword.toLowerCase()
+      const nameParts = (formData.fullName || "")
+        .toLowerCase()
+        .split(/\s+/)
+        .filter((p) => p.length >= 3)
+      for (const part of nameParts) {
+        if (lowerPwd.includes(part)) return false
+      }
+      const emailPrefix = (formData.email || "").split("@")[0]?.toLowerCase()
+      if (emailPrefix && emailPrefix.length >= 3 && lowerPwd.includes(emailPrefix)) {
+        return false
+      }
+      return true
+    })(),
+  }
+
+  const strengthScore = (() => {
+    if (!regPassword) return 0
+    let score = 0
+    if (pwdChecks.minLength) score += 1
+    if (regPassword.length >= 12) score += 1
+    if (pwdChecks.hasUpper) score += 1
+    if (pwdChecks.hasNumber) score += 1
+    if (pwdChecks.hasSpecial) score += 1
+    if (!pwdChecks.noName) score = Math.max(0, score - 2)
+    return Math.min(score, 4)
+  })()
+
+  const getStrengthMeta = (score: number) => {
+    if (!regPassword) return { label: "Ingresa una contraseña", color: "bg-gray-200", textColor: "text-muted-foreground" }
+    if (score <= 1) return { label: "Muy débil", color: "bg-red-500", textColor: "text-red-600" }
+    if (score === 2) return { label: "Débil", color: "bg-orange-500", textColor: "text-orange-600" }
+    if (score === 3) return { label: "Media / Aceptable", color: "bg-amber-500", textColor: "text-amber-600" }
+    return { label: "Muy segura", color: "bg-primary", textColor: "text-primary font-bold" }
+  }
+
+  const strengthMeta = getStrengthMeta(strengthScore)
 
   useEffect(() => {
     const checkExistingSession = async () => {
@@ -105,9 +155,11 @@ function AuthPageContent() {
     const emailParam = searchParams.get("email")
     if (mode === "register") {
       setIsLogin(false)
+      if (!registrationStartTime) setRegistrationStartTime(Date.now())
     } else if (mode === "login") {
       setIsLogin(true)
       setRegistrationStep(1)
+      setRegistrationStartTime(null)
       // Pre-fill email if coming from registration
       if (emailParam) {
         setFormData(prev => ({ ...prev, email: decodeURIComponent(emailParam) }))
@@ -118,19 +170,30 @@ function AuthPageContent() {
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target
     
+    // Don't auto-capitalize sensitive/technical fields
+    const isSensitive =
+      name === "email" ||
+      name === "password" ||
+      name === "confirmPassword" ||
+      name === "companyWebsite" ||
+      name === "phoneNumber" ||
+      name === "countryCode"
+
     // Restringir estado y dirección a solo letras, números y espacios
     if (name === "state" || name === "address") {
       const filteredValue = value.replace(/[^a-zA-Z0-9áéíóúÁÉÍÓÚñÑ\s]/g, "")
       setFormData((prev) => ({
         ...prev,
-        [name]: filteredValue,
+        [name]: smartCapitalize(filteredValue),
       }))
       return
     }
 
+    const finalVal = isSensitive ? value : smartCapitalize(value)
+
     setFormData((prev) => ({
       ...prev,
-      [name]: value,
+      [name]: finalVal,
     }))
   }
 
@@ -164,8 +227,28 @@ function AuthPageContent() {
         return
       }
 
-      if (formData.password.length < 6) {
-        setError("La contraseña debe tener al menos 6 caracteres")
+      if (!pwdChecks.minLength) {
+        setError("La contraseña debe tener al menos 8 caracteres")
+        return
+      }
+
+      if (!pwdChecks.hasUpper) {
+        setError("La contraseña debe incluir al menos una letra mayúscula (A-Z)")
+        return
+      }
+
+      if (!pwdChecks.hasNumber) {
+        setError("La contraseña debe incluir al menos un número (0-9)")
+        return
+      }
+
+      if (!pwdChecks.hasSpecial) {
+        setError("La contraseña debe incluir al menos un signo o símbolo especial (ej. !@#$)")
+        return
+      }
+
+      if (!pwdChecks.noName) {
+        setError("Por seguridad, la contraseña no debe contener tu nombre ni tu correo")
         return
       }
 
@@ -278,7 +361,12 @@ function AuthPageContent() {
 
         // Registration succeeded — user must verify email before logging in
         console.log("[Agrilpa] Registration successful, email verification required")
-        trackActivity('login', 'Registro de nuevo usuario exitoso', { email: formData.email, type: formData.userType })
+        const duration = registrationStartTime ? Date.now() - registrationStartTime : 0
+        trackActivity('login', 'Registro de nuevo usuario exitoso', { 
+          email: formData.email, 
+          type: formData.userType,
+          onboarding_duration_ms: duration
+        })
         setError("")
         setLoading(false)
         // Show a full-page confirmation message (handled below in JSX via requiresVerification state)
@@ -711,6 +799,7 @@ function AuthPageContent() {
                       onClick={() => {
                         setIsLogin(false)
                         setRegistrationStep(1)
+                        setRegistrationStartTime(Date.now())
                         setError("")
                         setFormData({
                           email: "",
@@ -826,7 +915,7 @@ function AuthPageContent() {
                           name="password"
                           value={formData.password}
                           onChange={handleInputChange}
-                          placeholder="••••••••"
+                          placeholder="Mínimo 8 caracteres"
                           className="w-full pl-4 pr-10 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition"
                           required
                         />
@@ -838,6 +927,88 @@ function AuthPageContent() {
                           {showRegPwd ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                         </button>
                       </div>
+
+                      {/* Barra Dinámica de Seguridad */}
+                      {formData.password && (
+                        <div className="mt-2.5 space-y-2 animate-in fade-in duration-200">
+                          <div className="flex items-center justify-between text-xs">
+                            <span className="text-muted-foreground font-medium">Seguridad de la contraseña:</span>
+                            <span className={`font-semibold ${strengthMeta.textColor}`}>
+                              {strengthMeta.label}
+                            </span>
+                          </div>
+
+                          {/* Segmented Progress Bar */}
+                          <div className="grid grid-cols-4 gap-1.5 h-1.5 w-full">
+                            <div className={`rounded-full transition-all duration-300 ${strengthScore >= 1 ? strengthMeta.color : "bg-gray-200"}`} />
+                            <div className={`rounded-full transition-all duration-300 ${strengthScore >= 2 ? strengthMeta.color : "bg-gray-200"}`} />
+                            <div className={`rounded-full transition-all duration-300 ${strengthScore >= 3 ? strengthMeta.color : "bg-gray-200"}`} />
+                            <div className={`rounded-full transition-all duration-300 ${strengthScore >= 4 ? strengthMeta.color : "bg-gray-200"}`} />
+                          </div>
+
+                          {/* Requirement Checklist */}
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 pt-1.5 text-xs text-muted-foreground">
+                            <div className={`flex items-center gap-1.5 transition-colors ${pwdChecks.minLength ? "text-primary font-medium" : ""}`}>
+                              {pwdChecks.minLength ? (
+                                <CheckCircle2 className="w-3.5 h-3.5 text-primary shrink-0" />
+                              ) : (
+                                <div className="w-3.5 h-3.5 rounded-full border border-gray-300 flex items-center justify-center shrink-0">
+                                  <div className="w-1 h-1 bg-gray-400 rounded-full" />
+                                </div>
+                              )}
+                              <span>Mínimo 8 caracteres</span>
+                            </div>
+
+                            <div className={`flex items-center gap-1.5 transition-colors ${pwdChecks.hasUpper ? "text-primary font-medium" : ""}`}>
+                              {pwdChecks.hasUpper ? (
+                                <CheckCircle2 className="w-3.5 h-3.5 text-primary shrink-0" />
+                              ) : (
+                                <div className="w-3.5 h-3.5 rounded-full border border-gray-300 flex items-center justify-center shrink-0">
+                                  <div className="w-1 h-1 bg-gray-400 rounded-full" />
+                                </div>
+                              )}
+                              <span>Al menos una mayúscula (A-Z)</span>
+                            </div>
+
+                            <div className={`flex items-center gap-1.5 transition-colors ${pwdChecks.hasNumber ? "text-primary font-medium" : ""}`}>
+                              {pwdChecks.hasNumber ? (
+                                <CheckCircle2 className="w-3.5 h-3.5 text-primary shrink-0" />
+                              ) : (
+                                <div className="w-3.5 h-3.5 rounded-full border border-gray-300 flex items-center justify-center shrink-0">
+                                  <div className="w-1 h-1 bg-gray-400 rounded-full" />
+                                </div>
+                              )}
+                              <span>Al menos un número (0-9)</span>
+                            </div>
+
+                            <div className={`flex items-center gap-1.5 transition-colors ${pwdChecks.hasSpecial ? "text-primary font-medium" : ""}`}>
+                              {pwdChecks.hasSpecial ? (
+                                <CheckCircle2 className="w-3.5 h-3.5 text-primary shrink-0" />
+                              ) : (
+                                <div className="w-3.5 h-3.5 rounded-full border border-gray-300 flex items-center justify-center shrink-0">
+                                  <div className="w-1 h-1 bg-gray-400 rounded-full" />
+                                </div>
+                              )}
+                              <span>Un signo especial (!@#$%...)</span>
+                            </div>
+
+                            <div className={`flex items-center gap-1.5 sm:col-span-2 transition-colors ${pwdChecks.noName ? (pwdChecks.minLength ? "text-primary font-medium" : "") : "text-amber-600 font-semibold"}`}>
+                              {pwdChecks.noName ? (
+                                pwdChecks.minLength ? (
+                                  <CheckCircle2 className="w-3.5 h-3.5 text-primary shrink-0" />
+                                ) : (
+                                  <div className="w-3.5 h-3.5 rounded-full border border-gray-300 flex items-center justify-center shrink-0">
+                                    <div className="w-1 h-1 bg-gray-400 rounded-full" />
+                                  </div>
+                                )
+                              ) : (
+                                <XCircle className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+                              )}
+                              <span>No debe contener tu nombre ni correo</span>
+                            </div>
+                          </div>
+                        </div>
+                      )}
                     </div>
 
                     <div>
@@ -916,53 +1087,66 @@ function AuthPageContent() {
                     </div>
                     <div>
                         <label className="block text-sm font-medium text-foreground mb-2">Tipo de Usuario *</label>
-                        <select
-                          name="userType"
+                        <Select
                           value={formData.userType}
-                          onChange={(e) => {
-                            handleInputChange(e);
-                            setFormData((prev) => ({ ...prev, userSubType: "", userSubTypeOther: "" }));
+                          onValueChange={(val) => {
+                            setFormData((prev) => ({
+                              ...prev,
+                              userType: val,
+                              userSubType: "",
+                              userSubTypeOther: "",
+                            }))
                           }}
-                          className="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary transition bg-white mb-4"
                         >
-                          <option value="vendedor">Vendedor Agrícola</option>
-                          <option value="comprador">Comprador/Distribuidor</option>
-                        </select>
+                          <SelectTrigger className="w-full h-12 px-4 py-3 border border-gray-300 rounded-md bg-white text-foreground focus:ring-2 focus:ring-primary shadow-none mb-4">
+                            <SelectValue placeholder="Selecciona el tipo de usuario" />
+                          </SelectTrigger>
+                          <SelectContent position="popper" className="max-h-60 bg-white shadow-lg border border-gray-200 rounded-xl z-50">
+                            <SelectItem value="vendedor">Vendedor Agrícola</SelectItem>
+                            <SelectItem value="comprador">Comprador/Distribuidor</SelectItem>
+                          </SelectContent>
+                        </Select>
                       </div>
 
                       <div>
                         <label className="block text-sm font-medium text-foreground mb-2">
                           {formData.userType === "vendedor" ? "¿Qué tipo de vendedor eres? *" : "¿Qué tipo de comprador eres? *"}
                         </label>
-                        <select
-                          name="userSubType"
+                        <Select
                           value={formData.userSubType}
-                          onChange={handleInputChange}
-                          className="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary transition bg-white mb-3"
-                          required
+                          onValueChange={(val) => {
+                            setFormData((prev) => ({
+                              ...prev,
+                              userSubType: val,
+                            }))
+                          }}
                         >
-                          <option value="" disabled>Selecciona una opción</option>
-                          {formData.userType === "vendedor" ? (
-                            <>
-                              <option value="Productor agrícola / Caficultor">Productor agrícola / Caficultor</option>
-                              <option value="Cooperativa agrícola">Cooperativa agrícola</option>
-                              <option value="Asociación de productores">Asociación de productores</option>
-                              <option value="Empresa cafetalera / Agroindustria">Empresa cafetalera / Agroindustria</option>
-                              <option value="Distribuidor o comercializador local">Distribuidor o comercializador local</option>
-                              <option value="Otra">Otra</option>
-                            </>
-                          ) : (
-                            <>
-                              <option value="Supermercado o cadena retail">Supermercado o cadena retail</option>
-                              <option value="Distribuidor / Mayorista">Distribuidor / Mayorista</option>
-                              <option value="Procesadora de alimentos">Procesadora de alimentos</option>
-                              <option value="Tostador o industria de café / cacao">Tostador o industria de café / cacao</option>
-                              <option value="Empresa importadora / exportadora">Empresa importadora / exportadora</option>
-                              <option value="Hotel, restaurante o servicio de alimentos (HORECA)">Hotel, restaurante o servicio de alimentos (HORECA)</option>
-                              <option value="Otra">Otra</option>
-                            </>
-                          )}
-                        </select>
+                          <SelectTrigger className="w-full h-12 px-4 py-3 border border-gray-300 rounded-md bg-white text-foreground focus:ring-2 focus:ring-primary shadow-none mb-3">
+                            <SelectValue placeholder="Selecciona una opción" />
+                          </SelectTrigger>
+                          <SelectContent position="popper" className="max-h-60 bg-white shadow-lg border border-gray-200 rounded-xl z-50">
+                            {formData.userType === "vendedor" ? (
+                              <>
+                                <SelectItem value="Productor agrícola / Caficultor">Productor agrícola / Caficultor</SelectItem>
+                                <SelectItem value="Cooperativa agrícola">Cooperativa agrícola</SelectItem>
+                                <SelectItem value="Asociación de productores">Asociación de productores</SelectItem>
+                                <SelectItem value="Empresa cafetalera / Agroindustria">Empresa cafetalera / Agroindustria</SelectItem>
+                                <SelectItem value="Distribuidor o comercializador local">Distribuidor o comercializador local</SelectItem>
+                                <SelectItem value="Otra">Otra</SelectItem>
+                              </>
+                            ) : (
+                              <>
+                                <SelectItem value="Supermercado o cadena retail">Supermercado o cadena retail</SelectItem>
+                                <SelectItem value="Distribuidor / Mayorista">Distribuidor / Mayorista</SelectItem>
+                                <SelectItem value="Procesadora de alimentos">Procesadora de alimentos</SelectItem>
+                                <SelectItem value="Tostador o industria de café / cacao">Tostador o industria de café / cacao</SelectItem>
+                                <SelectItem value="Empresa importadora / exportadora">Empresa importadora / exportadora</SelectItem>
+                                <SelectItem value="Hotel, restaurante o servicio de alimentos (HORECA)">Hotel, restaurante o servicio de alimentos (HORECA)</SelectItem>
+                                <SelectItem value="Otra">Otra</SelectItem>
+                              </>
+                            )}
+                          </SelectContent>
+                        </Select>
                         {formData.userSubType === "Otra" && (
                           <div className="animate-in fade-in zoom-in duration-300">
                             <input
@@ -995,19 +1179,25 @@ function AuthPageContent() {
 
                       <div>
                         <label className="block text-sm font-medium text-foreground mb-2">¿Posee certificados para exportar? *</label>
-                        <select
-                          name="hasExportCertificates"
-                          value={formData.hasExportCertificates as string}
-                          onChange={(e) => setFormData({ ...formData, hasExportCertificates: e.target.value })}
-                          className={`w-full px-4 py-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-primary bg-white transition ${
-                            formData.hasExportCertificates === "" ? "border-amber-400 bg-amber-50" : "border-gray-300"
-                          }`}
-                          required
+                        <Select
+                          value={formData.hasExportCertificates}
+                          onValueChange={(val) => {
+                            setFormData((prev) => ({
+                              ...prev,
+                              hasExportCertificates: val,
+                            }))
+                          }}
                         >
-                          <option value="" disabled>Selecciona una opción...</option>
-                          <option value="true">Sí, tengo certificados de exportación</option>
-                          <option value="false">No, no tengo certificados</option>
-                        </select>
+                          <SelectTrigger className={`w-full h-12 px-4 py-3 border rounded-md transition shadow-none ${
+                            formData.hasExportCertificates === "" ? "border-amber-400 bg-amber-50" : "border-gray-300 bg-white"
+                          }`}>
+                            <SelectValue placeholder="Selecciona una opción..." />
+                          </SelectTrigger>
+                          <SelectContent position="popper" className="max-h-60 bg-white shadow-lg border border-gray-200 rounded-xl z-50">
+                            <SelectItem value="true">Sí, tengo certificados de exportación</SelectItem>
+                            <SelectItem value="false">No, no tengo certificados</SelectItem>
+                          </SelectContent>
+                        </Select>
                         {formData.hasExportCertificates === "" && (
                           <p className="text-xs text-amber-600 mt-1">⚠ Este campo es obligatorio</p>
                         )}
@@ -1214,15 +1404,23 @@ function AuthPageContent() {
 
                     <div>
                       <label className="block text-sm font-medium text-foreground mb-2">¿Abastecen o proveen productos de algún país? *</label>
-                      <select
-                        name="doesProvideInternationally"
+                      <Select
                         value={formData.doesProvideInternationally}
-                        onChange={handleInputChange}
-                        className="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary bg-white transition mb-3"
+                        onValueChange={(val) => {
+                          setFormData((prev) => ({
+                            ...prev,
+                            doesProvideInternationally: val,
+                          }))
+                        }}
                       >
-                        <option value="false">No</option>
-                        <option value="true">Sí</option>
-                      </select>
+                        <SelectTrigger className="w-full h-12 px-4 py-3 border border-gray-300 rounded-md bg-white text-foreground focus:ring-2 focus:ring-primary shadow-none mb-3">
+                          <SelectValue placeholder="Selecciona una opción" />
+                        </SelectTrigger>
+                        <SelectContent position="popper" className="max-h-60 bg-white shadow-lg border border-gray-200 rounded-xl z-50">
+                          <SelectItem value="false">No</SelectItem>
+                          <SelectItem value="true">Sí</SelectItem>
+                        </SelectContent>
+                      </Select>
 
                       {formData.doesProvideInternationally === "true" && (
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-3 animate-in fade-in zoom-in duration-300">
@@ -1259,44 +1457,54 @@ function AuthPageContent() {
                       <label className="block text-sm font-medium text-foreground mb-2">
                         Volumen de Movimiento Anual * <span className="text-muted-foreground font-normal">(USD $)</span>
                       </label>
-                      <select
-                        name="volumeRange"
+                      <Select
                         value={formData.volumeRange}
-                        onChange={handleInputChange}
-                        className="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary bg-white transition"
+                        onValueChange={(val) => {
+                          setFormData((prev) => ({
+                            ...prev,
+                            volumeRange: val,
+                          }))
+                        }}
                       >
-                        <option value="">Selecciona un rango</option>
-                        <option value="0-5000">De $0 a $5,000</option>
-                        <option value="5001-50000">De $5,001 a $50,000</option>
-                        <option value="50001-250000">De $50,001 a $250,000</option>
-                        <option value="250001-500000">De $250,001 a $500,000</option>
-                        <option value="500001-1000000">De $500,001 a $1,000,000</option>
-                        <option value="1000000plus">Más de $1,000,000</option>
-                      </select>
+                        <SelectTrigger className="w-full h-12 px-4 py-3 border border-gray-300 rounded-md bg-white text-foreground focus:ring-2 focus:ring-primary shadow-none">
+                          <SelectValue placeholder="Selecciona un rango" />
+                        </SelectTrigger>
+                        <SelectContent position="popper" className="max-h-60 bg-white shadow-lg border border-gray-200 rounded-xl z-50">
+                          <SelectItem value="0-5000">De $0 a $5,000</SelectItem>
+                          <SelectItem value="5001-50000">De $5,001 a $50,000</SelectItem>
+                          <SelectItem value="50001-250000">De $50,001 a $250,000</SelectItem>
+                          <SelectItem value="250001-500000">De $250,001 a $500,000</SelectItem>
+                          <SelectItem value="500001-1000000">De $500,001 a $1,000,000</SelectItem>
+                          <SelectItem value="1000000plus">Más de $1,000,000</SelectItem>
+                        </SelectContent>
+                      </Select>
                     </div>
 
                     <div>
                       <label className="block text-sm font-medium text-foreground mb-2">
                         ¿Cómo se enteró de nosotros? *
                       </label>
-                      <select
-                        name="howHeardAboutUs"
+                      <Select
                         value={formData.howHeardAboutUs}
-                        onChange={handleInputChange}
-                        className="w-full px-4 py-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary bg-white transition mb-3"
-                        required
+                        onValueChange={(val) => {
+                          setFormData((prev) => ({
+                            ...prev,
+                            howHeardAboutUs: val,
+                          }))
+                        }}
                       >
-                        <option value="" disabled>Selecciona una opción</option>
-                        <option value="TikTok">TikTok</option>
-                        <option value="Instagram">Instagram</option>
-                        <option value="Facebook">Facebook</option>
-                        <option value="LinkedIn">LinkedIn</option>
-                        <option value="Reddit">Reddit</option>
-                        <option value="Correo">Correo</option>
-                        <option value="Recomendación de un amigo/colega">Recomendación de un amigo/colega</option>
-                        <option value="Internet">Internet</option>
-                        <option value="Otro">Otro</option>
-                      </select>
+                        <SelectTrigger className="w-full h-12 px-4 py-3 border border-gray-300 rounded-md bg-white text-foreground focus:ring-2 focus:ring-primary shadow-none mb-3">
+                          <SelectValue placeholder="Selecciona una opción" />
+                        </SelectTrigger>
+                        <SelectContent position="popper" className="max-h-60 bg-white shadow-lg border border-gray-200 rounded-xl z-50">
+                          <SelectItem value="ChatGPT">ChatGPT</SelectItem>
+                          <SelectItem value="Google">Google</SelectItem>
+                          <SelectItem value="TikTok">TikTok</SelectItem>
+                          <SelectItem value="Redes Sociales">Redes Sociales</SelectItem>
+                          <SelectItem value="Recomendación">Recomendación</SelectItem>
+                          <SelectItem value="Otro">Otro</SelectItem>
+                        </SelectContent>
+                      </Select>
 
                       {formData.howHeardAboutUs === "Otro" && (
                         <div className="animate-in fade-in zoom-in duration-300 mt-2">

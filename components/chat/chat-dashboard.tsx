@@ -11,7 +11,7 @@ import { Dialog, DialogContent } from '@/components/ui/dialog'
 import {
   Search, Paperclip, Send, Check, CheckCheck, FileText, Download,
   Box, Eye, X, MessageSquare, Loader, ExternalLink, Inbox, Circle, MoreVertical,
-  Copy, Info, Bell, Headphones
+  Copy, Info, Bell, Headphones, ArrowLeft
 } from "lucide-react"
 import {
   DropdownMenu,
@@ -62,6 +62,7 @@ export function ChatDashboard({ currentUserId }: ChatDashboardProps) {
   const scrollRef = useRef<HTMLDivElement>(null)
   const activeConversationIdRef = useRef<string | null>(activeConversationId)
   const conversationsRef = useRef<Conversation[]>(conversations)
+  const hasInitiallySelectedRef = useRef(false)
 
   useEffect(() => {
     activeConversationIdRef.current = activeConversationId
@@ -73,15 +74,24 @@ export function ChatDashboard({ currentUserId }: ChatDashboardProps) {
 
   const activeConversation = conversations.find(c => c.id === activeConversationId)
 
-  // 1. Fetch conversations for the current user
   const fetchConversations = async () => {
     try {
-      const res = await fetch(`/api/chat/conversations?userId=${currentUserId}`)
+      const res = await fetch(`/api/chat/conversations?userId=${currentUserId}&_t=${Date.now()}`, {
+        cache: 'no-store'
+      })
       const data = await res.json()
       if (data.conversations) {
         setConversations(data.conversations)
-        if (!activeConversationIdRef.current && data.conversations.length > 0) {
-          setActiveConversationId(data.conversations[0].id)
+        
+        // Solo autoseleccionar en la carga inicial de pantalla grande (escritorio >= 768px).
+        // En teléfonos móviles o en las actualizaciones en segundo plano (cada 8s), NUNCA
+        // forzar la apertura de un chat si el usuario está en la bandeja de entrada.
+        if (!hasInitiallySelectedRef.current) {
+          hasInitiallySelectedRef.current = true
+          const isDesktop = typeof window !== 'undefined' && window.innerWidth >= 768
+          if (isDesktop && !activeConversationIdRef.current && data.conversations.length > 0) {
+            setActiveConversationId(data.conversations[0].id)
+          }
         }
       }
     } catch (err) {
@@ -118,7 +128,7 @@ export function ChatDashboard({ currentUserId }: ChatDashboardProps) {
 
           if (!targetConv) {
             // If not found in current conversations, check if it's a new conversation specifically for this user
-            fetch(`/api/chat/conversations?userId=${currentUserId}`)
+            fetch(`/api/chat/conversations?userId=${currentUserId}&_t=${Date.now()}`, { cache: 'no-store' })
               .then(res => res.json())
               .then(data => {
                 if (!isMounted) return
@@ -629,7 +639,7 @@ export function ChatDashboard({ currentUserId }: ChatDashboardProps) {
         <div className="flex h-[calc(100vh-320px)] min-h-[600px]">
           
           {/* LEFT SIDEBAR - CONVERSATIONS LIST */}
-          <div className="w-full md:w-80 lg:w-[400px] border-r border-border/50 flex flex-col bg-gray-50/40">
+          <div className={`w-full md:w-80 lg:w-[400px] border-r border-border/50 flex-col bg-gray-50/40 ${activeConversation ? 'hidden md:flex' : 'flex'}`}>
             <div className="p-4 border-b border-border/50 bg-gray-50 flex items-center justify-between">
               <h2 className="font-bold text-sm text-muted-foreground uppercase tracking-wider">Historial de Chats</h2>
               <Badge variant="outline" className="bg-white">{filteredConversations.length}</Badge>
@@ -732,12 +742,21 @@ export function ChatDashboard({ currentUserId }: ChatDashboardProps) {
 
           {/* RIGHT SIDE - CHAT AREA */}
           {activeConversation ? (
-            <div className="flex-1 flex flex-col bg-[#fdfcf9] relative">
+            <div className="flex-1 flex flex-col bg-[#fdfcf9] relative min-w-0">
               
               {/* Chat Header */}
-              <div className="h-16 border-b border-border/50 bg-white flex items-center justify-between px-6 shrink-0 shadow-sm z-10 relative">
-                <div className="flex items-center gap-4">
-                  <div className="relative">
+              <div className="h-16 border-b border-border/50 bg-white flex items-center justify-between px-4 md:px-6 shrink-0 shadow-sm z-10 relative gap-2">
+                <div className="flex items-center gap-3 md:gap-4 min-w-0">
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    className="md:hidden h-8 w-8 -ml-1 text-muted-foreground hover:bg-slate-100 rounded-full"
+                    onClick={() => setActiveConversationId(null)}
+                    title="Volver a la lista de mensajes"
+                  >
+                    <ArrowLeft className="w-5 h-5" />
+                  </Button>
+                  <div className="relative shrink-0">
                     <Avatar className="w-10 h-10 border border-border/50 shadow-sm">
                       <AvatarFallback className="bg-primary/10 text-primary font-bold">
                         {(activeConversation.other_user?.name || "U").slice(0, 2).toUpperCase()}
@@ -749,8 +768,8 @@ export function ChatDashboard({ currentUserId }: ChatDashboardProps) {
                       }`}
                     />
                   </div>
-                  <div>
-                    <h3 className="font-bold text-foreground text-base leading-tight">
+                  <div className="min-w-0">
+                    <h3 className="font-bold text-foreground text-base leading-tight truncate">
                       {activeConversation.other_user?.companyName || activeConversation.other_user?.name}
                     </h3>
                     {isUserOnline(activeConversation.other_user?.id) ? (
@@ -767,11 +786,11 @@ export function ChatDashboard({ currentUserId }: ChatDashboardProps) {
                   </div>
                 </div>
                 
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1.5 md:gap-2 shrink-0">
                   {activeConversation.product && (
-                    <Button variant="outline" size="sm" asChild className="h-8 text-xs font-medium bg-primary/5 text-primary hover:bg-primary/10 border-primary/20">
+                    <Button variant="outline" size="sm" asChild className="h-8 text-xs font-medium bg-primary/5 text-primary hover:bg-primary/10 border-primary/20 px-2 sm:px-3">
                       <Link href={`/producto/${activeConversation.product.id}`}>
-                        Ver Producto <ExternalLink className="w-3.5 h-3.5 ml-1.5" />
+                        <span className="hidden sm:inline">Ver Producto</span> <ExternalLink className="w-3.5 h-3.5 sm:ml-1.5" />
                       </Link>
                     </Button>
                   )}
@@ -894,7 +913,7 @@ export function ChatDashboard({ currentUserId }: ChatDashboardProps) {
                      </p>
                    </div>
                  ) : (
-                   messages.map((msg) => {
+                   messages.map((msg, idx) => {
                      const isMe = msg.sender_id === currentUserId
                      return (
                        <div key={msg.id} className={`flex flex-col gap-1 max-w-[80%] ${isMe ? 'ml-auto items-end' : 'mr-auto items-start'}`}>
@@ -971,7 +990,7 @@ export function ChatDashboard({ currentUserId }: ChatDashboardProps) {
 
                            {/* Content */}
                            {msg.content && (
-                             <p className="leading-relaxed whitespace-pre-wrap">{msg.content}</p>
+                             <p className="leading-relaxed whitespace-pre-wrap break-words break-all sm:break-normal">{msg.content}</p>
                            )}
 
                            {/* Footer with Timestamp and Read Receipt Checkmarks */}
@@ -1109,7 +1128,7 @@ export function ChatDashboard({ currentUserId }: ChatDashboardProps) {
               </div>
             </div>
           ) : (
-            <div className="flex-1 flex flex-col items-center justify-center bg-gray-50/50 p-8 text-center relative overflow-hidden">
+            <div className="flex-1 hidden md:flex flex-col items-center justify-center bg-gray-50/50 p-8 text-center relative overflow-hidden">
               {/* Decorative background element */}
               <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-primary/5 rounded-full blur-3xl -z-10"></div>
               

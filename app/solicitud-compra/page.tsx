@@ -8,6 +8,7 @@ import { createClient } from "@/lib/supabase/client"
 import { PRODUCT_CATEGORIES } from "@/lib/constants"
 import { useToast } from "@/hooks/use-toast"
 import { CountryPicker, PhoneCodePicker } from "@/components/ui/country-picker"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 
 import {
   Search,
@@ -468,19 +469,18 @@ export default function SolicitudCompraPage() {
                 <label className="block text-sm font-semibold text-foreground mb-2">
                   Categoría <span className="text-red-500">*</span>
                 </label>
-                <select
-                  value={category}
-                  onChange={(e) => setCategory(e.target.value)}
-                  className="w-full px-4 py-3 rounded-lg border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary transition-all"
-                  required
-                >
-                  <option value="">Selecciona una categoría</option>
-                  {PRODUCT_CATEGORIES.map((cat) => (
-                    <option key={cat} value={cat}>
-                      {cat.charAt(0).toUpperCase() + cat.slice(1)}
-                    </option>
-                  ))}
-                </select>
+                <Select value={category} onValueChange={setCategory}>
+                  <SelectTrigger className="w-full h-12 px-4 py-3 rounded-lg border border-border bg-background text-foreground focus:ring-2 focus:ring-primary shadow-none">
+                    <SelectValue placeholder="Selecciona una categoría" />
+                  </SelectTrigger>
+                  <SelectContent position="popper" className="max-h-60 bg-white shadow-lg border border-gray-200 rounded-xl z-50">
+                    {PRODUCT_CATEGORIES.map((cat) => (
+                      <SelectItem key={cat} value={cat}>
+                        {cat.charAt(0).toUpperCase() + cat.slice(1)}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
 
               <div>
@@ -494,22 +494,24 @@ export default function SolicitudCompraPage() {
                     placeholder="Ej: 5000"
                     value={quantity}
                     onChange={(e) => setQuantity(e.target.value)}
-                    className="flex-1 px-4 py-3 rounded-lg border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary transition-all"
+                    className="flex-1 px-4 py-3 rounded-lg border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary transition-all h-12"
                     required
                   />
-                  <select
-                    value={unit}
-                    onChange={(e) => setUnit(e.target.value)}
-                    className="w-24 px-3 py-3 rounded-lg border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary transition-all"
-                    required
-                  >
-                    <option value="kg">kg</option>
-                    <option value="ton">ton</option>
-                    <option value="lb">lb</option>
-                    <option value="quintales">qq</option>
-                    <option value="unidades">uds</option>
-                    <option value="contenedores">cont.</option>
-                  </select>
+                  <div className="w-28 shrink-0">
+                    <Select value={unit} onValueChange={setUnit}>
+                      <SelectTrigger className="w-full h-12 px-3 py-3 rounded-lg border border-border bg-background text-foreground focus:ring-2 focus:ring-primary shadow-none">
+                        <SelectValue placeholder="Unidad" />
+                      </SelectTrigger>
+                      <SelectContent position="popper" className="bg-white shadow-lg border border-gray-200 rounded-xl z-50">
+                        <SelectItem value="kg">kg</SelectItem>
+                        <SelectItem value="ton">ton</SelectItem>
+                        <SelectItem value="lb">lb</SelectItem>
+                        <SelectItem value="quintales">qq</SelectItem>
+                        <SelectItem value="unidades">uds</SelectItem>
+                        <SelectItem value="contenedores">cont.</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
               </div>
             </div>
@@ -601,16 +603,16 @@ export default function SolicitudCompraPage() {
                   <Globe className="w-4 h-4 inline mr-1 -mt-0.5" />
                   Origen del producto <span className="text-red-500">*</span>
                 </label>
-                <select
-                  value={sourceType}
-                  onChange={(e) => setSourceType(e.target.value)}
-                  className="w-full px-4 py-3 rounded-lg border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary transition-all"
-                  required
-                >
-                  <option value="cualquiera">Cualquiera (Local o Importado)</option>
-                  <option value="local">Solo producto local</option>
-                  <option value="importado">Solo producto importado</option>
-                </select>
+                <Select value={sourceType} onValueChange={setSourceType}>
+                  <SelectTrigger className="w-full h-12 px-4 py-3 rounded-lg border border-border bg-background text-foreground focus:ring-2 focus:ring-primary shadow-none">
+                    <SelectValue placeholder="Selecciona el origen" />
+                  </SelectTrigger>
+                  <SelectContent position="popper" className="bg-white shadow-lg border border-gray-200 rounded-xl z-50">
+                    <SelectItem value="cualquiera">Cualquiera (Local o Importado)</SelectItem>
+                    <SelectItem value="local">Solo producto local</SelectItem>
+                    <SelectItem value="importado">Solo producto importado</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
             </div>
 

@@ -71,8 +71,6 @@ export default function AdminMensajesPage() {
   
   // Status filter: Todos | No vistos | Vistos
   const [statusFilter, setStatusFilter] = useState<"all" | "unseen" | "seen">("all")
-  // Type filter: Todos | Productos | Soporte
-  const [typeFilter, setTypeFilter] = useState<"all" | "products" | "support">("all")
   
   const [previewImage, setPreviewImage] = useState<string | null>(null)
   const [copiedKey, setCopiedKey] = useState<string | null>(null)
@@ -249,8 +247,6 @@ export default function AdminMensajesPage() {
   const totalConvs = conversations.length
   const totalUnseen = conversations.filter((c) => !c.is_seen).length
   const totalSeen = conversations.filter((c) => c.is_seen).length
-  const totalProductChats = conversations.filter((c) => !c.is_support).length
-  const totalSupportChats = conversations.filter((c) => c.is_support).length
   const totalMessagesCount = conversations.reduce((sum, c) => sum + (c.messages_count || 0), 0)
 
   // Filter conversations
@@ -259,10 +255,6 @@ export default function AdminMensajesPage() {
       // Status filter
       if (statusFilter === "unseen" && conv.is_seen) return false
       if (statusFilter === "seen" && !conv.is_seen) return false
-
-      // Type filter
-      if (typeFilter === "products" && conv.is_support) return false
-      if (typeFilter === "support" && !conv.is_support) return false
 
       // Search query (Supports Searching by ID, Code, Names, Emails, Products, Message contents)
       if (!searchQuery.trim()) return true
@@ -304,13 +296,13 @@ export default function AdminMensajesPage() {
 
       return idMatch || buyerMatch || sellerMatch || productMatch || msgMatch
     })
-  }, [conversations, statusFilter, typeFilter, searchQuery])
+  }, [conversations, statusFilter, searchQuery])
 
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] gap-3">
         <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary"></div>
-        <p className="text-sm text-muted-foreground font-medium">Cargando Centro de Mensajes de la Plataforma...</p>
+        <p className="text-sm text-muted-foreground font-medium">Cargando Mensajes entre Usuarios...</p>
       </div>
     )
   }
@@ -325,24 +317,38 @@ export default function AdminMensajesPage() {
               <MessageCircle className="w-6 h-6" />
             </div>
             <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground">
-              Mensajería Global de la Plataforma
+              Mensajes entre Usuarios
             </h1>
           </div>
           <p className="text-sm text-muted-foreground">
-            Monitoreo en vivo de todas las negociaciones entre compradores, vendedores y consultas de asistencia con ID único.
+            Monitoreo en vivo de todas las negociaciones y chats entre compradores y vendedores de la plataforma.
           </p>
         </div>
 
-        <Button
-          onClick={() => fetchConversations(false)}
-          disabled={isRefreshing}
-          variant="outline"
-          size="sm"
-          className="gap-2 bg-white hover:bg-gray-50 border-border self-start sm:self-auto rounded-xl shadow-xs"
-        >
-          <RefreshCw className={`w-4 h-4 ${isRefreshing ? "animate-spin text-primary" : ""}`} />
-          {isRefreshing ? "Sincronizando..." : "Actualizar chats"}
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button
+            asChild
+            variant="outline"
+            size="sm"
+            className="gap-2 bg-white hover:bg-emerald-50 text-emerald-800 border-emerald-200 rounded-xl shadow-xs"
+          >
+            <Link href="/admin/soporte">
+              <Headphones className="w-4 h-4 text-emerald-600" />
+              <span>Ver Tickets de Soporte</span>
+            </Link>
+          </Button>
+
+          <Button
+            onClick={() => fetchConversations(false)}
+            disabled={isRefreshing}
+            variant="outline"
+            size="sm"
+            className="gap-2 bg-white hover:bg-gray-50 border-border rounded-xl shadow-xs"
+          >
+            <RefreshCw className={`w-4 h-4 ${isRefreshing ? "animate-spin text-primary" : ""}`} />
+            {isRefreshing ? "Sincronizando..." : "Actualizar"}
+          </Button>
+        </div>
       </div>
 
       {/* Metrics Row */}
@@ -350,9 +356,9 @@ export default function AdminMensajesPage() {
         <Card className="border border-border/80 shadow-xs bg-white">
           <CardContent className="p-4 flex items-center justify-between">
             <div>
-              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Total Chats</p>
+              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Total Negociaciones</p>
               <h3 className="text-2xl font-bold text-foreground mt-1">{totalConvs}</h3>
-              <p className="text-[11px] text-muted-foreground mt-0.5">En toda la plataforma</p>
+              <p className="text-[11px] text-muted-foreground mt-0.5">Entre compradores y vendedores</p>
             </div>
             <div className="w-11 h-11 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
               <MessageCircle className="w-5 h-5" />
@@ -360,7 +366,7 @@ export default function AdminMensajesPage() {
           </CardContent>
         </Card>
 
-        {/* Card: No Vistos (con badge y alerta visual) */}
+        {/* Card: No Vistos */}
         <Card
           onClick={() => setStatusFilter(statusFilter === "unseen" ? "all" : "unseen")}
           className={`border shadow-xs bg-white cursor-pointer transition-all hover:border-red-300 ${
@@ -391,27 +397,36 @@ export default function AdminMensajesPage() {
           </CardContent>
         </Card>
 
-        <Card className="border border-border/80 shadow-xs bg-white">
+        <Card
+          onClick={() => setStatusFilter(statusFilter === "seen" ? "all" : "seen")}
+          className={`border shadow-xs bg-white cursor-pointer transition-all hover:border-blue-300 ${
+            statusFilter === "seen" ? "ring-2 ring-blue-500/80 border-blue-500" : "border-border/80"
+          }`}
+        >
           <CardContent className="p-4 flex items-center justify-between">
             <div>
-              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Chats por Producto</p>
-              <h3 className="text-2xl font-bold text-foreground mt-1">{totalProductChats}</h3>
-              <p className="text-[11px] text-muted-foreground mt-0.5">Negociaciones B2B</p>
+              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Revisados</p>
+              <h3 className="text-2xl font-bold text-foreground mt-1">{totalSeen}</h3>
+              <p className="text-[11px] text-muted-foreground mt-0.5">Chats revisados</p>
             </div>
             <div className="w-11 h-11 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center">
-              <Package className="w-5 h-5" />
+              <Eye className="w-5 h-5" />
             </div>
           </CardContent>
         </Card>
 
-        <Card className="border border-border/80 shadow-xs bg-white">
+        <Card className="border border-purple-200 bg-purple-50/40 shadow-xs">
           <CardContent className="p-4 flex items-center justify-between">
             <div>
-              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Consultas Soporte</p>
-              <h3 className="text-2xl font-bold text-foreground mt-1">{totalSupportChats}</h3>
-              <p className="text-[11px] text-muted-foreground mt-0.5">Asistencia directa</p>
+              <p className="text-xs font-semibold text-purple-800 uppercase tracking-wider">Soporte y Ayuda</p>
+              <h3 className="text-sm font-bold text-purple-900 mt-1 flex items-center gap-1.5">
+                Panel Separado
+              </h3>
+              <Link href="/admin/soporte" className="text-[11px] font-semibold text-purple-700 hover:underline mt-0.5 inline-block">
+                Ver tickets de soporte →
+              </Link>
             </div>
-            <div className="w-11 h-11 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center">
+            <div className="w-11 h-11 rounded-xl bg-purple-100 text-purple-700 flex items-center justify-center">
               <Headphones className="w-5 h-5" />
             </div>
           </CardContent>
@@ -424,7 +439,7 @@ export default function AdminMensajesPage() {
         {/* Left Column: Conversations List (5 cols) */}
         <div className="lg:col-span-5 flex flex-col h-[750px] bg-white rounded-2xl border border-border overflow-hidden shadow-xs">
           
-          {/* Top Bar: Search, Status Tabs & Type Filter */}
+          {/* Top Bar: Search and Status Tabs */}
           <div className="p-3.5 border-b border-border/80 bg-gray-50/70 space-y-2.5 shrink-0">
             
             {/* Search Input (Supports ID, Code, Users, Products) */}
@@ -438,7 +453,7 @@ export default function AdminMensajesPage() {
               />
             </div>
 
-            {/* Row 1: Status Filter Tabs (Todos / No Vistos / Vistos) */}
+            {/* Status Filter Tabs (Todos / No Vistos / Vistos) */}
             <div className="flex items-center gap-1.5 p-1 bg-gray-200/60 rounded-xl">
               <button
                 onClick={() => setStatusFilter("all")}
@@ -475,34 +490,6 @@ export default function AdminMensajesPage() {
               >
                 Vistos ({totalSeen})
               </button>
-            </div>
-
-            {/* Row 2: Secondary Type Filter (Todos / Productos / Soporte) */}
-            <div className="flex items-center gap-1.5 overflow-x-auto pb-0.5 scrollbar-thin">
-              <Button
-                variant={typeFilter === "all" ? "default" : "outline"}
-                size="sm"
-                onClick={() => setTypeFilter("all")}
-                className="h-6 px-2.5 text-[11px] rounded-lg font-medium whitespace-nowrap shrink-0"
-              >
-                Todos los tipos
-              </Button>
-              <Button
-                variant={typeFilter === "products" ? "default" : "outline"}
-                size="sm"
-                onClick={() => setTypeFilter("products")}
-                className="h-6 px-2.5 text-[11px] rounded-lg font-medium whitespace-nowrap shrink-0"
-              >
-                Productos B2B ({totalProductChats})
-              </Button>
-              <Button
-                variant={typeFilter === "support" ? "default" : "outline"}
-                size="sm"
-                onClick={() => setTypeFilter("support")}
-                className="h-6 px-2.5 text-[11px] rounded-lg font-medium whitespace-nowrap shrink-0"
-              >
-                Soporte ({totalSupportChats})
-              </Button>
             </div>
           </div>
 

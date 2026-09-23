@@ -8,10 +8,11 @@ export async function GET(request: NextRequest) {
   try {
     const adminClient = createAdminClient();
 
-    // 1. Fetch all conversations from Supabase
+    // 1. Fetch only user-to-user / product conversations from Supabase (excluding support tickets where product_id is null)
     const { data: convos, error: convosError } = await adminClient
       .from("conversations")
       .select("*")
+      .not("product_id", "is", null)
       .order("updated_at", { ascending: false });
 
     if (convosError) {
