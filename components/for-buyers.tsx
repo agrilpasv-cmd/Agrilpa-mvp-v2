@@ -30,7 +30,7 @@ export function ForBuyers() {
   ]
 
   return (
-    <section id="compradores" className="py-20 md:py-32 relative overflow-hidden bg-background">
+    <section id="compradores" className="pt-8 md:pt-12 pb-12 md:pb-16 lg:pb-20 relative overflow-hidden bg-background">
       {/* Decorative background blobs */}
       <div className="absolute top-1/2 right-0 -mt-40 -mr-20 w-96 h-96 rounded-full bg-primary/5 blur-3xl pointer-events-none" />
       <div className="absolute bottom-0 left-0 -mb-20 -ml-20 w-80 h-80 rounded-full bg-blue-500/5 blur-3xl pointer-events-none" />

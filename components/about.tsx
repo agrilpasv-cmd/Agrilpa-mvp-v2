@@ -1,11 +1,11 @@
 "use client"
 
-import { Globe, MessageSquare, ShieldCheck, Lightbulb, FileCheck, Truck, FileText } from "lucide-react"
+import { Globe, MessageSquare, ShieldCheck, Lightbulb, Building2, ArrowLeftRight } from "lucide-react"
 import { motion } from "framer-motion"
 
 export function About() {
   return (
-    <section id="sobre" className="pt-0 pb-16 md:pb-24 bg-background">
+    <section id="sobre" className="pt-0 pb-10 md:pb-14 bg-background">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <motion.div 
           initial={{ opacity: 0, y: 30 }}
@@ -71,49 +71,43 @@ export function About() {
           </motion.div>
         </div>
 
-        <div className="mt-12 relative overflow-hidden rounded-[2.5rem] border border-primary/20 bg-gradient-to-br from-[#e8f0d8] via-[#edf3e0] to-[#e2eed4] shadow-[0_24px_48px_rgba(0,0,0,0.06)]">
-          {/* Subtle grid texture overlay */}
-          <div
-            className="absolute inset-0 opacity-[0.04]"
-            style={{
-              backgroundImage:
-                "linear-gradient(#8BC646 1px,transparent 1px),linear-gradient(90deg,#8BC646 1px,transparent 1px)",
-              backgroundSize: "32px 32px",
-            }}
-          />
-          {/* Brand-color glow top-right */}
-          <div className="absolute -top-20 -right-20 w-64 h-64 bg-primary/10 rounded-full blur-3xl pointer-events-none" />
+        {/* ── SECCIÓN: CENTRO DE CONTROL AGRÍCOLA ── */}
+        <div 
+          className="mt-12 relative overflow-hidden rounded-3xl lg:rounded-[2.5rem] border border-[#c5e2c7]/80 shadow-sm"
+          style={{
+            backgroundColor: "#e9f3e9",
+            backgroundImage: "radial-gradient(#cadfca 1.2px, transparent 1.2px)",
+            backgroundSize: "24px 24px",
+          }}
+        >
+          {/* Subtle organic background gradient accents using Agrilpa primary green */}
+          <div className="absolute -top-40 -left-40 w-96 h-96 bg-[#8BC646]/25 rounded-full blur-3xl pointer-events-none" />
+          <div className="absolute -bottom-40 right-1/4 w-[30rem] h-[30rem] bg-[#8BC646]/20 rounded-full blur-3xl pointer-events-none" />
 
           <motion.div 
             initial={{ opacity: 0, y: 40 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: "-50px" }}
             transition={{ duration: 0.7 }}
-            className="relative grid md:grid-cols-2 gap-10 items-center p-8 md:p-14"
+            className="relative grid md:grid-cols-2 gap-8 lg:gap-12 items-center p-5 sm:p-7 lg:p-9"
           >
             {/* ── LEFT: text column ── */}
-            <div>
-              {/* Badge */}
-              <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/15 border border-primary/30 text-primary text-xs font-semibold uppercase tracking-widest mb-5">
-                <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
-                Plataforma B2B Agrícola
-              </span>
-
-              <h3 className="text-2xl md:text-4xl font-extrabold text-foreground leading-tight mb-5">
+            <div className="min-w-0">
+              <h3 className="text-2xl sm:text-3xl lg:text-[2.25rem] font-extrabold text-foreground leading-[1.18] mb-3 tracking-tight">
                 Tu centro de control{" "}
-                <span className="text-primary">agrícola.</span>
+                <span className="text-primary block sm:inline">agrícola.</span>
               </h3>
 
-              <p className="text-muted-foreground text-base md:text-lg leading-relaxed mb-8">
+              <p className="text-foreground/75 text-sm sm:text-base leading-relaxed mb-5 max-w-xl font-normal">
                 Administra tus operaciones comerciales en un solo lugar: publicaciones, cotizaciones y contactos, todo
                 integrado para que puedas enfocarte en crecer.
               </p>
 
-              <p className="text-foreground font-semibold text-sm uppercase tracking-widest mb-4 opacity-50">
+              <p className="text-foreground/70 font-bold text-xs uppercase tracking-widest mb-2.5">
                 Cómo funciona Agrilpa
               </p>
 
-              <ul className="space-y-3">
+              <ul className="space-y-2 sm:space-y-2.5">
                 {[
                   {
                     Icon: Lightbulb,
@@ -126,31 +120,34 @@ export function About() {
                     desc: "Recibe alertas de nuevas cotizaciones y responde a compradores directamente desde la plataforma.",
                   },
                   {
-                    Icon: FileCheck,
+                    Icon: ShieldCheck,
                     title: "Contacto directo garantizado",
                     desc: "Contacta directamente a compradores y vendedores interesados sin intermediarios.",
                   },
                   {
-                    Icon: FileText,
+                    Icon: Building2,
                     title: "Perfil de empresa completo",
                     desc: "Completa y gestiona tu perfil empresarial profesional para generar confianza ante compradores y vendedores.",
                   },
                   {
-                    Icon: Truck,
+                    Icon: ArrowLeftRight,
                     title: "Directorio de proveedores",
                     desc: "Explora y filtra empresas agrícolas por categoría, región o producto para encontrar al aliado ideal.",
                   },
                 ].map(({ Icon, title, desc }, i) => (
                   <li
                     key={i}
-                    className="flex items-start gap-3 bg-white hover:bg-primary/5 transition-colors rounded-xl px-4 py-3 border border-primary/15 shadow-sm"
+                    className="group flex items-center gap-3 sm:gap-3.5 bg-white rounded-xl sm:rounded-2xl px-3.5 sm:px-4 py-2 sm:py-2.5 border border-slate-200/90 hover:border-primary/50 shadow-[0_2px_10px_-2px_rgba(18,48,22,0.05)] hover:shadow-[0_8px_18px_-4px_rgba(20,65,25,0.1)] transition-all"
                   >
-                    <div className="mt-0.5 w-7 h-7 rounded-lg bg-primary/15 flex items-center justify-center flex-shrink-0">
-                      <Icon className="w-4 h-4 text-primary" />
+                    <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-lg bg-[#f2f8f2] border border-[#e1f0e2] flex items-center justify-center shrink-0 group-hover:bg-[#e1f0e2] group-hover:scale-105 transition-all text-primary">
+                      <Icon className="w-4 h-4 sm:w-4.5 sm:h-4.5 text-primary" />
                     </div>
-                    <span className="text-muted-foreground text-sm leading-snug">
-                      <strong className="text-foreground font-semibold">{title}:</strong> {desc}
-                    </span>
+                    <div className="min-w-0">
+                      <h4 className="text-xs sm:text-[13px] font-bold text-slate-900 group-hover:text-primary transition-colors leading-snug">
+                        {title}:{" "}
+                        <span className="font-normal text-slate-600">{desc}</span>
+                      </h4>
+                    </div>
                   </li>
                 ))}
               </ul>
@@ -158,7 +155,7 @@ export function About() {
 
             {/* ── RIGHT: image column ── */}
             <div className="relative flex items-center justify-center">
-              <div className="relative rounded-2xl overflow-hidden shadow-xl border border-primary/20 w-full">
+              <div className="relative rounded-2xl md:rounded-3xl overflow-hidden shadow-[0_20px_50px_-15px_rgba(22,60,26,0.18),0_10px_20px_-10px_rgba(0,0,0,0.08)] border border-slate-200/90 bg-white w-full transition-transform duration-500 hover:scale-[1.01]">
                 <img
                   src="/dashboard-preview.png"
                   alt="Plataforma Agrilpa"

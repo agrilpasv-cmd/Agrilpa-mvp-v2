@@ -16,7 +16,7 @@ export function Products() {
   ]
 
   return (
-    <section id="productos" className="py-16 md:py-24 bg-background">
+    <section id="productos" className="py-12 md:py-16 lg:py-20 bg-background">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <motion.div 
           initial={{ opacity: 0, y: 30 }}

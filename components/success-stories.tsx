@@ -200,7 +200,7 @@ export function SuccessStories() {
   };
 
   return (
-    <section className="py-16 md:py-24 bg-white/30 backdrop-blur-xl overflow-hidden">
+    <section className="py-12 md:py-16 lg:py-20 bg-white/30 backdrop-blur-xl overflow-hidden">
       <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 mb-12 md:mb-16">
         <motion.div 
           initial={{ opacity: 0, y: 30 }}

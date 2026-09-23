@@ -97,7 +97,7 @@ export function Newsletter() {
   }
 
   return (
-    <section className="relative py-16 md:py-24 bg-background overflow-hidden">
+    <section className="relative py-12 md:py-16 lg:py-20 bg-background overflow-hidden">
       {/* Soft background glow */}
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[500px] bg-primary/5 rounded-full blur-[120px] pointer-events-none -z-10" />
 
